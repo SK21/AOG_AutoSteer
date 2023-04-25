@@ -1,8 +1,8 @@
-#define InoDescription "AutoSteerTeensyRVC   24-Apr-2023"
+#define InoDescription "AutoSteerTeensyRVC   25-Apr-2023"
 // autosteer for Teensy 4.1
-// uses BNO in RVC mode on Serial 7
+// uses BNO in RVC mode over serial
 
-#define InoID 2404	// if not in eeprom, overwrite
+#define InoID 2504	// if not in eeprom, overwrite
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -19,7 +19,6 @@
 #define MaxReadBuffer 100	// bytes
 #define MaxHostBuffer 50
 #define LOW_HIGH_DEGREES 5.0	//How many degrees before decreasing Max PWM
-#define CMPS14_ADDRESS 0x60 
 #define ADS1115_Address 0x48
 #define USBBAUD 38400
 #define CNT_DEVICES (sizeof(drivers)/sizeof(drivers[0]))
@@ -38,16 +37,12 @@ USBDriver* drivers[] = { &hub1, &hub2, &hid1, &hid2, &hid3, &userial };
 const char* driver_names[CNT_DEVICES] = { "Hub1", "Hub2",  "HID1", "HID2", "HID3", "USERIAL1" };
 bool driver_active[CNT_DEVICES] = { false, false, false, false };
 
-struct ModuleConfig	// 34 bytes, AS14 default
+struct ModuleConfig	
 {
 	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
 	uint8_t ReceiverSerialPort = 4;	// GPS receiver
 	uint8_t	IMUSerialPort = 7;		// IMU
-	uint8_t WemosSerialPort = 3;	// serial port connected to Wemos D1 Mini
 	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
-	uint8_t IMU = 4;				// 0 none, 1 Sparkfun BNO, 2 CMPS14, 3 Adafruit BNO, 4 BNO RVC
-	uint8_t IMUdelay = 90;			// how many ms after last sentence should imu sample, 90 for SparkFun, 4 for CMPS14   
-	uint8_t IMU_Interval = 40;		// for Sparkfun 
 	uint16_t ZeroOffset = 6500;
 	uint8_t MinSpeed = 1;
 	uint8_t MaxSpeed = 15;
@@ -55,14 +50,9 @@ struct ModuleConfig	// 34 bytes, AS14 default
 	uint8_t	AnalogMethod = 2;		// 0 use ADS1115 for WAS(AIN0), AIN1, current(AIN2), 1 use Teensy analog pin for WAS, 2 use ADS1115 from Wemos D1 Mini
 	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
 	uint8_t InvertRoll = 0;
-	uint8_t UseTB6612 = 0;			// 0 - don't use TB6612 motor driver, 1 - use TB6612 motor driver for motor 2
-	uint8_t GyroOn = 0;
-	uint8_t UseLinearActuator = 0;	// to engage or retract steering motor, uses motor 2
 	uint8_t	GGAlast = 1;
 	uint8_t Dir1 = 26;
 	uint8_t PWM1 = 25;
-	uint8_t Dir2 = 28;				// motor 2 direction, TB6612 IN1
-	uint8_t PWM2 = 29;				// motor 2 pwm, TB6612 PWM	
 	uint8_t SteerSw_Relay = 36;		// pin for steering disconnect relay
 	uint8_t SteerSw = 39;
 	uint8_t WorkSw = 27;
@@ -178,20 +168,14 @@ uint32_t  LoopLast = LOOP_TIME;
 
 NMEAParser<2> parser;
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
+BNO08x_RVC_Data heading;
 
 uint32_t CommTime;
 bool ADSfound = false;
+byte PGNlength;
 
 HardwareSerial* SerialIMU;
 HardwareSerial* SerialReceiver;
-HardwareSerial* SerialWemos;
-
-byte PGNlength;
-uint32_t Debug1;
-uint32_t TestTime;
-uint32_t Debug2;
-uint32_t DisplayTime; 
-int Debug3;
 
 void setup()
 {
@@ -203,37 +187,18 @@ void loop()
 	if (millis() - LoopLast >= LOOP_TIME)
 	{
 		LoopLast = millis();
+		ReadAnalog();
 		ReadSwitches();
 		DoSteering();
-		ReceiveConfigData();
 		SendSpeedPulse();
 		DoHost();
-		ReceiveWemos();
-		ReadAnalog();
+		ReceiveConfigData();
 	}
 	ReceiveSteerData();
-	if (MDL.Receiver != 0) DoPanda();
+	DoPanda();
 	ReadIMU();
 	Blink();
 	wdt.feed();
-}
-
-void TimeIt()
-{
-	if (micros() - TestTime > Debug1)
-	{
-		Debug1 = micros() - TestTime;
-	}
-	if (millis() - Debug2 > 5000)
-	{
-		Debug2 = millis();
-		Debug1 = 0;
-	}
-	if (millis() - DisplayTime > 1000)
-	{
-		Serial.println(Debug1);
-		DisplayTime = millis();
-	}
 }
 
 bool State = false;

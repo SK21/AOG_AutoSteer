@@ -28,7 +28,7 @@
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
     <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
     <LinuxProjectType>{D51BCBC9-82E9-4017-911E-C93873C4EA2B}</LinuxProjectType>
-    <ProjectGuid>{0F6AA266-96F9-4951-A4F3-69CFB41E3A1A}</ProjectGuid>
+    <ProjectGuid>{ABB615E0-B615-43FF-8AA9-8F1843738BCD}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -80,14 +80,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NMEAParserX.h">
-      <FileType>CppCode</FileType>
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
-    <ClCompile Include="zNMEAParser.h">
-      <FileType>CppCode</FileType>
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
     <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
@@ -134,12 +126,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="USBhost.ino">
-      <FileType>CppCode</FileType>
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="WemosComm.ino">
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>

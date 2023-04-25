@@ -27,35 +27,27 @@ char imuRoll[6];
 char imuPitch[6];
 char imuYawRate[6];
 
-bool isTriggered = false;
-uint32_t PandalastTime = MDL.IMUdelay;
 int16_t Ptemp;
 
 void DoPanda()
 {
-    // NMEA, from receiver to parser
-    if (SerialReceiver->available()) parser << SerialReceiver->read();
-
-    // GPS corrections from AGIO to receiver
-    int packetSize = UDPntrip.parsePacket();
-    if (packetSize)
+    if (MDL.Receiver > 0)
     {
-        UDPntrip.read(NtripBuffer, packetSize);
-        SerialReceiver->write(NtripBuffer, packetSize);
-    }
+        // NMEA, from receiver to parser
+        if (SerialReceiver->available()) parser << SerialReceiver->read();
 
-    // IMU
-    //if (isTriggered && millis() - PandalastTime > MDL.IMUdelay)
-    //{
-    //    imuHandler();
-    //    isTriggered = false;
-    //}
+        // GPS corrections from AGIO to receiver
+        int packetSize = UDPntrip.parsePacket();
+        if (packetSize)
+        {
+            UDPntrip.read(NtripBuffer, packetSize);
+            SerialReceiver->write(NtripBuffer, packetSize);
+        }
+    }
 }
 
 void imuHandler()
 {
-    //ReadIMU();
-
     Ptemp = (int16_t)IMU_Heading;
     itoa(Ptemp, imuHeading, 10);
 
@@ -65,11 +57,8 @@ void imuHandler()
     Ptemp = (int16_t)IMU_Pitch;
     itoa(Ptemp, imuPitch, 10);
 
-    if (MDL.GyroOn)
-    {
-        Ptemp = (int16_t)IMU_YawRate;
-        itoa(Ptemp, imuYawRate, 10);
-    }
+    Ptemp = (int16_t)IMU_YawRate;
+    itoa(Ptemp, imuYawRate, 10);
 }
 
 // if odd characters showed up.
@@ -159,7 +148,7 @@ void BuildPanda()
     strcat(nme, ",");
 
     //11
-    if (atof(speedKnots) > 0.3) strcat(nme, speedKnots);
+    if (atof(speedKnots) > 0.2) strcat(nme, speedKnots);
     strcat(nme, ",");
 
     //12
@@ -182,9 +171,6 @@ void BuildPanda()
     CalculateChecksum();
 
     strcat(nme, "\r\n");
-
-    //PandalastTime = millis();
-    //isTriggered = true;
 
     imuHandler();
 

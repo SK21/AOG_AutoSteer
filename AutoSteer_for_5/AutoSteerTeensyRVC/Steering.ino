@@ -78,82 +78,31 @@ float tmpIMU;
 
 void ReadIMU()
 {
-	switch (MDL.IMU)
+	if (rvc.read(&heading))
 	{
-
-	case 3:	// CMPS14
-		//the heading x10
-		Wire.beginTransmission(CMPS14_ADDRESS);
-		Wire.write(0x02);
-		Wire.endTransmission();
-
-		Wire.requestFrom(CMPS14_ADDRESS, 3);
-		while (Wire.available() < 3);
-
-		IMU_Heading = Wire.read() << 8 | Wire.read();
-
-		//3rd byte pitch
-		IMU_Pitch = Wire.read();
-
-		//roll
-		Wire.beginTransmission(CMPS14_ADDRESS);
-		Wire.write(0x1C);
-		Wire.endTransmission();
-
-		Wire.requestFrom(CMPS14_ADDRESS, 2);
-		while (Wire.available() < 2);
-
-		tmpIMU = int16_t(Wire.read() << 8 | Wire.read());
-
-		//Complementary filter
-		IMU_Roll = 0.9 * IMU_Roll + 0.1 * tmpIMU;
-
-		//Get the Z gyro
-		Wire.beginTransmission(CMPS14_ADDRESS);
-		Wire.write(0x16);
-		Wire.endTransmission();
-
-		Wire.requestFrom(CMPS14_ADDRESS, 2);
-		while (Wire.available() < 2);
-
-		tmpIMU = int16_t(Wire.read() << 8 | Wire.read());
-
-		//Complementary filter
-		IMU_YawRate = 0.93 * IMU_YawRate + 0.07 * tmpIMU;
-		break;
-
-	case 4:
-		BNO08x_RVC_Data heading;
-		if (rvc.read(&heading))
+		IMU_Heading = heading.yaw;
+		if (IMU_Heading < 0 && IMU_Heading >= -180) //Scale BNO085 yaw from [-180?;180?] to [0;360?]
 		{
-			IMU_Heading = heading.yaw;
-			if (IMU_Heading < 0 && IMU_Heading >= -180) //Scale BNO085 yaw from [-180?;180?] to [0;360?]
-			{
-				IMU_Heading = IMU_Heading + 360;
-			}
-			IMU_Heading *= 10.0;
-
-			if (MDL.SwapRollPitch)
-			{
-				IMU_Roll = heading.pitch * 10;
-				if (MDL.InvertRoll) IMU_Roll *= -1.0;
-
-				IMU_Pitch = heading.roll * 10;
-			}
-			else
-			{
-				IMU_Roll = heading.roll * 10;
-				if (MDL.InvertRoll) IMU_Roll *= -1.0;
-
-				IMU_Pitch = heading.pitch * 10;
-			}
-
-			if (MDL.GyroOn)
-			{
-				IMU_YawRate = heading.z_accel;
-			}
+			IMU_Heading = IMU_Heading + 360;
 		}
-		break;
+		IMU_Heading *= 10.0;
+
+		if (MDL.SwapRollPitch)
+		{
+			IMU_Roll = heading.pitch * 10;
+			if (MDL.InvertRoll) IMU_Roll *= -1.0;
+
+			IMU_Pitch = heading.roll * 10;
+		}
+		else
+		{
+			IMU_Roll = heading.roll * 10;
+			if (MDL.InvertRoll) IMU_Roll *= -1.0;
+
+			IMU_Pitch = heading.pitch * 10;
+		}
+
+		IMU_YawRate = heading.z_accel;
 	}
 }
 

@@ -1,6 +1,6 @@
 int16_t StoredID = 0;
-uint8_t IMUaddress;
 uint8_t ErrorCount;
+bool IMUstarted = false;
 
 void DoSetup()
 {
@@ -37,6 +37,7 @@ void DoSetup()
 		EEPROM.put(110, MDL);
 	}
 
+	Serial.println("");
 
 	// receive data from gps receiver
 	switch (MDL.ReceiverSerialPort)
@@ -67,7 +68,7 @@ void DoSetup()
 		break;
 	}
 
-	// send gps corrections to receiver
+	// serial bno
 	switch (MDL.IMUSerialPort)
 	{
 	case 1:
@@ -95,42 +96,6 @@ void DoSetup()
 		SerialIMU = &Serial8;
 		break;
 	}
-
-	// Wemos D1 Mini serial port
-	switch (MDL.WemosSerialPort)
-	{
-	case 1:
-		SerialWemos = &Serial1;
-		break;
-	case 2:
-		SerialWemos = &Serial2;
-		break;
-	case 3:
-		SerialWemos = &Serial3;
-		break;
-	case 4:
-		SerialWemos = &Serial4;
-		break;
-	case 5:
-		SerialWemos = &Serial5;
-		break;
-	case 6:
-		SerialWemos = &Serial6;
-		break;
-	case 7:
-		SerialWemos = &Serial7;
-		break;
-	default:
-		SerialWemos = &Serial8;
-		break;
-	}
-
-	SerialWemos->begin(115200);
-
-	static char SerialWemosSendBuffer[512];
-	static char SerialWemosReadBuffer[512];
-	SerialWemos->addMemoryForWrite(SerialWemosSendBuffer, 512);
-	SerialWemos->addMemoryForRead(SerialWemosReadBuffer, 512);
 
 	if (MDL.Receiver != 0)
 	{
@@ -183,19 +148,8 @@ void DoSetup()
 		Serial.println("ADS1115 not found.");
 		Serial.println("");
 
-		switch (MDL.AnalogMethod)
-		{
-
-		case 1:
-			Serial.println("Using Teensy pins for analog data.");
-			Serial.println("");
-			break;
-
-		case 2:
-			Serial.println("Using Wemos D1 Mini for analog data.");
-			Serial.println("");
-			break;
-		}
+		Serial.println("Using Teensy pins for analog data.");
+		Serial.println("");
 	}
 
 	// ethernet 
@@ -205,10 +159,7 @@ void DoSetup()
 
 	Ethernet.begin(LocalMac, 0);
 	Ethernet.setLocalIP(LocalIP);
-	DestinationIP = IPAddress(MDL.IP0, MDL.IP1, MDL.IP2, 255);	// update from saved data
 
-	Serial.print("IP Address: ");
-	Serial.println(Ethernet.localIP());
 	delay(1000);
 	if (Ethernet.linkStatus() == LinkON)
 	{
@@ -218,6 +169,9 @@ void DoSetup()
 	{
 		Serial.println("Ethernet Not Connected.");
 	}
+	Serial.print("IP Address: ");
+	Serial.println(Ethernet.localIP());
+	DestinationIP = IPAddress(MDL.IP0, MDL.IP1, MDL.IP2, 255);	// update from saved data
 	Serial.println("");
 
 	UDPsteering.begin(ListeningPort);
@@ -237,74 +191,19 @@ void DoSetup()
 	SerialIMU->addMemoryForRead(IMUBufferIn, 512);
 	SerialIMU->addMemoryForWrite(IMUBufferOut, 512);
 
-	if (!StartIMU(MDL.IMU))	// try saved IMU first
+	Serial.println("Starting  BNO RVC  ...");
+	IMUstarted = rvc.begin(SerialIMU);
+	if (IMUstarted)
 	{
-		for (int i = 1; i < 5; i++)
-		{
-			if (i != MDL.IMU)
-			{
-				if (StartIMU(i))
-				{
-					MDL.IMU = i;
-					EEPROM.put(110, MDL);
-					break;
-				}
-			}
-		}
+		Serial.println("BNO RVC IMU started.");
 	}
-
-	if (MDL.IMU == 0)
+	else
 	{
-		Serial.println("");
-		Serial.println("IMU not found.");
+		Serial.println("BNO RVC IMU failed to start.");
 	}
-
 
 	Serial.println("");
 	Serial.println("Finished setup.");
 	Serial.println("");
 }
 
-bool StartIMU(byte ID)
-{
-	bool IMUstarted = false;
-	ErrorCount = 0;
-	switch (ID)
-	{
-	case 3:
-		Serial.println("Starting  CMPS14 IMU  ...");
-		while (!IMUstarted)
-		{
-			Wire1.beginTransmission(CMPS14_ADDRESS);
-			IMUstarted = !Wire1.endTransmission();
-			Serial.print(".");
-			delay(500);
-			if (ErrorCount++ > 10) break;
-		}
-		Serial.println("");
-		if (IMUstarted)
-		{
-			Serial.println("CMPS14 IMU started.");
-		}
-		else
-		{
-			Serial.println("CMPS14 IMU failed to start.");
-		}
-		break;
-
-	case 4:
-		Serial.println("Starting  BNO RVC  ...");
-		IMUstarted = rvc.begin(SerialIMU);
-		Serial.println("");
-		if (IMUstarted)
-		{
-			Serial.println("BNO RVC IMU started.");
-		}
-		else
-		{
-			Serial.println("BNO RVC IMU failed to start.");
-		}
-		break;
-	}
-	return IMUstarted;
-}

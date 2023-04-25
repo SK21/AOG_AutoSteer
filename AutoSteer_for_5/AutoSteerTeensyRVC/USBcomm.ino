@@ -30,14 +30,14 @@ void ReceiveConfigData()
             //4     RTCM serial port, 1-8
             //5     RTCM UDP port # lo
             //6     RTCM UDP port # Hi
-            //7     IMU         0-None, 1-Sparkfun BNO, 2-CMPS14, 3-Adafruit BNO, 4 serial
-            //8     Read Delay
-            //9     Report Interval
+            //7     -
+            //8     -
+            //9     -
             //10    Zero offset Lo
             //11    Zero offset Hi
             //12    IMU Serial port, 1-8
             //13    IP address, 3rd octet
-            //14    Wemos serial port
+            //14    -
             //15    CRC
 
             PGNlength = 16;
@@ -54,13 +54,9 @@ void ReceiveConfigData()
                     MDL.Receiver = DataUSB[2];
                     MDL.ReceiverSerialPort = DataUSB[3];
                     MDL.NtripPort = DataUSB[5] | DataUSB[6] << 8;
-                    MDL.IMU = DataUSB[7];
-                    MDL.IMUdelay = DataUSB[8];
-                    MDL.IMU_Interval = DataUSB[9];
                     MDL.ZeroOffset = DataUSB[10] | DataUSB[11] << 8;
                     MDL.IMUSerialPort = DataUSB[12];
                     MDL.IP2 = DataUSB[13];
-                    MDL.WemosSerialPort = DataUSB[14];
 
                     EEPROM.put(110, MDL);
                 }
@@ -77,18 +73,12 @@ void ReceiveConfigData()
             //3     Maximum speed
             //4     Speed pulse cal X 10 Lo
             //5     Speed pulse cal X 10 Hi
-            //6     Analog method 0 ADS1115 (Teensy), 1 pins (Teensy), 2 ADS1115 (D1 Mini)
+            //6     Analog method 0 ADS1115 (Teensy), 1 pins (Teensy)
             //7     RelayControl 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays
             //8     Module ID
             //9     Commands
-            //          - use rate control
-            //          - use TB6612 motor controller
-            //          - relay on high
-            //          - flow on high
             //          - swap pitch for roll
             //          - invert roll
-            //          - Gyro on
-            //          - use linear actuator
             //10    CRC
 
             PGNlength = 11;
@@ -109,11 +99,8 @@ void ReceiveConfigData()
                     MDL.AnalogMethod = DataUSB[6];
 
                     uint8_t Commands = DataUSB[9];
-                    if (bitRead(Commands, 1)) MDL.UseTB6612 = 1; else MDL.UseTB6612 = 0;
                     if (bitRead(Commands, 4)) MDL.SwapRollPitch = 1; else MDL.SwapRollPitch = 0;
                     if (bitRead(Commands, 5)) MDL.InvertRoll = 1; else MDL.InvertRoll = 0;
-                    if (bitRead(Commands, 6)) MDL.GyroOn = 1; else MDL.GyroOn = 0;
-                    if (bitRead(Commands, 7)) MDL.UseLinearActuator = 1; else MDL.UseLinearActuator = 0;
 
                     EEPROM.put(110, MDL);
                 }
@@ -161,8 +148,6 @@ void ReceiveConfigData()
                     MDL.CurrentSensor = DataUSB[8];
                     MDL.PressureSensor = DataUSB[9];
                     MDL.Encoder = DataUSB[10];
-                    MDL.Dir2 = DataUSB[11];
-                    MDL.PWM2 = DataUSB[12];
                     MDL.SpeedPulse = DataUSB[13];
 
                     EEPROM.put(110, MDL);

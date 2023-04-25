@@ -18,19 +18,12 @@
     <ClCompile Include="AutoSteerTeensyRVC.ino" />
     <ClCompile Include="Analog.ino" />
     <ClCompile Include="Begin.ino" />
-    <ClCompile Include="NMEAParserX.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="Panda.ino" />
     <ClCompile Include="SteerComm.ino" />
     <ClCompile Include="Steering.ino" />
     <ClCompile Include="StrSwitches.ino" />
     <ClCompile Include="USBcomm.ino" />
     <ClCompile Include="USBhost.ino" />
-    <ClCompile Include="WemosComm.ino" />
-    <ClCompile Include="zNMEAParser.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h">

@@ -111,7 +111,7 @@ void SendSteerData()
     PGN_253[6] = tmp >> 8;
 
     // heading
-    if (MDL.Receiver == 0 && MDL.IMU != 0)
+    if (MDL.Receiver == 0 && IMUstarted)
     {
         tmp = (int)(IMU_Heading);
     }
@@ -123,7 +123,7 @@ void SendSteerData()
     PGN_253[8] = tmp >> 8;
 
     // roll
-    if (MDL.Receiver == 0 && MDL.IMU != 0)
+    if (MDL.Receiver == 0 && IMUstarted)
     {
         tmp = (int)(IMU_Roll);
     }
@@ -203,7 +203,7 @@ void SendHelloReply()
         UDPsteering.write(helloFromAutoSteer, sizeof(helloFromAutoSteer));
         UDPsteering.endPacket();
 
-        if (MDL.IMU > 0)
+        if (IMUstarted)
         {
             UDPsteering.beginPacket(DestinationIP, DestinationPort);
             UDPsteering.write(helloFromIMU, sizeof(helloFromIMU));

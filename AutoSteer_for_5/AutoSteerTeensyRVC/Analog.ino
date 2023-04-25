@@ -49,7 +49,7 @@ void ReadAnalog()
 		// Bits 8     0=Continuous conversion mode, 1=Power down single shot
 
 		CurrentPin++;
-		if (CurrentPin > 2) CurrentPin = 0;	// AIN3 is not used
+		if (CurrentPin > 3) CurrentPin = 0;	
 		switch (CurrentPin)
 		{
 			// single ended
@@ -62,7 +62,7 @@ void ReadAnalog()
 		case 2:
 			Wire.write(0b01100000);	// AIN2
 			break;
-		default:
+		case 3:
 			Wire.write(0b01110000);	// AIN3
 			break;
 		}
