@@ -74,35 +74,4 @@ void DoSteering()
 	analogWrite(MDL.PWM1, abs(pwmDrive));
 }
 
-float tmpIMU;
-
-void ReadIMU()
-{
-	if (rvc.read(&heading))
-	{
-		IMU_Heading = heading.yaw;
-		if (IMU_Heading < 0 && IMU_Heading >= -180) //Scale BNO085 yaw from [-180?;180?] to [0;360?]
-		{
-			IMU_Heading = IMU_Heading + 360;
-		}
-		IMU_Heading *= 10.0;
-
-		if (MDL.SwapRollPitch)
-		{
-			IMU_Roll = heading.pitch * 10;
-			if (MDL.InvertRoll) IMU_Roll *= -1.0;
-
-			IMU_Pitch = heading.roll * 10;
-		}
-		else
-		{
-			IMU_Roll = heading.roll * 10;
-			if (MDL.InvertRoll) IMU_Roll *= -1.0;
-
-			IMU_Pitch = heading.pitch * 10;
-		}
-
-		IMU_YawRate = heading.z_accel;
-	}
-}
 

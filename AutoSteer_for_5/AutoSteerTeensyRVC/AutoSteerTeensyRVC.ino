@@ -177,6 +177,8 @@ byte PGNlength;
 HardwareSerial* SerialIMU;
 HardwareSerial* SerialReceiver;
 
+extern float tempmonGetTemp(void);
+
 void setup()
 {
 	DoSetup();
@@ -191,13 +193,13 @@ void loop()
 		ReadSwitches();
 		DoSteering();
 		SendSpeedPulse();
-		DoHost();
 		ReceiveConfigData();
 	}
 	ReceiveSteerData();
 	DoPanda();
 	ReadIMU();
 	Blink();
+	DoHost();
 	wdt.feed();
 }
 
@@ -223,6 +225,9 @@ void Blink()
 
 		Serial.print(", Heading: ");
 		Serial.print(IMU_Heading / 10.0);
+
+		//Serial.print(", Temp: ");
+		//Serial.print(tempmonGetTemp());
 
 		Serial.println("");
 
