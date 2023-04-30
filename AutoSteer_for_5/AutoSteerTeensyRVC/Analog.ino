@@ -7,7 +7,7 @@ uint32_t Analogtime;
 void ReadAnalog()
 {
 	// use ADS1115 through Teensy
-	if (ADSfound && (millis() - Analogtime > 2) && MDL.AnalogMethod == 0)
+	if (ADSfound && (millis() - Analogtime > 2))
 	{
 		Analogtime = millis();
 		// based on https://github.com/RalphBacon/ADS1115-ADC/blob/master/ADS1115_ADC_16_bit_SingleEnded.ino

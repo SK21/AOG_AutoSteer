@@ -73,9 +73,9 @@ void ReceiveConfigData()
             //3     Maximum speed
             //4     Speed pulse cal X 10 Lo
             //5     Speed pulse cal X 10 Hi
-            //6     Analog method 0 ADS1115 (Teensy), 1 pins (Teensy)
-            //7     RelayControl 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays
-            //8     Module ID
+            //6     -
+            //7     -
+            //8     -
             //9     Commands
             //          - swap pitch for roll
             //          - invert roll
@@ -96,7 +96,6 @@ void ReceiveConfigData()
                     MDL.MinSpeed = DataUSB[2];
                     MDL.MaxSpeed = DataUSB[3];
                     MDL.PulseCal = DataUSB[4] | DataUSB[5] << 8;
-                    MDL.AnalogMethod = DataUSB[6];
 
                     uint8_t Commands = DataUSB[9];
                     if (bitRead(Commands, 4)) MDL.SwapRollPitch = 1; else MDL.SwapRollPitch = 0;
@@ -143,7 +142,7 @@ void ReceiveConfigData()
                     MDL.Dir1 = DataUSB[2];
                     MDL.PWM1 = DataUSB[3];
                     MDL.SteerSw = DataUSB[4];
-                    MDL.SteerSw_Relay = DataUSB[6];
+                    MDL.SteeringRelay = DataUSB[6];
                     MDL.WorkSw = DataUSB[7];
                     MDL.CurrentSensor = DataUSB[8];
                     MDL.PressureSensor = DataUSB[9];

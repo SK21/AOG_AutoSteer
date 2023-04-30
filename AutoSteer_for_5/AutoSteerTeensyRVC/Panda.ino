@@ -45,7 +45,7 @@ void DoPanda()
             SerialReceiver->write(NtripBuffer, packetSize);
         }
 
-        if (isGGA_Updated && imuDelayTimer > 40)
+        if (isGGA_Updated && imuDelayTimer > 40 && IMUstarted)
         {
             imuHandler();
             isGGA_Updated = false;
@@ -71,8 +71,6 @@ void imuHandler()
 
     Ptemp = (int16_t)IMU_YawRate;
     itoa(Ptemp, imuYawRate, 10);
-
-    isGGA_Updated = false;
 }
 
 void ReadIMU()

@@ -2,7 +2,7 @@
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
-#define InoID 3004	// if not in eeprom, overwrite
+#define InoID 3004	// if not in eeprom, overwrite. Use to reset eeprom.
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -28,12 +28,11 @@ struct ModuleConfig
 	uint8_t MinSpeed = 1;
 	uint8_t MaxSpeed = 15;
 	uint16_t PulseCal = 255;		// Hz/KMH X 10
-	uint8_t	AnalogMethod = 2;		// 0 use ADS1115 for WAS(AIN0), AIN1, current(AIN2), 1 use Teensy analog pin for WAS, 2 use ADS1115 from Wemos D1 Mini
 	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
 	uint8_t InvertRoll = 0;
 	uint8_t Dir1 = 26;
 	uint8_t PWM1 = 25;
-	uint8_t SteerSw_Relay = 36;		// pin for steering disconnect relay
+	uint8_t SteeringRelay = 36;		// pin for steering disconnect relay
 	uint8_t SteerSw = 39;
 	uint8_t WorkSw = 27;
 	uint8_t CurrentSensor = 10;
@@ -44,6 +43,7 @@ struct ModuleConfig
 	uint8_t IP1 = 168;
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
+	uint8_t PowerRelay = 0;			// pin for 12V out relay
 };
 
 ModuleConfig MDL;
@@ -95,11 +95,6 @@ EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
 uint16_t ListeningPort = 8888;
 uint16_t DestinationPort = 9999;	// port that AGIO listens on
 IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
-
-// Ethernet switchbox
-EthernetUDP UDPswitches;
-uint16_t ListeningPortSwitches = 28888;
-uint16_t DestinationPortSwitches = 29999;
 
 EthernetUDP UDPntrip;	// from AGIO to receiver
 char NtripBuffer[512];	// buffer for ntrip data

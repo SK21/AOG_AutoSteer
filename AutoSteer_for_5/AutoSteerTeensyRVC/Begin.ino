@@ -114,10 +114,14 @@ void DoSetup()
 	pinMode(MDL.Encoder, INPUT_PULLUP);
 	pinMode(MDL.WorkSw, INPUT_PULLUP);
 	pinMode(MDL.SteerSw, INPUT_PULLUP);
-	pinMode(MDL.SteerSw_Relay, OUTPUT);
+	pinMode(MDL.SteeringRelay, OUTPUT);
 	pinMode(MDL.Dir1, OUTPUT);
 	pinMode(MDL.PWM1, OUTPUT);
 	pinMode(MDL.SpeedPulse, OUTPUT);
+	pinMode(MDL.PowerRelay, OUTPUT);
+
+	noTone(MDL.SpeedPulse);
+	SteerSwitch = HIGH;
 
 	Wire.begin();			// I2C on pins SCL 19, SDA 18
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
@@ -141,7 +145,6 @@ void DoSetup()
 	{
 		Serial.println("ADS1115 connected.");
 		Serial.println("");
-		MDL.AnalogMethod = 0;
 	}
 	else
 	{
@@ -176,10 +179,6 @@ void DoSetup()
 
 	UDPsteering.begin(ListeningPort);
 	UDPntrip.begin(MDL.NtripPort);
-	UDPswitches.begin(ListeningPortSwitches);
-
-	noTone(MDL.SpeedPulse);
-	SteerSwitch = HIGH;
 
 	// IMU
 	SerialIMU->begin(IMUBaud);
@@ -189,7 +188,16 @@ void DoSetup()
 	SerialIMU->addMemoryForWrite(IMUBufferOut, 512);
 
 	Serial.println("Starting  BNO RVC  ...");
-	IMUstarted = rvc.begin(SerialIMU);
+	rvc.begin(SerialIMU);
+	ErrorCount = 0;
+	while (!IMUstarted)
+	{
+		IMUstarted = rvc.read(&heading);
+		Serial.print(".");
+		delay(500);
+		if (ErrorCount++ > 10) break;
+	}
+	Serial.println("");
 	if (IMUstarted)
 	{
 		Serial.println("BNO RVC IMU started.");

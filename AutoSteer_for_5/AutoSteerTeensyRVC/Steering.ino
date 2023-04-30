@@ -26,8 +26,10 @@ void DoSteering()
 
 		pwmDrive = 0;
 
-		// release steer relay
-		digitalWrite(MDL.SteerSw_Relay, LOW);
+		// release relays
+		digitalWrite(MDL.SteeringRelay, LOW);
+		digitalWrite(MDL.PowerRelay, LOW);
+
 	}
 	else
 	{
@@ -65,8 +67,9 @@ void DoSteering()
 			pwmDrive += 128;          // add Center Pos.
 		}
 
-		// engage steer relay
-		digitalWrite(MDL.SteerSw_Relay, HIGH);
+		// engage relays
+		digitalWrite(MDL.SteeringRelay, HIGH);
+		digitalWrite(MDL.PowerRelay, HIGH);
 	}
 
 	// pwm value out to motor
