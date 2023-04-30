@@ -23,7 +23,9 @@
     <ClCompile Include="Steering.ino" />
     <ClCompile Include="StrSwitches.ino" />
     <ClCompile Include="USBcomm.ino" />
-    <ClCompile Include="USBhost.ino" />
+    <ClCompile Include="zNMEAParser.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h">

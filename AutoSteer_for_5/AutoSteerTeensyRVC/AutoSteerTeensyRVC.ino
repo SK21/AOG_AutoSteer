@@ -1,8 +1,8 @@
-#define InoDescription "AutoSteerTeensyRVC   25-Apr-2023"
+#define InoDescription "AutoSteerTeensyRVC   30-Apr-2023"
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
-#define InoID 2504	// if not in eeprom, overwrite
+#define InoID 3004	// if not in eeprom, overwrite
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -10,32 +10,13 @@
 #include <NativeEthernetUdp.h>
 #include <Watchdog_t4.h>	// https://github.com/tonton81/WDT_T4
 #include "zNMEAParser.h"	
-#include "USBHost_t36.h"
 #include "Adafruit_BNO08x_RVC.h"
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
-
 #define MaxReadBuffer 100	// bytes
-#define MaxHostBuffer 50
 #define LOW_HIGH_DEGREES 5.0	//How many degrees before decreasing Max PWM
 #define ADS1115_Address 0x48
-#define USBBAUD 38400
-#define CNT_DEVICES (sizeof(drivers)/sizeof(drivers[0]))
-
-// usb host
-uint32_t baud = USBBAUD;
-uint32_t format = USBHOST_SERIAL_8N1;
-USBHost myusb;
-USBHub hub1(myusb);
-USBHub hub2(myusb);
-USBHIDParser hid1(myusb);
-USBHIDParser hid2(myusb);
-USBHIDParser hid3(myusb);
-USBSerial userial(myusb);  // works only for those Serial devices who transfer <=64 bytes (like T3.x, FTDI...)
-USBDriver* drivers[] = { &hub1, &hub2, &hid1, &hid2, &hid3, &userial };
-const char* driver_names[CNT_DEVICES] = { "Hub1", "Hub2",  "HID1", "HID2", "HID3", "USERIAL1" };
-bool driver_active[CNT_DEVICES] = { false, false, false, false };
 
 struct ModuleConfig	
 {
@@ -50,7 +31,6 @@ struct ModuleConfig
 	uint8_t	AnalogMethod = 2;		// 0 use ADS1115 for WAS(AIN0), AIN1, current(AIN2), 1 use Teensy analog pin for WAS, 2 use ADS1115 from Wemos D1 Mini
 	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
 	uint8_t InvertRoll = 0;
-	uint8_t	GGAlast = 1;
 	uint8_t Dir1 = 26;
 	uint8_t PWM1 = 25;
 	uint8_t SteerSw_Relay = 36;		// pin for steering disconnect relay
@@ -178,6 +158,8 @@ HardwareSerial* SerialIMU;
 HardwareSerial* SerialReceiver;
 
 extern float tempmonGetTemp(void);
+elapsedMillis imuDelayTimer;
+bool isGGA_Updated = false;
 
 void setup()
 {
@@ -195,11 +177,10 @@ void loop()
 		SendSpeedPulse();
 		ReceiveConfigData();
 	}
+	ReadIMU();
 	ReceiveSteerData();
 	DoPanda();
-	ReadIMU();
 	Blink();
-	DoHost();
 	wdt.feed();
 }
 

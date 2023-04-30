@@ -181,9 +181,6 @@ void DoSetup()
 	noTone(MDL.SpeedPulse);
 	SteerSwitch = HIGH;
 
-	// usb host
-	myusb.begin();
-
 	// IMU
 	SerialIMU->begin(IMUBaud);
 	static char IMUBufferIn[512];

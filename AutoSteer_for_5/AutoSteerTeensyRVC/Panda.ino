@@ -44,7 +44,35 @@ void DoPanda()
             UDPntrip.read(NtripBuffer, packetSize);
             SerialReceiver->write(NtripBuffer, packetSize);
         }
+
+        if (isGGA_Updated && imuDelayTimer > 40)
+        {
+            imuHandler();
+            isGGA_Updated = false;
+        }
     }
+    else
+    {
+        // no receiver, just get imu data
+        imuHandler();
+    }
+}
+
+void imuHandler()
+{
+    Ptemp = (int16_t)IMU_Heading;
+    itoa(Ptemp, imuHeading, 10);
+
+    Ptemp = (int16_t)IMU_Roll;
+    itoa(Ptemp, imuRoll, 10);
+
+    Ptemp = (int16_t)IMU_Pitch;
+    itoa(Ptemp, imuPitch, 10);
+
+    Ptemp = (int16_t)IMU_YawRate;
+    itoa(Ptemp, imuYawRate, 10);
+
+    isGGA_Updated = false;
 }
 
 void ReadIMU()
@@ -77,21 +105,6 @@ void ReadIMU()
     }
 }
 
-void imuHandler()
-{
-    Ptemp = (int16_t)IMU_Heading;
-    itoa(Ptemp, imuHeading, 10);
-
-    Ptemp = (int16_t)IMU_Roll;
-    itoa(Ptemp, imuRoll, 10);
-
-    Ptemp = (int16_t)IMU_Pitch;
-    itoa(Ptemp, imuPitch, 10);
-
-    Ptemp = (int16_t)IMU_YawRate;
-    itoa(Ptemp, imuYawRate, 10);
-}
-
 // if odd characters showed up.
 void errorHandler()
 {
@@ -105,7 +118,6 @@ void VTG_Handler()
 
     //vtg Speed knots
     if (parser.getArg(4, speedKnots));
-    if (!MDL.GGAlast) BuildPanda();
 }
 
 void GGA_Handler() //Rec'd GGA
@@ -136,12 +148,17 @@ void GGA_Handler() //Rec'd GGA
     //time of last DGPS update
     if (parser.getArg(12, ageDGPS));
 
-    if (MDL.GGAlast) BuildPanda();
+    //we have new GGA sentence
+    isGGA_Updated = true;
+
+    //reset imu timer
+    imuDelayTimer = 0;
+
+    BuildPanda();
 }
 
 void BuildPanda()
 {
-    // build Panda
     strcpy(nme, "");
 
     strcat(nme, "$PANDA,");
@@ -182,9 +199,9 @@ void BuildPanda()
     if (atof(speedKnots) > 0.2) strcat(nme, speedKnots);
     strcat(nme, ",");
 
-    imuHandler();
-
     //12
+    Ptemp = (int16_t)IMU_Heading;
+    itoa(Ptemp, imuHeading, 10);
     strcat(nme, imuHeading);
     strcat(nme, ",");
 
