@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.33530.505
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoSteerTeensyRVC", "AutoSteerTeensyRVC.vcxproj", "{F053E278-256F-443D-8C66-FFEF9E503205}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Scanner", "..\..\..\..\..\..\Arduino\My Examples\Scanner\Scanner.vcxproj", "{639453EE-5BE2-4AF9-B80E-089C2B34A581}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -25,6 +27,18 @@ Global
 		{F053E278-256F-443D-8C66-FFEF9E503205}.Release|ARM64.ActiveCfg = Release|ARM64
 		{F053E278-256F-443D-8C66-FFEF9E503205}.Release|ARM64.Build.0 = Release|ARM64
 		{F053E278-256F-443D-8C66-FFEF9E503205}.Release|ARM64.Deploy.0 = Release|ARM64
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Debug|ARM.ActiveCfg = Debug|ARM
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Debug|ARM.Build.0 = Debug|ARM
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Debug|ARM.Deploy.0 = Debug|ARM
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Debug|ARM64.Build.0 = Debug|ARM64
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Release|ARM.ActiveCfg = Release|ARM
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Release|ARM.Build.0 = Release|ARM
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Release|ARM.Deploy.0 = Release|ARM
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Release|ARM64.ActiveCfg = Release|ARM64
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Release|ARM64.Build.0 = Release|ARM64
+		{639453EE-5BE2-4AF9-B80E-089C2B34A581}.Release|ARM64.Deploy.0 = Release|ARM64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

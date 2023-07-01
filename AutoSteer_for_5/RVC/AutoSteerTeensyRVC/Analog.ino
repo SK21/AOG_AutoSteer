@@ -79,3 +79,9 @@ void ReadAnalog()
 		Wire.endTransmission();
 	}
 }
+
+//	AS15 config
+//	AIN0	WAS 5V
+//	AIN1	Analog 12V
+//	AIN2	Analog 4-20
+//	AIN3	Current

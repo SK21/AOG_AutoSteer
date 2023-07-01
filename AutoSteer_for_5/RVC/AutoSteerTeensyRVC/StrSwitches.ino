@@ -94,7 +94,7 @@ void ReadSwitches()
 	// current sensor
 	if (steerConfig.CurrentSensor)
 	{
-		float SensorSample = (((abs(6700.0 - (float)AINs.AIN2)) / 6700.0) * 255.0) * 4.0;
+		float SensorSample = (((abs(6700.0 - (float)AINs.AIN3)) / 6700.0) * 255.0) * 4.0;
 		SensorReading = SensorReading * 0.7 + SensorSample * 0.3;
 		if (SensorReading >= steerConfig.PulseCountMax)
 		{

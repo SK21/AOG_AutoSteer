@@ -38,6 +38,9 @@ void DoSetup()
 	}
 
 	Serial.println("");
+	Serial.print("Module Version: ");
+	Serial.println(InoID);
+	Serial.println("");
 
 	// receive data from gps receiver
 	switch (MDL.ReceiverSerialPort)
@@ -211,4 +214,58 @@ void DoSetup()
 	Serial.println("Finished setup.");
 	Serial.println("");
 }
+
+//	AS14 config
+//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
+//	uint8_t ReceiverSerialPort = 4;	// GPS receiver
+//	uint8_t	IMUSerialPort = 7;		// IMU
+//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
+//	uint16_t ZeroOffset = 6500;
+//	uint8_t MinSpeed = 1;
+//	uint8_t MaxSpeed = 15;
+//	uint16_t PulseCal = 255;		// Hz/KMH X 10
+//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
+//	uint8_t InvertRoll = 0;
+//	uint8_t Dir1 = 26;
+//	uint8_t PWM1 = 25;
+//	uint8_t SteeringRelay = 36;		// pin for steering disconnect relay
+//	uint8_t SteerSw = 39;
+//	uint8_t WorkSw = 27;
+//	uint8_t CurrentSensor = 10;
+//	uint8_t PressureSensor = 26;
+//	uint8_t Encoder = 38;
+//	uint8_t SpeedPulse = 37;
+//	uint8_t IP0 = 192;
+//	uint8_t IP1 = 168;
+//	uint8_t IP2 = 1;
+//	uint8_t IP3 = 126;
+//	uint8_t PowerRelay = 0;			// pin for 12V out relay
+
+
+//	AS15 config
+//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
+//	uint8_t ReceiverSerialPort = 3;	// gps receiver
+//	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
+//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
+//	uint16_t ZeroOffset = 6500;
+//	uint8_t MinSpeed = 1;
+//	uint8_t MaxSpeed = 15;
+//	uint16_t PulseCal = 255;		// Hz/KMH X 10
+//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
+//	uint8_t InvertRoll = 0;
+//	uint8_t Dir1 = 23;
+//	uint8_t PWM1 = 22;
+//	uint8_t SteeringRelay = 6;		// pin for steering disconnect relay
+//	uint8_t SteerSw = 25;
+//	uint8_t WorkSw = 26;
+//	uint8_t CurrentSensor = 10;		// Ads1115
+//	uint8_t PressureSensor = 26;	// Ads1115
+//	uint8_t Encoder = 38;			// none
+//	uint8_t SpeedPulse = 27;
+//	uint8_t IP0 = 192;
+//	uint8_t IP1 = 168;
+//	uint8_t IP2 = 1;
+//	uint8_t IP3 = 126;
+//	uint8_t PowerRelay = 0;			// pin for 12V out relay
+
 
