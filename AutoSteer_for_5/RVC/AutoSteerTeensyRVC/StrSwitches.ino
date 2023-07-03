@@ -37,7 +37,6 @@ void ReadSwitches()
 		// pin is pulled high and goes low when button is pushed
 
 		SWreading = digitalRead(MDL.SteerSw);
-
 		if (SWreading == LOW && SWprevious == HIGH && millis() - SWtime > SWdebounce)
 		{
 			if (SteerSwitch == HIGH)
@@ -109,7 +108,6 @@ void ReadSwitches()
 	if (steerConfig.PressureSensor)
 	{
 		float SensorSample = (float)AINs.AIN1;
-		SensorSample *= 0.25;
 		SensorReading = SensorReading * 0.6 + SensorSample * 0.4;
 		if (SensorReading >= steerConfig.PulseCountMax)
 		{

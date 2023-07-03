@@ -18,12 +18,11 @@ void ReadAnalog()
 		Wire.endTransmission();
 		Wire.requestFrom(ADS1115_Address, 2);
 		Aread = (Wire.read() << 8 | Wire.read());
-		Aread = Aread >> 1;
 
 		switch (CurrentPin)
 		{
 		case 0:
-			AINs.AIN0 = Aread;
+			AINs.AIN0 = Aread >> 1;	// WAS
 			break;
 		case 1:
 			AINs.AIN1 = Aread;

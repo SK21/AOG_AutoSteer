@@ -244,7 +244,7 @@ void DoSetup()
 
 //	AS15 config
 //	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-//	uint8_t ReceiverSerialPort = 3;	// gps receiver
+//	uint8_t ReceiverSerialPort = 8;	// gps receiver
 //	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
 //	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
 //	uint16_t ZeroOffset = 6500;
@@ -255,13 +255,13 @@ void DoSetup()
 //	uint8_t InvertRoll = 0;
 //	uint8_t Dir1 = 23;
 //	uint8_t PWM1 = 22;
-//	uint8_t SteeringRelay = 6;		// pin for steering disconnect relay
-//	uint8_t SteerSw = 25;
-//	uint8_t WorkSw = 26;
-//	uint8_t CurrentSensor = 10;		// Ads1115
-//	uint8_t PressureSensor = 26;	// Ads1115
-//	uint8_t Encoder = 38;			// none
-//	uint8_t SpeedPulse = 27;
+//	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
+//	uint8_t SteerSw = 26;
+//	uint8_t WorkSw = 27;
+//	uint8_t CurrentSensor = 0;		// Ads1115
+//	uint8_t PressureSensor = 0;	// Ads1115
+//	uint8_t Encoder = 0;			// none
+//	uint8_t SpeedPulse = 28;
 //	uint8_t IP0 = 192;
 //	uint8_t IP1 = 168;
 //	uint8_t IP2 = 1;
