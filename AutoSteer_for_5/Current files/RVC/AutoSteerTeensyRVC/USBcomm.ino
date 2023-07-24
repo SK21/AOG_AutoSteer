@@ -148,6 +148,7 @@ void ReceiveConfigData()
                     MDL.PressureSensor = DataUSB[9];
                     MDL.Encoder = DataUSB[10];
                     MDL.SpeedPulse = DataUSB[13];
+                    MDL.Use4_20 = DataUSB[14];
 
                     EEPROM.put(110, MDL);
 

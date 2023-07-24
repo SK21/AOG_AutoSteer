@@ -2,14 +2,12 @@
 uint8_t CurrentPin = 0;
 uint16_t Aread;
 elapsedMicros ReadTime;
-uint32_t Analogtime;
 
 void ReadAnalog()
 {
 	// use ADS1115 through Teensy
-	if (ADSfound && (millis() - Analogtime > 2))
+	if (ADSfound)
 	{
-		Analogtime = millis();
 		// based on https://github.com/RalphBacon/ADS1115-ADC/blob/master/ADS1115_ADC_16_bit_SingleEnded.ino
 
 		// read current value

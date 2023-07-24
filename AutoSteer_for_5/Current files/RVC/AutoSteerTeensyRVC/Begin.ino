@@ -1,6 +1,7 @@
 int16_t StoredID = 0;
 uint8_t ErrorCount;
 bool IMUstarted = false;
+int ADS[] = { 0x48,0x49,0x4A,0x4B };	// ADS1115 addresses
 
 void DoSetup()
 {
@@ -130,31 +131,40 @@ void DoSetup()
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
 
 	// ADS1115
-	Serial.println("Starting ADS1115 ...");
-	ErrorCount = 0;
-	while (!ADSfound)
+	for (int i = 0; i < 4; i++)
 	{
-		Wire.beginTransmission(ADS1115_Address);
-		Wire.write(0b00000000);	//Point to Conversion register
-		Wire.endTransmission();
-		Wire.requestFrom(ADS1115_Address, 2);
-		ADSfound = Wire.available();
-		Serial.print(".");
-		delay(500);
-		if (ErrorCount++ > 10) break;
-	}
-	Serial.println("");
-	if (ADSfound)
-	{
-		Serial.println("ADS1115 connected.");
+		ADS1115_Address = ADS[i];
+		Serial.print("Starting ADS1115 at address ");
+		Serial.print(ADS1115_Address);
+		ErrorCount = 0;
+		while (!ADSfound)
+		{
+			Wire.beginTransmission(ADS1115_Address);
+			Wire.write(0b00000000);	//Point to Conversion register
+			Wire.endTransmission();
+			Wire.requestFrom(ADS1115_Address, 2);
+			ADSfound = Wire.available();
+			Serial.print(".");
+			delay(500);
+			if (ErrorCount++ > 10) break;
+		}
 		Serial.println("");
+		if (ADSfound)
+		{
+			Serial.print("ADS1115 connected at address ");
+			Serial.println(ADS1115_Address);
+			Serial.println("");
+			break;
+		}
+		else
+		{
+			Serial.print("ADS1115 not found.");
+			Serial.println("");
+		}
 	}
-	else
+	if (!ADSfound)
 	{
-		Serial.println("ADS1115 not found.");
-		Serial.println("");
-
-		Serial.println("Using Teensy pins for analog data.");
+		Serial.println("ADS1115 disabled.");
 		Serial.println("");
 	}
 
@@ -208,6 +218,86 @@ void DoSetup()
 	else
 	{
 		Serial.println("BNO RVC IMU failed to start.");
+	}
+
+	// Relays
+	switch (MDL.RelayControl)
+	{
+	case 2:
+	case 3:
+		// PCA9555 I/O expander on default address 0x20
+		Serial.println("");
+		Serial.println("Starting PCA9555 I/O Expander ...");
+		ErrorCount = 0;
+		while (!PCA9555PW_found)
+		{
+			Serial.print(".");
+			Wire.beginTransmission(0x20);
+			PCA9555PW_found = (Wire.endTransmission() == 0);
+			ErrorCount++;
+			delay(500);
+			if (ErrorCount > 5) break;
+		}
+
+		Serial.println("");
+		if (PCA9555PW_found)
+		{
+			Serial.println("PCA9555 expander found.");
+
+			PCA.attach(Wire);
+			PCA.polarity(PCA95x5::Polarity::ORIGINAL_ALL);
+			PCA.direction(PCA95x5::Direction::OUT_ALL);
+			PCA.write(PCA95x5::Level::H_ALL);
+		}
+		else
+		{
+			Serial.println("PCA9555 expander not found.");
+		}
+		Serial.println("");
+		break;
+
+	case 4:
+		// MCP23017 I/O expander on default address 0x20
+		Serial.println("");
+		Serial.println("Starting MCP23017 ...");
+		ErrorCount = 0;
+		while (!MCP23017_found)
+		{
+			Serial.print(".");
+			Wire.beginTransmission(0x20);
+			MCP23017_found = (Wire.endTransmission() == 0);
+			ErrorCount++;
+			delay(500);
+			if (ErrorCount > 5) break;
+		}
+
+		Serial.println("");
+		if (MCP23017_found)
+		{
+			Serial.println("MCP23017 found.");
+			MCP.begin_I2C();
+
+			for (int i = 0; i < 16; i++)
+			{
+				MCP.pinMode(MDL.MCP20317Pins[i], OUTPUT);
+			}
+		}
+		else
+		{
+			Serial.println("MCP23017 not found.");
+		}
+		break;
+
+	case 5:
+		// Relay GPIO Pins
+		for (int i = 0; i < 16; i++)
+		{
+			if (MDL.RelayPins[i] > 0)
+			{
+				pinMode(MDL.RelayPins[i], OUTPUT);
+			}
+		}
+		break;
 	}
 
 	Serial.println("");

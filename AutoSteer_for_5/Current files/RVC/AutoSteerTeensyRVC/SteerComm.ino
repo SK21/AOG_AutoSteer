@@ -93,6 +93,9 @@ void ReceiveSteerData()
                     Speed_KMH = (DataEthernet[6] << 8 | DataEthernet[5]) * 0.1;
                     guidanceStatus = DataEthernet[7];
                     steerAngleSetPoint = (float)((int16_t)(DataEthernet[9] << 8 | DataEthernet[8])) * 0.01;
+                    RelayLo = DataEthernet[11];
+                    RelayHi = DataEthernet[12];
+
                     SendSteerData();
                     CommTime = millis();
                     break;

@@ -1,8 +1,8 @@
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
-#define InoDescription "AutoSteerTeensyRVC   02-Jul-2023"
-const uint16_t InoID = 2073;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   23-Jul-2023"
+const uint16_t InoID = 23073;	// change to send defaults to eeprom, ddmmy, no leading 0
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -12,12 +12,22 @@ const uint16_t InoID = 2073;	// change to send defaults to eeprom, ddmmy, no lea
 #include "zNMEAParser.h"	
 #include "Adafruit_BNO08x_RVC.h"
 
+#include "PCA95x5_RC.h"		// modified from https://github.com/hideakitai/PCA95x5
+
+#include <Adafruit_MCP23008.h>
+#include <Adafruit_MCP23X08.h>
+#include <Adafruit_MCP23X17.h>
+#include <Adafruit_MCP23XXX.h>
+
+#include <Adafruit_BusIO_Register.h>
+#include <Adafruit_I2CDevice.h>
+#include <Adafruit_I2CRegister.h>
+#include <Adafruit_SPIDevice.h>
+
 #define ReceiverBaud 460800
 #define IMUBaud 115200
 #define MaxReadBuffer 100	// bytes
 #define LOW_HIGH_DEGREES 5.0	//How many degrees before decreasing Max PWM
-//#define ADS1115_Address 0x48
-#define ADS1115_Address 0x49
 
 struct ModuleConfig
 {
@@ -38,7 +48,7 @@ struct ModuleConfig
 	uint8_t SteerSw = 26;
 	uint8_t WorkSw = 27;
 	uint8_t CurrentSensor = 0;		// Ads1115
-	uint8_t PressureSensor = 0;	// Ads1115
+	uint8_t PressureSensor = 0;		// Ads1115
 	uint8_t Encoder = 0;			// none
 	uint8_t SpeedPulse = 28;
 	uint8_t IP0 = 192;
@@ -46,6 +56,10 @@ struct ModuleConfig
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
 	uint8_t PowerRelay = 0;			// pin for 12V out relay
+	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
+	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
+	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
 };
 
 ModuleConfig MDL;
@@ -53,9 +67,9 @@ ModuleConfig MDL;
 struct PCBanalog
 {
 	int16_t AIN0;	// WAS
-	int16_t AIN1;	// linear actuator position or pressure sensor
+	int16_t AIN1;	// 0-5V pressure sensor
 	int16_t AIN2;	// current sensor
-	int16_t AIN3;
+	int16_t AIN3;	// 4-20 pressure sensor
 };
 
 PCBanalog AINs;
@@ -91,6 +105,8 @@ struct Setup
 };
 
 Setup steerConfig;          //9 bytes
+
+extern float tempmonGetTemp(void);
 
 // Ethernet steering
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
@@ -154,9 +170,17 @@ byte PGNlength;
 HardwareSerial* SerialIMU;
 HardwareSerial* SerialReceiver;
 
-extern float tempmonGetTemp(void);
 elapsedMillis imuDelayTimer;
 bool isGGA_Updated = false;
+int ADS1115_Address;
+
+byte RelayLo = 0;	// sections 0-7
+byte RelayHi = 0;	// sections 8-15
+
+PCA9555 PCA;
+bool PCA9555PW_found = false;
+Adafruit_MCP23X17 MCP;
+bool MCP23017_found = false;
 
 void setup()
 {
@@ -173,10 +197,11 @@ void loop()
 		DoSteering();
 		SendSpeedPulse();
 		ReceiveConfigData();
+		CheckRelays();
 	}
 	ReadIMU();
-	ReceiveSteerData();
 	DoPanda();
+	ReceiveSteerData();
 	Blink();
 	wdt.feed();
 }
