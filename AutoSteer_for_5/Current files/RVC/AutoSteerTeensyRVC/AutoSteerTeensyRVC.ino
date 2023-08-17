@@ -1,8 +1,8 @@
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
-#define InoDescription "AutoSteerTeensyRVC   23-Jul-2023"
-const uint16_t InoID = 23073;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   17-Aug-2023"
+const uint16_t InoID = 17083;	// change to send defaults to eeprom, ddmmy, no leading 0
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -47,8 +47,6 @@ struct ModuleConfig
 	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
 	uint8_t SteerSw = 26;
 	uint8_t WorkSw = 27;
-	uint8_t CurrentSensor = 0;		// Ads1115
-	uint8_t PressureSensor = 0;		// Ads1115
 	uint8_t Encoder = 0;			// none
 	uint8_t SpeedPulse = 28;
 	uint8_t IP0 = 192;
@@ -60,6 +58,7 @@ struct ModuleConfig
 	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
 	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
 	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
+	uint8_t RelayOnSignal = 1;		// 0 or 1
 };
 
 ModuleConfig MDL;
@@ -116,6 +115,11 @@ IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
 
 EthernetUDP UDPntrip;	// from AGIO to receiver
 char NtripBuffer[512];	// buffer for ntrip data
+
+// Ethernet config
+EthernetUDP UDPconfig;
+uint16_t ConfigListeningPort = 28800;
+uint16_t ConfigDestinationPort = 29900;
 
 //steering variables
 float steerAngleActual = 0;
@@ -196,7 +200,7 @@ void loop()
 		ReadSwitches();
 		DoSteering();
 		SendSpeedPulse();
-		ReceiveConfigData();
+		ReceiveUDPconfig();
 		CheckRelays();
 	}
 	ReadIMU();

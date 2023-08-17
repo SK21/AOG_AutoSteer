@@ -192,6 +192,7 @@ void DoSetup()
 
 	UDPsteering.begin(ListeningPort);
 	UDPntrip.begin(MDL.NtripPort);
+	UDPconfig.begin(ConfigListeningPort);
 
 	// IMU
 	SerialIMU->begin(IMUBaud);
