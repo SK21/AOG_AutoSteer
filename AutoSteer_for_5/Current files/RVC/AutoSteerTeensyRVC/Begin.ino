@@ -1,6 +1,7 @@
 int16_t StoredID = 0;
 uint8_t ErrorCount;
 bool IMUstarted = false;
+int ADS[] = { 0x48,0x49,0x4A,0x4B };	// ADS1115 addresses
 
 void DoSetup()
 {
@@ -130,31 +131,40 @@ void DoSetup()
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
 
 	// ADS1115
-	Serial.println("Starting ADS1115 ...");
-	ErrorCount = 0;
-	while (!ADSfound)
+	for (int i = 0; i < 4; i++)
 	{
-		Wire.beginTransmission(ADS1115_Address);
-		Wire.write(0b00000000);	//Point to Conversion register
-		Wire.endTransmission();
-		Wire.requestFrom(ADS1115_Address, 2);
-		ADSfound = Wire.available();
-		Serial.print(".");
-		delay(500);
-		if (ErrorCount++ > 10) break;
-	}
-	Serial.println("");
-	if (ADSfound)
-	{
-		Serial.println("ADS1115 connected.");
+		ADS1115_Address = ADS[i];
+		Serial.print("Starting ADS1115 at address ");
+		Serial.print(ADS1115_Address);
+		ErrorCount = 0;
+		while (!ADSfound)
+		{
+			Wire.beginTransmission(ADS1115_Address);
+			Wire.write(0b00000000);	//Point to Conversion register
+			Wire.endTransmission();
+			Wire.requestFrom(ADS1115_Address, 2);
+			ADSfound = Wire.available();
+			Serial.print(".");
+			delay(500);
+			if (ErrorCount++ > 10) break;
+		}
 		Serial.println("");
+		if (ADSfound)
+		{
+			Serial.print("ADS1115 connected at address ");
+			Serial.println(ADS1115_Address);
+			Serial.println("");
+			break;
+		}
+		else
+		{
+			Serial.print("ADS1115 not found.");
+			Serial.println("");
+		}
 	}
-	else
+	if (!ADSfound)
 	{
-		Serial.println("ADS1115 not found.");
-		Serial.println("");
-
-		Serial.println("Using Teensy pins for analog data.");
+		Serial.println("ADS1115 disabled.");
 		Serial.println("");
 	}
 
@@ -182,6 +192,7 @@ void DoSetup()
 
 	UDPsteering.begin(ListeningPort);
 	UDPntrip.begin(MDL.NtripPort);
+	UDPconfig.begin(ConfigListeningPort);
 
 	// IMU
 	SerialIMU->begin(IMUBaud);
@@ -210,62 +221,88 @@ void DoSetup()
 		Serial.println("BNO RVC IMU failed to start.");
 	}
 
+	// Relays
+	switch (MDL.RelayControl)
+	{
+	case 2:
+	case 3:
+		// PCA9555 I/O expander on default address 0x20
+		Serial.println("");
+		Serial.println("Starting PCA9555 I/O Expander ...");
+		ErrorCount = 0;
+		while (!PCA9555PW_found)
+		{
+			Serial.print(".");
+			Wire.beginTransmission(0x20);
+			PCA9555PW_found = (Wire.endTransmission() == 0);
+			ErrorCount++;
+			delay(500);
+			if (ErrorCount > 5) break;
+		}
+
+		Serial.println("");
+		if (PCA9555PW_found)
+		{
+			Serial.println("PCA9555 expander found.");
+
+			PCA.attach(Wire);
+			PCA.polarity(PCA95x5::Polarity::ORIGINAL_ALL);
+			PCA.direction(PCA95x5::Direction::OUT_ALL);
+			PCA.write(PCA95x5::Level::H_ALL);
+		}
+		else
+		{
+			Serial.println("PCA9555 expander not found.");
+		}
+		Serial.println("");
+		break;
+
+	case 4:
+		// MCP23017 I/O expander on default address 0x20
+		Serial.println("");
+		Serial.println("Starting MCP23017 ...");
+		ErrorCount = 0;
+		while (!MCP23017_found)
+		{
+			Serial.print(".");
+			Wire.beginTransmission(0x20);
+			MCP23017_found = (Wire.endTransmission() == 0);
+			ErrorCount++;
+			delay(500);
+			if (ErrorCount > 5) break;
+		}
+
+		Serial.println("");
+		if (MCP23017_found)
+		{
+			Serial.println("MCP23017 found.");
+			MCP.begin_I2C();
+
+			for (int i = 0; i < 16; i++)
+			{
+				MCP.pinMode(MDL.MCP20317Pins[i], OUTPUT);
+			}
+		}
+		else
+		{
+			Serial.println("MCP23017 not found.");
+		}
+		break;
+
+	case 5:
+		// Relay GPIO Pins
+		for (int i = 0; i < 16; i++)
+		{
+			if (MDL.RelayPins[i] > 0)
+			{
+				pinMode(MDL.RelayPins[i], OUTPUT);
+			}
+		}
+		break;
+	}
+
 	Serial.println("");
 	Serial.println("Finished setup.");
 	Serial.println("");
 }
-
-//	AS14 config
-//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-//	uint8_t ReceiverSerialPort = 4;	// GPS receiver
-//	uint8_t	IMUSerialPort = 7;		// IMU
-//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
-//	uint16_t ZeroOffset = 6500;
-//	uint8_t MinSpeed = 1;
-//	uint8_t MaxSpeed = 15;
-//	uint16_t PulseCal = 255;		// Hz/KMH X 10
-//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
-//	uint8_t InvertRoll = 0;
-//	uint8_t Dir1 = 26;
-//	uint8_t PWM1 = 25;
-//	uint8_t SteeringRelay = 36;		// pin for steering disconnect relay
-//	uint8_t SteerSw = 39;
-//	uint8_t WorkSw = 27;
-//	uint8_t CurrentSensor = 10;
-//	uint8_t PressureSensor = 26;
-//	uint8_t Encoder = 38;
-//	uint8_t SpeedPulse = 37;
-//	uint8_t IP0 = 192;
-//	uint8_t IP1 = 168;
-//	uint8_t IP2 = 1;
-//	uint8_t IP3 = 126;
-//	uint8_t PowerRelay = 0;			// pin for 12V out relay
-
-
-//	AS15 config
-//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-//	uint8_t ReceiverSerialPort = 8;	// gps receiver
-//	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
-//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
-//	uint16_t ZeroOffset = 6500;
-//	uint8_t MinSpeed = 1;
-//	uint8_t MaxSpeed = 15;
-//	uint16_t PulseCal = 255;		// Hz/KMH X 10
-//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
-//	uint8_t InvertRoll = 0;
-//	uint8_t Dir1 = 23;
-//	uint8_t PWM1 = 22;
-//	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
-//	uint8_t SteerSw = 26;
-//	uint8_t WorkSw = 27;
-//	uint8_t CurrentSensor = 0;		// Ads1115
-//	uint8_t PressureSensor = 0;	// Ads1115
-//	uint8_t Encoder = 0;			// none
-//	uint8_t SpeedPulse = 28;
-//	uint8_t IP0 = 192;
-//	uint8_t IP1 = 168;
-//	uint8_t IP2 = 1;
-//	uint8_t IP3 = 126;
-//	uint8_t PowerRelay = 0;			// pin for 12V out relay
-
 

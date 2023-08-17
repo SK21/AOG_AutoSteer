@@ -107,7 +107,16 @@ void ReadSwitches()
 	// pressure sensor
 	if (steerConfig.PressureSensor)
 	{
-		float SensorSample = (float)AINs.AIN1;
+		float SensorSample = 0;
+		if (MDL.Use4_20)
+		{
+			SensorSample = (float)(AINs.AIN2 >> 8);	// need to convert from 0-65535 to 0-255
+		}
+		else
+		{
+			SensorSample = (float)(AINs.AIN1 >> 8);
+		}
+
 		SensorReading = SensorReading * 0.6 + SensorSample * 0.4;
 		if (SensorReading >= steerConfig.PulseCountMax)
 		{

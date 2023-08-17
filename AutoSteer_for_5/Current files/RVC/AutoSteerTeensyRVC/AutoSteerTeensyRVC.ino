@@ -1,8 +1,8 @@
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
-#define InoDescription "AutoSteerTeensyRVC   02-Jul-2023"
-const uint16_t InoID = 2073;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   17-Aug-2023"
+const uint16_t InoID = 17083;	// change to send defaults to eeprom, ddmmy, no leading 0
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -12,12 +12,22 @@ const uint16_t InoID = 2073;	// change to send defaults to eeprom, ddmmy, no lea
 #include "zNMEAParser.h"	
 #include "Adafruit_BNO08x_RVC.h"
 
+#include "PCA95x5_RC.h"		// modified from https://github.com/hideakitai/PCA95x5
+
+#include <Adafruit_MCP23008.h>
+#include <Adafruit_MCP23X08.h>
+#include <Adafruit_MCP23X17.h>
+#include <Adafruit_MCP23XXX.h>
+
+#include <Adafruit_BusIO_Register.h>
+#include <Adafruit_I2CDevice.h>
+#include <Adafruit_I2CRegister.h>
+#include <Adafruit_SPIDevice.h>
+
 #define ReceiverBaud 460800
 #define IMUBaud 115200
 #define MaxReadBuffer 100	// bytes
 #define LOW_HIGH_DEGREES 5.0	//How many degrees before decreasing Max PWM
-//#define ADS1115_Address 0x48
-#define ADS1115_Address 0x49
 
 struct ModuleConfig
 {
@@ -37,8 +47,6 @@ struct ModuleConfig
 	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
 	uint8_t SteerSw = 26;
 	uint8_t WorkSw = 27;
-	uint8_t CurrentSensor = 0;		// Ads1115
-	uint8_t PressureSensor = 0;	// Ads1115
 	uint8_t Encoder = 0;			// none
 	uint8_t SpeedPulse = 28;
 	uint8_t IP0 = 192;
@@ -46,6 +54,11 @@ struct ModuleConfig
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
 	uint8_t PowerRelay = 0;			// pin for 12V out relay
+	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
+	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
+	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
+	uint8_t RelayOnSignal = 1;		// 0 or 1
 };
 
 ModuleConfig MDL;
@@ -53,9 +66,9 @@ ModuleConfig MDL;
 struct PCBanalog
 {
 	int16_t AIN0;	// WAS
-	int16_t AIN1;	// linear actuator position or pressure sensor
+	int16_t AIN1;	// 0-5V pressure sensor
 	int16_t AIN2;	// current sensor
-	int16_t AIN3;
+	int16_t AIN3;	// 4-20 pressure sensor
 };
 
 PCBanalog AINs;
@@ -92,6 +105,8 @@ struct Setup
 
 Setup steerConfig;          //9 bytes
 
+extern float tempmonGetTemp(void);
+
 // Ethernet steering
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
 uint16_t ListeningPort = 8888;
@@ -100,6 +115,11 @@ IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
 
 EthernetUDP UDPntrip;	// from AGIO to receiver
 char NtripBuffer[512];	// buffer for ntrip data
+
+// Ethernet config
+EthernetUDP UDPconfig;
+uint16_t ConfigListeningPort = 28800;
+uint16_t ConfigDestinationPort = 29900;
 
 //steering variables
 float steerAngleActual = 0;
@@ -154,9 +174,17 @@ byte PGNlength;
 HardwareSerial* SerialIMU;
 HardwareSerial* SerialReceiver;
 
-extern float tempmonGetTemp(void);
 elapsedMillis imuDelayTimer;
 bool isGGA_Updated = false;
+int ADS1115_Address;
+
+byte RelayLo = 0;	// sections 0-7
+byte RelayHi = 0;	// sections 8-15
+
+PCA9555 PCA;
+bool PCA9555PW_found = false;
+Adafruit_MCP23X17 MCP;
+bool MCP23017_found = false;
 
 void setup()
 {
@@ -172,11 +200,12 @@ void loop()
 		ReadSwitches();
 		DoSteering();
 		SendSpeedPulse();
-		ReceiveConfigData();
+		ReceiveUDPconfig();
+		CheckRelays();
 	}
 	ReadIMU();
-	ReceiveSteerData();
 	DoPanda();
+	ReceiveSteerData();
 	Blink();
 	wdt.feed();
 }
@@ -259,6 +288,73 @@ byte CRC(byte Chk[], byte Length, byte Start)
 }
 
 
+//struct ModuleConfig
+//{
+//	//	AS15 config
+//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
+//	uint8_t ReceiverSerialPort = 8;	// gps receiver
+//	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
+//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
+//	uint16_t ZeroOffset = 6500;
+//	uint8_t MinSpeed = 1;
+//	uint8_t MaxSpeed = 15;
+//	uint16_t PulseCal = 255;		// Hz/KMH X 10
+//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
+//	uint8_t InvertRoll = 0;
+//	uint8_t Dir1 = 23;
+//	uint8_t PWM1 = 22;
+//	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
+//	uint8_t SteerSw = 26;
+//	uint8_t WorkSw = 27;
+//	uint8_t CurrentSensor = 0;		// Ads1115
+//	uint8_t PressureSensor = 0;		// Ads1115
+//	uint8_t Encoder = 0;			// none
+//	uint8_t SpeedPulse = 28;
+//	uint8_t IP0 = 192;
+//	uint8_t IP1 = 168;
+//	uint8_t IP2 = 1;
+//	uint8_t IP3 = 126;
+//	uint8_t PowerRelay = 0;			// pin for 12V out relay
+//	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
+//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+//	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
+//	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
+//};
 
+
+
+
+//struct ModuleConfig
+//{
+//	//	AS14 config, IMU on serial 7
+//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
+//	uint8_t ReceiverSerialPort = 4;	// gps receiver
+//	uint8_t	IMUSerialPort = 7;		// Adafruit 5, Sparkfun 4
+//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
+//	uint16_t ZeroOffset = 6500;
+//	uint8_t MinSpeed = 1;
+//	uint8_t MaxSpeed = 15;
+//	uint16_t PulseCal = 255;		// Hz/KMH X 10
+//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
+//	uint8_t InvertRoll = 0;
+//	uint8_t Dir1 = 26;
+//	uint8_t PWM1 = 25;
+//	uint8_t SteeringRelay = 36;		// pin for steering disconnect relay
+//	uint8_t SteerSw = 39;
+//	uint8_t WorkSw = 27;
+//	uint8_t CurrentSensor = 0;		// Ads1115
+//	uint8_t PressureSensor = 0;		// Ads1115
+//	uint8_t Encoder = 0;			// none
+//	uint8_t SpeedPulse = 37;
+//	uint8_t IP0 = 192;
+//	uint8_t IP1 = 168;
+//	uint8_t IP2 = 1;
+//	uint8_t IP3 = 126;
+//	uint8_t PowerRelay = 0;			// pin for 12V out relay
+//	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
+//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+//	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
+//	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
+//};
 
 
