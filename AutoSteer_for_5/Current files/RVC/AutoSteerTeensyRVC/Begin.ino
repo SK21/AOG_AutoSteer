@@ -280,7 +280,7 @@ void DoSetup()
 
 			for (int i = 0; i < 16; i++)
 			{
-				MCP.pinMode(MDL.MCP20317Pins[i], OUTPUT);
+				MCP.pinMode(MDL.RelayPins[i], OUTPUT);
 			}
 		}
 		else

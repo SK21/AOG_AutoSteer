@@ -84,11 +84,11 @@ void CheckRelays()
                 {
                     if (bitRead(Rlys, i))
                     {
-                        MCP.digitalWrite(MDL.MCP20317Pins[i + j * 8], steerConfig.IsRelayActiveHigh);
+                        MCP.digitalWrite(MDL.RelayPins[i + j * 8], steerConfig.IsRelayActiveHigh);
                     }
                     else
                     {
-                        MCP.digitalWrite(MDL.MCP20317Pins[i + j * 8], !steerConfig.IsRelayActiveHigh);
+                        MCP.digitalWrite(MDL.RelayPins[i + j * 8], !steerConfig.IsRelayActiveHigh);
                     }
                 }
             }
