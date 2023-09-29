@@ -1,0 +1,36 @@
+AS15 config
+-----------
+GPS receiver			0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
+Receiver serial port		micro Serial 3, full-sized Serial 8
+IMU serial port			Adafruit 5, Sparkfun 4
+Minimum speed			1
+Maximum speed			15
+Speed pulse cal			255
+Relay Control			0 - no relays, 1 - NA, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+
+Motor Dir			23
+Motor PWM			22
+Power Relay			0
+Steer Relay			7
+Steer Switch			26
+Work Switch			27
+Speed Pulse			28
+
+
+AS14 config
+-----------
+GPS receiver			0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
+Receiver serial port		4
+IMU serial port			Adafruit 5, Sparkfun 4
+Minimum speed			1
+Maximum speed			15
+Speed pulse cal			255
+Relay Control			0 - no relays, 1 - NA, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+
+Motor Dir			26
+Motor PWM			25
+Steer Relay			36
+Steer Switch			39
+Work Switch			27
+Speed Pulse			37
+
