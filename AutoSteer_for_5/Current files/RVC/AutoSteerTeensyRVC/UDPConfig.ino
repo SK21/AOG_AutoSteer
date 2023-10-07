@@ -1,7 +1,4 @@
 
-byte DataConfig[MaxReadBuffer];
-uint16_t PGNconfig;
-
 void ReceiveUDPconfig()
 {
     if (Ethernet.linkStatus() == LinkON)
@@ -101,26 +98,14 @@ void ReceiveUDPconfig()
                 //      Info request from PCBsetup
                 //0     HeaderLo    146
                 //1     HeaderHi    126
-                //2     Info ID     0 IP address, 1 Ino ID
-                //3     CRC
+                //2     CRC
 
-                PGNlength = 4;
+                PGNlength = 3;
                 if (len > PGNlength - 1)
                 {
                     if (GoodCRC(DataConfig, PGNlength))
                     {
-                        switch (DataConfig[2])
-                        {
-                        case 0:
-                            // subnet
-                            UDPSendIP();
-                            break;
-                            
-                        case 1:
-                            // Ino ID
-                            UDPSendInoID();
-                            break;
-                        }
+                        UDPSendInfo();
                     }
                 }
                 break;
@@ -154,31 +139,69 @@ void ReceiveUDPconfig()
     }
 }
 
-void UDPSendIP()
+void UDPSendInfo()
 {
-    //0     HeaderLo
-    //1     HeaderHi
-    //2     Info ID
-    //3     module type
-    //4     module ID
-    //5     IP 0
-    //6     IP 1
-    //7     IP 2
-    //8     -
-    //9     CRC
+    // PGN 32403
+    //0     HeaderLo    147
+    //1     HeaderHi    126
+    //2     InoID lo
+    //3     InoID Hi
+    //4     IP 0
+    //5     IP 1
+    //6     IP 2
+    //7     IMU started
+    //8     ADS found
+    //9     PCA9555PW found
+    //10    MCP23017 found
+    //11    WAS lo
+    //12    WAS Hi
+    //13    Steer Switch
+    //14    guidance status
+    //15    Zero offset Lo
+    //16    Zero offset Hi
+    //17    heading Lo
+    //18    heading Hi
+    //19    connected
+    //20    Receiver time
+    //21    Ntrip time
+    //22    Loop time lo
+    //23    Loop time Hi
+    //24    Ethernet
+    //25    CRC
 
     if (Ethernet.linkStatus() == LinkON)
     {
-        byte Data[10];
+        byte Data[26];
         Data[0] = 147;
         Data[1] = 126;
-        Data[2] = 0;
-        Data[3] = 0;
-        Data[4] = 0;
-        Data[5] = MDL.IP0;
-        Data[6] = MDL.IP1;
-        Data[7] = MDL.IP2;
-        Data[9] = CRC(Data, 9, 0);
+        Data[2] = (byte)InoID;
+        Data[3] = InoID >> 8;
+        Data[4] = MDL.IP0;
+        Data[5] = MDL.IP1;
+        Data[6] = MDL.IP2;
+        Data[7] = IMUstarted;
+        Data[8] = ADSfound;
+        Data[9] = PCA9555PW_found;
+        Data[10] = MCP23017_found;
+        Data[11] = AINs.AIN0;
+        Data[12] = AINs.AIN0 >> 8;
+        Data[13] = digitalRead(MDL.SteerSw);
+        Data[14] = guidanceStatus;
+        Data[15] = MDL.ZeroOffset;
+        Data[16] = MDL.ZeroOffset >> 8;
+
+        uint16_t Heading = IMU_Heading;
+        Data[17] = Heading;
+        Data[18] = Heading >> 8;
+
+        Data[19] = (millis() - AOGTime < 4000);
+        Data[20] = (millis() - ReceiverTime < 4000);
+        Data[21] = (millis() - NtripTime < 4000);
+        Data[22] = MaxLoopTime;
+        Data[23] = MaxLoopTime >> 8;
+        Data[24] = (Ethernet.linkStatus() == LinkON);
+
+        Data[25] = CRC(Data, 25, 0);
 
         static uint8_t ipDest[] = { 255,255,255,255 };
 
@@ -189,35 +212,4 @@ void UDPSendIP()
     }
 }
 
-void UDPSendInoID()
-{
-    //0     HeaderLo
-    //1     HeaderHi
-    //2     Info ID
-    //3     Ino ID lo
-    //4     Ino ID Hi
-    //5     
-    //6     
-    //7     
-    //8     
-    //9     CRC
-
-    if (Ethernet.linkStatus() == LinkON)
-    {
-        byte Data[10];
-        Data[0] = 147;
-        Data[1] = 126;
-        Data[2] = 1;
-        Data[3] = (byte)InoID;
-        Data[4] = InoID >> 8;
-        Data[9] = CRC(Data, 9, 0);
-
-        static uint8_t ipDest[] = { 255,255,255,255 };
-
-        // to ethernet
-        UDPsteering.beginPacket(ipDest, ConfigDestinationPort);
-        UDPsteering.write(Data, sizeof(Data));
-        UDPsteering.endPacket();
-    }
-}
 

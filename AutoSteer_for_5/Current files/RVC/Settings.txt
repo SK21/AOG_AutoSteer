@@ -1,7 +1,7 @@
 AS15 config
 -----------
 GPS receiver			0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-Receiver serial port		micro Serial 3, full-sized Serial 8
+Receiver serial port		8
 IMU serial port			Adafruit 5, Sparkfun 4
 Minimum speed			1
 Maximum speed			15

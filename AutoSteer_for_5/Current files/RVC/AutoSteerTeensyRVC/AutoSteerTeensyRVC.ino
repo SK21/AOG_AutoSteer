@@ -1,8 +1,8 @@
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
-#define InoDescription "AutoSteerTeensyRVC   18-Aug-2023"
-const uint16_t InoID = 18083;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   07-Oct-2023"
+const uint16_t InoID = 7103;	// change to send defaults to eeprom, ddmmy, no leading 0
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -166,7 +166,10 @@ NMEAParser<2> parser;
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 BNO08x_RVC_Data heading;
 
-uint32_t CommTime;
+uint32_t AOGTime;
+uint32_t ReceiverTime;
+uint32_t NtripTime;
+
 bool ADSfound = false;
 byte PGNlength;
 
@@ -185,6 +188,9 @@ bool PCA9555PW_found = false;
 Adafruit_MCP23X17 MCP;
 bool MCP23017_found = false;
 
+byte DataConfig[MaxReadBuffer];
+uint16_t PGNconfig;
+
 void setup()
 {
 	DoSetup();
@@ -200,6 +206,7 @@ void loop()
 		DoSteering();
 		SendSpeedPulse();
 		ReceiveUDPconfig();
+		ReceiveSerialConfig();
 		CheckRelays();
 	}
 	ReadIMU();

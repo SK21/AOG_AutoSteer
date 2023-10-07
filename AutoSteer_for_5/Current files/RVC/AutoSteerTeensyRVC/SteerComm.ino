@@ -97,7 +97,7 @@ void ReceiveSteerData()
                     RelayHi = DataEthernet[12];
 
                     SendSteerData();
-                    CommTime = millis();
+                    AOGTime = millis();
                     break;
                 }
             }

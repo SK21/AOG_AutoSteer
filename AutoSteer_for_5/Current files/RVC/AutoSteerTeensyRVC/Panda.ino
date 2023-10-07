@@ -41,6 +41,7 @@ void DoPanda()
         int packetSize = UDPntrip.parsePacket();
         if (packetSize)
         {
+            NtripTime = millis();
             UDPntrip.read(NtripBuffer, packetSize);
             SerialReceiver->write(NtripBuffer, packetSize);
         }
@@ -157,6 +158,8 @@ void GGA_Handler() //Rec'd GGA
 
 void BuildPanda()
 {
+    ReceiverTime = millis();
+
     strcpy(nme, "");
 
     strcat(nme, "$PANDA,");

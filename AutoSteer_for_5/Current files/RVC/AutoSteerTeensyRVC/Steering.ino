@@ -20,7 +20,7 @@ void DoSteering()
 	if (steerAngleActual < 0) steerAngleActual = (steerAngleActual * steerSettings.AckermanFix);
 	steerAngleError = steerAngleActual - steerAngleSetPoint;
 
-	if ((millis() - CommTime > 4000) || (bitRead(guidanceStatus, 0) == 0) || SteerSwitch == HIGH || (Speed_KMH < MDL.MinSpeed) || Speed_KMH > MDL.MaxSpeed)
+	if ((millis() - AOGTime > 4000) || (bitRead(guidanceStatus, 0) == 0) || SteerSwitch == HIGH || (Speed_KMH < MDL.MinSpeed) || Speed_KMH > MDL.MaxSpeed)
 	{
 		// steering disabled
 
