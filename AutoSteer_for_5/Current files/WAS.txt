@@ -1,0 +1,7 @@
+These are pull2seat connectors. Put the wire through the back seal and through the connector before attaching the socket. Then pull the wire and socket back into the connector.
+
+1.sensor 		55250-00-00-0	https://www.mouser.ca/ProductDetail/Littelfuse/55250-00-00-0?qs=X8LBAgEWIKJ7RBNax9Nopw%3D%3D
+
+2.terminals		12124075-L	https://www.mouser.ca/ProductDetail/Aptiv-formerly-Delphi/12124075-L?qs=DlE0rdXB%2FL2j1NLgMOsvsg%3D%3D
+
+3.adapter assy		12162186	https://www.mouser.ca/ProductDetail/829-12162186
