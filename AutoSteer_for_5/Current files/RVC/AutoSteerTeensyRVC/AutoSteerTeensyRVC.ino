@@ -1,6 +1,7 @@
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
+#include <Adafruit_Sensor.h>
 #define InoDescription "AutoSteerTeensyRVC   07-Oct-2023"
 const uint16_t InoID = 7103;	// change to send defaults to eeprom, ddmmy, no leading 0
 
