@@ -55,6 +55,11 @@ void ReceiveSerialConfig()
 				PGNfound = true;
 				break;
 
+			case 32503:
+				SerialPGNlength = 6;
+				PGNfound = true;
+				break;
+
 			default:
 				// find pgn
 				SerialMSB = Serial.read();
