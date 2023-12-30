@@ -2,8 +2,8 @@
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   07-Oct-2023"
-const uint16_t InoID = 7103;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   30-Dec-2023"
+const uint16_t InoID = 30123;	// change to send defaults to eeprom, ddmmy, no leading 0
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -206,7 +206,7 @@ void loop()
 		ReadSwitches();
 		DoSteering();
 		SendSpeedPulse();
-		ReceiveUDPconfig();
+		ReceiveEthernetConfig();
 		ReceiveSerialConfig();
 		CheckRelays();
 	}

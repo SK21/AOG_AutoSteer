@@ -23,14 +23,13 @@
       <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="Relays.ino" />
-    <ClCompile Include="SerialConfig.ino" />
     <ClCompile Include="SteerComm.ino" />
     <ClCompile Include="Steering.ino" />
     <ClCompile Include="StrSwitches.ino" />
-    <ClCompile Include="UDPConfig.ino" />
     <ClCompile Include="zNMEAParser.h">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="Config.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h">
