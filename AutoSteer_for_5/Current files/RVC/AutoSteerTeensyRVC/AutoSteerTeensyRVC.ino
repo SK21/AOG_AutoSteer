@@ -2,8 +2,9 @@
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   29-Dec-2023"
-const uint16_t InoID = 29123;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   30-Dec-2023"
+const uint16_t InoID = 30123;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #include <Wire.h>
 #include <EEPROM.h> 
@@ -118,8 +119,8 @@ char NtripBuffer[512];	// buffer for ntrip data
 
 // Ethernet config
 EthernetUDP UDPconfig;
-uint16_t ConfigListeningPort = 28800;
-uint16_t ConfigDestinationPort = 29900;
+uint16_t ConfigListeningPort = 28888;
+uint16_t ConfigDestinationPort = 29999;
 
 //steering variables
 float steerAngleActual = 0;
@@ -192,6 +193,8 @@ bool MCP23017_found = false;
 byte DataConfig[MaxReadBuffer];
 uint16_t PGNconfig;
 
+bool IMUstarted = false;
+
 void setup()
 {
 	DoSetup();
@@ -222,6 +225,7 @@ elapsedMillis BlinkTmr;
 byte ResetRead;
 elapsedMicros LoopTmr;
 uint32_t MaxLoopTime;
+
 void Blink()
 {
 	if (BlinkTmr > 1000)
@@ -229,7 +233,6 @@ void Blink()
 		BlinkTmr = 0;
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
-		Serial.println(".");	// needed to allow PCBsetup to connect
 
 		Serial.print(" Loop Time (Micros): ");
 		Serial.print(MaxLoopTime);

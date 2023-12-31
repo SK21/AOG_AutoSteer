@@ -1,10 +1,11 @@
-int16_t StoredID = 0;
-uint8_t ErrorCount;
-bool IMUstarted = false;
-int ADS[] = { 0x48,0x49,0x4A,0x4B };	// ADS1115 addresses
 
 void DoSetup()
 {
+	int ADS[] = { 0x48,0x49,0x4A,0x4B };	// ADS1115 addresses
+	uint8_t ErrorCount;
+	int16_t StoredID = 0;
+	int8_t StoredType = 0;
+
 	// watchdog timer
 	WDT_timings_t config;
 	config.timeout = 60;	// seconds
@@ -20,7 +21,8 @@ void DoSetup()
 
 	// eeprom data
 	EEPROM.get(0, StoredID);              // read identifier
-	if (StoredID == InoID)
+	EEPROM.get(4, StoredType);
+	if (StoredID == InoID && StoredType == InoType)
 	{
 		// load stored data
 		Serial.println("Loading stored settings.");
@@ -33,6 +35,7 @@ void DoSetup()
 		// update stored data
 		Serial.println("Updating stored data.");
 		EEPROM.put(0, InoID);
+		EEPROM.put(4, InoType);
 		EEPROM.put(10, steerSettings);
 		EEPROM.put(40, steerConfig);
 		EEPROM.put(110, MDL);
