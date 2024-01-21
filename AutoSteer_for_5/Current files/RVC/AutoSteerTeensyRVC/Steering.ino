@@ -76,5 +76,3 @@ void DoSteering()
 	digitalWrite(MDL.Dir1, (pwmDrive >= 0));
 	analogWrite(MDL.PWM1, abs(pwmDrive));
 }
-
-

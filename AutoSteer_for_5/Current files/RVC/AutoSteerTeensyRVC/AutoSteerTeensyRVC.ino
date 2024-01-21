@@ -2,8 +2,8 @@
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   30-Dec-2023"
-const uint16_t InoID = 30123;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   20-Jan-2024"
+const uint16_t InoID = 20014;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #include <Wire.h>
@@ -137,12 +137,7 @@ float IMU_YawRate = 0;
 
 // switches
 int8_t SteerSwitch = LOW;	// Low on, High off
-int8_t SWreading = HIGH;
-int8_t SWprevious = LOW;
-uint32_t  SWtime = 0;
-uint8_t  SWdebounce = 50;
 int8_t switchByte = 0;
-int8_t workSwitch = 0;
 float SensorReading;
 
 //pwm variables

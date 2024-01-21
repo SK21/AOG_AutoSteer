@@ -2,8 +2,10 @@ uint32_t PulseStart;
 int SwitchPulseCount;
 bool PulseRead;
 bool PulseLast;
-bool LatchedOff;
-int8_t SWpin;
+int8_t SWreading = HIGH;
+int8_t SWprevious = LOW;
+uint32_t SWtime = 0;
+uint8_t SWdebounce = 50;
 
 void ReadSwitches()
 {
@@ -16,20 +18,19 @@ void ReadSwitches()
 	if (steerConfig.SteerSwitch == 1)
 	{
 		// on off switch
-		SWpin = digitalRead(MDL.SteerSw);
+		SWreading = digitalRead(MDL.SteerSw);
 
-		if (SWpin)
+		if (SWreading)
 		{
 			// pin high, turn off
-			LatchedOff = false;
-			SteerSwitch = SWpin;
+			SteerSwitch = SWreading;
 		}
 		else
 		{
-			// pin low, turn on
-			if (!LatchedOff) SteerSwitch = SWpin;
+			// pin low and previously off, turn on
+			if (SWprevious) SteerSwitch = SWreading;
 		}
-		switchByte = SteerSwitch << 1;
+		SWprevious = SWreading;
 	}
 	else if (steerConfig.SteerButton == 1)
 	{
@@ -49,7 +50,6 @@ void ReadSwitches()
 			}
 			SWtime = millis();
 		}
-		switchByte = SteerSwitch << 1;
 		SWprevious = SWreading;
 	}
 	else
@@ -58,19 +58,51 @@ void ReadSwitches()
 		if (guidanceStatus)
 		{
 			// steering on
-			if (!LatchedOff) SteerSwitch = !guidanceStatus;
+			// previously off, turn on
+			if (SWprevious) SteerSwitch = LOW;
 		}
 		else
 		{
 			// steering off
-			SteerSwitch = !guidanceStatus;
-			LatchedOff = false;
+			SteerSwitch = HIGH;
 		}
-		switchByte = SteerSwitch << 1;
+		SWprevious = !guidanceStatus;
 	}
 
-	// encoder
-	if (steerConfig.ShaftEncoder)
+	// sensors
+	if (steerConfig.CurrentSensor)
+	{
+		float SensorSample = (float)(AINs.AIN2 >> 8);	// convert from 0-65535 to 0-255
+		SensorSample = (abs(512 - SensorSample)) * 0.5;
+		SensorReading = SensorReading * 0.7 + SensorSample * 0.3;
+		if (SensorReading >= steerConfig.PulseCountMax)
+		{
+			SteerSwitch = HIGH;
+			SWprevious = LOW;
+		}
+	}
+	else if (steerConfig.PressureSensor)
+	{
+		float SensorSample = 0;
+		if (MDL.Use4_20)
+		{
+			// analog 4-20
+			SensorSample = (float)(AINs.AIN2 >> 8);
+		}
+		else
+		{
+			// analog 12V
+			SensorSample = (float)(AINs.AIN1 >> 8);
+		}
+
+		SensorReading = SensorReading * 0.6 + SensorSample * 0.4;
+		if (SensorReading >= steerConfig.PulseCountMax)
+		{
+			SteerSwitch = HIGH;
+			SWprevious = LOW;
+		}
+	}
+	else if (steerConfig.ShaftEncoder)
 	{
 		PulseRead = digitalRead(MDL.Encoder);
 		if ((PulseRead != PulseLast) && (millis() - PulseStart > SWdebounce))
@@ -82,56 +114,12 @@ void ReadSwitches()
 			if (SwitchPulseCount >= steerConfig.PulseCountMax)
 			{
 				SteerSwitch = HIGH;
-				switchByte = SteerSwitch << 1;
-				SWprevious = HIGH;
+				SWprevious = LOW;
 				SwitchPulseCount = 0;
-				LatchedOff = true;
 			}
 		}
 	}
 
-	// current sensor
-	if (steerConfig.CurrentSensor)
-	{
-		float SensorSample = (((abs(6700.0 - (float)AINs.AIN3)) / 6700.0) * 255.0) * 4.0;
-		SensorReading = SensorReading * 0.7 + SensorSample * 0.3;
-		if (SensorReading >= steerConfig.PulseCountMax)
-		{
-			SteerSwitch = HIGH;
-			switchByte = SteerSwitch << 1;
-			SWprevious = LOW;
-			LatchedOff = true;
-		}
-	}
-
-	// pressure sensor
-	if (steerConfig.PressureSensor)
-	{
-		float SensorSample = 0;
-		if (MDL.Use4_20)
-		{
-			SensorSample = (float)(AINs.AIN2 >> 8);	// need to convert from 0-65535 to 0-255
-		}
-		else
-		{
-			SensorSample = (float)(AINs.AIN1 >> 8);
-		}
-
-		SensorReading = SensorReading * 0.6 + SensorSample * 0.4;
-		if (SensorReading >= steerConfig.PulseCountMax)
-		{
-			SteerSwitch = HIGH;
-			switchByte = SteerSwitch << 1;
-			SWprevious = LOW;
-			LatchedOff = true;
-		}
-	}
-
-	workSwitch = digitalRead(MDL.WorkSw);  // read work switch, Low on, High off
-	switchByte |= workSwitch;
+	switchByte = SteerSwitch << 1;
+	switchByte |= digitalRead(MDL.WorkSw);  // read work switch, Low on, High off
 }
-
-
-
-
-
