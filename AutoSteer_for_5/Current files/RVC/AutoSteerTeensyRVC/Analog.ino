@@ -23,13 +23,13 @@ void ReadAnalog()
 			AINs.AIN0 = Aread >> 1;	// WAS
 			break;
 		case 1:
-			AINs.AIN1 = Aread;
+			AINs.AIN1 = Aread >> 8;	// analog 12V, convert from 0-65535 to 0-255
 			break;
 		case 2:
-			AINs.AIN2 = Aread;
+			AINs.AIN2 = Aread >> 8;	// analog 4-20
 			break;
 		default:
-			AINs.AIN3 = Aread;
+			AINs.AIN3 = Aread >> 8;	// analog current
 			break;
 		}
 

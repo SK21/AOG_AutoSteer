@@ -134,11 +134,45 @@ void DoSetup()
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
 
 	// ADS1115
-	for (int i = 0; i < 4; i++)
+	if (MDL.AdsAddress == 0)
 	{
-		ADS1115_Address = ADS[i];
+		for (int i = 0; i < 4; i++)
+		{
+			ADS1115_Address = ADS[i];
+			Serial.print("Starting ADS1115 at address ");
+			Serial.println(ADS1115_Address);
+			ErrorCount = 0;
+			while (!ADSfound)
+			{
+				Wire.beginTransmission(ADS1115_Address);
+				Wire.write(0b00000000);	//Point to Conversion register
+				Wire.endTransmission();
+				Wire.requestFrom(ADS1115_Address, 2);
+				ADSfound = Wire.available();
+				Serial.print(".");
+				delay(500);
+				if (ErrorCount++ > 5) break;
+			}
+			Serial.println("");
+			if (ADSfound)
+			{
+				Serial.print("ADS1115 connected at address ");
+				Serial.println(ADS1115_Address);
+				Serial.println("");
+				break;
+			}
+			else
+			{
+				Serial.print("ADS1115 not found.");
+				Serial.println("");
+			}
+		}
+	}
+	else
+	{
+		ADS1115_Address = MDL.AdsAddress;
 		Serial.print("Starting ADS1115 at address ");
-		Serial.print(ADS1115_Address);
+		Serial.println(ADS1115_Address);
 		ErrorCount = 0;
 		while (!ADSfound)
 		{
@@ -149,7 +183,7 @@ void DoSetup()
 			ADSfound = Wire.available();
 			Serial.print(".");
 			delay(500);
-			if (ErrorCount++ > 10) break;
+			if (ErrorCount++ > 5) break;
 		}
 		Serial.println("");
 		if (ADSfound)
@@ -157,7 +191,6 @@ void DoSetup()
 			Serial.print("ADS1115 connected at address ");
 			Serial.println(ADS1115_Address);
 			Serial.println("");
-			break;
 		}
 		else
 		{
@@ -165,6 +198,7 @@ void DoSetup()
 			Serial.println("");
 		}
 	}
+
 	if (!ADSfound)
 	{
 		Serial.println("ADS1115 disabled.");

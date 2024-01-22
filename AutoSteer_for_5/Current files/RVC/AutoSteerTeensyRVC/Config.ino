@@ -104,8 +104,8 @@ void ReadPGNs(byte Data[], uint16_t len)
 		//2     Receiver    0 none, 1 simpleRTK2B
 		//3     Receiver serial port
 		//4     IMU serial port
-		//5     Min. speed
-		//6     Max. speed
+		//5     -
+		//6     -
 		//7     Pulse Cal X 10, Lo
 		//8     Pulse Cal X 10, Hi
 		//9     relay control type  0 - no relays, 1 - PCA9685, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
@@ -125,8 +125,6 @@ void ReadPGNs(byte Data[], uint16_t len)
 				MDL.Receiver = Data[2];
 				MDL.ReceiverSerialPort = Data[3];
 				MDL.IMUSerialPort = Data[4];
-				MDL.MinSpeed = Data[5];
-				MDL.MaxSpeed = Data[6];
 				MDL.PulseCal = Data[7] | Data[8] << 8;
 				MDL.RelayControl = Data[9];
 

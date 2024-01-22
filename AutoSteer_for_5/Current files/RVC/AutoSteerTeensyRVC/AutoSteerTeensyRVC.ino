@@ -39,8 +39,6 @@ struct ModuleConfig
 	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
 	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
 	uint16_t ZeroOffset = 6500;
-	uint8_t MinSpeed = 1;
-	uint8_t MaxSpeed = 15;
 	uint16_t PulseCal = 255;		// Hz/KMH X 10
 	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
 	uint8_t InvertRoll = 0;
@@ -56,10 +54,11 @@ struct ModuleConfig
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
 	uint8_t PowerRelay = 0;			// pin for 12V out relay
-	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
+	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-12V
 	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
 	uint8_t RelayPins[16];
 	uint8_t RelayOnSignal = 1;		// 0 or 1
+	uint8_t AdsAddress = 0x49;		// enter 0 to search all
 };
 
 ModuleConfig MDL;
@@ -220,6 +219,10 @@ elapsedMillis BlinkTmr;
 byte ResetRead;
 elapsedMicros LoopTmr;
 uint32_t MaxLoopTime;
+//uint16_t debug1;
+//uint16_t debug2;
+//uint16_t debug3;
+//uint16_t debug4;
 
 void Blink()
 {
@@ -229,7 +232,7 @@ void Blink()
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
 
-		Serial.print(" Loop Time (Micros): ");
+		Serial.print(" Micros: ");
 		Serial.print(MaxLoopTime);
 
 		Serial.print(", WAS: ");
@@ -237,6 +240,18 @@ void Blink()
 
 		Serial.print(", Heading: ");
 		Serial.print(IMU_Heading / 10.0);
+
+		//Serial.print(", ");
+		//Serial.print(debug1);
+
+		//Serial.print(", ");
+		//Serial.print(debug2);
+
+		//Serial.print(", ");
+		//Serial.print(debug3);
+
+		//Serial.print(", ");
+		//Serial.print(debug4);
 
 		//Serial.print(", Temp: ");
 		//Serial.print(tempmonGetTemp());

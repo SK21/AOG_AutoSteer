@@ -72,7 +72,7 @@ void ReadSwitches()
 	// sensors
 	if (steerConfig.CurrentSensor)
 	{
-		float SensorSample = (float)(AINs.AIN2 >> 8);	// convert from 0-65535 to 0-255
+		float SensorSample = (float)(AINs.AIN3 );	
 		SensorSample = (abs(512 - SensorSample)) * 0.5;
 		SensorReading = SensorReading * 0.7 + SensorSample * 0.3;
 		if (SensorReading >= steerConfig.PulseCountMax)
@@ -87,12 +87,12 @@ void ReadSwitches()
 		if (MDL.Use4_20)
 		{
 			// analog 4-20
-			SensorSample = (float)(AINs.AIN2 >> 8);
+			SensorSample = (float)(AINs.AIN2 );
 		}
 		else
 		{
 			// analog 12V
-			SensorSample = (float)(AINs.AIN1 >> 8);
+			SensorSample = (float)(AINs.AIN1);
 		}
 
 		SensorReading = SensorReading * 0.6 + SensorSample * 0.4;
