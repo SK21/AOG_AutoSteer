@@ -50,16 +50,6 @@ void ReceiveSerialConfig()
 				PGNfound = true;
 				break;
 
-			case 32303:
-				SerialPGNlength = 3;
-				PGNfound = true;
-				break;
-
-			case 32503:
-				SerialPGNlength = 6;
-				PGNfound = true;
-				break;
-
 			default:
 				// find pgn
 				SerialMSB = Serial.read();
@@ -178,98 +168,5 @@ void ReadPGNs(byte Data[], uint16_t len)
 			}
 		}
 		break;
-
-	case 32303:
-		//      Info request from PCBsetup
-		//0     HeaderLo    47
-		//1     HeaderHi    126
-		//2     CRC
-
-		PGNlength = 3;
-		if (len > PGNlength - 1)
-		{
-			if (GoodCRC(Data, PGNlength))
-			{
-				SendStatus();
-			}
-		}
-		break;
-
-	case 32503:
-		//      New IP
-		//0     HeaderLo    247
-		//1     HeaderHI    126
-		//2     IP 0
-		//3     IP 1
-		//4     IP 2
-		//5     CRC
-
-		PGNlength = 6;
-		if (len > PGNlength - 1)
-		{
-			if (GoodCRC(Data, PGNlength))
-			{
-				MDL.IP0 = Data[2];
-				MDL.IP1 = Data[3];
-				MDL.IP2 = Data[4];
-
-				EEPROM.put(110, MDL);
-
-				SCB_AIRCR = 0x05FA0004; //reset the Teensy   
-			}
-		}
-		break;
-
-	default:
-		break;
-	}
-}
-
-void SendStatus()
-{
-	//		PGN32302
-	//0		HeaderLo	46
-	//1		HeaderHi	126
-	//2		InoID Lo
-	//3		InoID Hi
-	//4		Status byte
-	//5		-
-	//6		CRC
-
-	byte data[7];
-	data[0] = 46;
-	data[1] = 126;
-	data[2] = (byte)InoID;
-	data[3] = InoID >> 8;
-
-	byte Status = IMUstarted;
-	if (ADSfound) Status = Status | 0b10;
-	if (PCA9555PW_found || MCP23017_found) Status = Status | 0b100;
-	if (digitalRead(MDL.SteerSw)) Status = Status | 0b1000;
-	if (millis() - AOGTime < 4000) Status = Status | 0b10000;
-	if (millis() - ReceiverTime < 4000) Status = Status | 0b100000;
-	if (millis() - NtripTime < 4000) Status = Status | 0b1000000;
-	if (Ethernet.linkStatus() == LinkON) Status = Status | 0b10000000;
-
-	data[4] = Status;
-	data[5] = 0;
-	data[6] = CRC(data, 6, 0);
-
-	// to serial
-	Serial.print(data[0]);
-	for (int i = 1; i < 7; i++)
-	{
-		Serial.print(",");
-		Serial.print(data[i]);
-	}
-	Serial.println("");
-
-	// to ethernet
-	if (Ethernet.linkStatus() == LinkON)
-	{
-		static uint8_t ipDest[] = { 255,255,255,255 };
-		UDPsteering.beginPacket(ipDest, ConfigDestinationPort);
-		UDPsteering.write(data, sizeof(data));
-		UDPsteering.endPacket();
 	}
 }

@@ -1,19 +1,11 @@
-// autosteer for Teensy 4.1
-// uses BNO in RVC mode over serial
-
-#include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   20-Jan-2024"
-const uint16_t InoID = 20014;	// change to send defaults to eeprom, ddmmy, no leading 0
-const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
-
 #include <Wire.h>
 #include <EEPROM.h> 
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
+
 #include <Watchdog_t4.h>	// https://github.com/tonton81/WDT_T4
 #include "zNMEAParser.h"	
 #include "Adafruit_BNO08x_RVC.h"
-
 #include "PCA95x5_RC.h"		// modified from https://github.com/hideakitai/PCA95x5
 
 #include <Adafruit_MCP23008.h>
@@ -26,10 +18,19 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 #include <Adafruit_I2CRegister.h>
 #include <Adafruit_SPIDevice.h>
 
+// autosteer for Teensy 4.1
+// uses BNO in RVC mode over serial
+
+#include <Adafruit_Sensor.h>
+#define InoDescription "AutoSteerTeensyRVC   19-Feb-2024"
+const uint16_t InoID = 19024;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
+
 #define ReceiverBaud 460800
 #define IMUBaud 115200
 #define MaxReadBuffer 100	// bytes
 #define LOW_HIGH_DEGREES 5.0	//How many degrees before decreasing Max PWM
+#define NC 0xFF		// Pin not connected
 
 struct ModuleConfig
 {
@@ -55,7 +56,7 @@ struct ModuleConfig
 	uint8_t IP3 = 126;
 	uint8_t PowerRelay = 0;			// pin for 12V out relay
 	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-12V
-	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+	uint8_t RelayControl = 0;		// 0 - no relays, 1 - GPIOs, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017
 	uint8_t RelayPins[16];
 	uint8_t RelayOnSignal = 1;		// 0 or 1
 	uint8_t AdsAddress = 0x49;		// enter 0 to search all
@@ -336,7 +337,7 @@ byte CRC(byte Chk[], byte Length, byte Start)
 //	uint8_t IP3 = 126;
 //	uint8_t PowerRelay = 0;			// pin for 12V out relay
 //	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
-//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - GPIOs, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017
 //	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
 //	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
 //};
@@ -372,7 +373,7 @@ byte CRC(byte Chk[], byte Length, byte Start)
 //	uint8_t IP3 = 126;
 //	uint8_t PowerRelay = 0;			// pin for 12V out relay
 //	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
-//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - RS485, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - GPIOs, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017
 //	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
 //	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
 //};

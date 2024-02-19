@@ -3,8 +3,6 @@ void DoSetup()
 {
 	int ADS[] = { 0x48,0x49,0x4A,0x4B };	// ADS1115 addresses
 	uint8_t ErrorCount;
-	int16_t StoredID = 0;
-	int8_t StoredType = 0;
 
 	// watchdog timer
 	WDT_timings_t config;
@@ -20,26 +18,7 @@ void DoSetup()
 	Serial.println();
 
 	// eeprom data
-	EEPROM.get(0, StoredID);              // read identifier
-	EEPROM.get(4, StoredType);
-	if (StoredID == InoID && StoredType == InoType)
-	{
-		// load stored data
-		Serial.println("Loading stored settings.");
-		EEPROM.get(10, steerSettings);
-		EEPROM.get(40, steerConfig);
-		EEPROM.get(110, MDL);
-	}
-	else
-	{
-		// update stored data
-		Serial.println("Updating stored data.");
-		EEPROM.put(0, InoID);
-		EEPROM.put(4, InoType);
-		EEPROM.put(10, steerSettings);
-		EEPROM.put(40, steerConfig);
-		EEPROM.put(110, MDL);
-	}
+	LoadData();
 
 	Serial.println("");
 	Serial.print("Module Version: ");
@@ -261,6 +240,17 @@ void DoSetup()
 	// Relays
 	switch (MDL.RelayControl)
 	{
+	case 1:
+		// Relay GPIO Pins
+		for (int i = 0; i < 16; i++)
+		{
+			if (MDL.RelayPins[i] > 0)
+			{
+				pinMode(MDL.RelayPins[i], OUTPUT);
+			}
+		}
+		break;
+
 	case 2:
 	case 3:
 		// PCA9555 I/O expander on default address 0x20
@@ -325,21 +315,121 @@ void DoSetup()
 			Serial.println("MCP23017 not found.");
 		}
 		break;
-
-	case 5:
-		// Relay GPIO Pins
-		for (int i = 0; i < 16; i++)
-		{
-			if (MDL.RelayPins[i] > 0)
-			{
-				pinMode(MDL.RelayPins[i], OUTPUT);
-			}
-		}
-		break;
 	}
 
 	Serial.println("");
 	Serial.println("Finished setup.");
 	Serial.println("");
 }
+
+void LoadData()
+{
+	bool IsValid = false;
+	int16_t StoredID;
+	int8_t StoredType;
+	EEPROM.get(0, StoredID);
+	EEPROM.get(4, StoredType);
+	if (StoredID == InoID && StoredType == InoType)
+	{
+		// load stored data
+		Serial.println("Loading stored settings.");
+		EEPROM.get(10, steerSettings);
+		EEPROM.get(40, steerConfig);
+		EEPROM.get(110, MDL);
+
+		IsValid = ValidData();
+		if (!IsValid)
+		{
+			Serial.println("Stored settings not valid.");
+		}
+	}
+
+	if (!IsValid)
+	{
+		LoadDefaults();
+		SaveData();
+	}
+}
+
+void SaveData()
+{
+	// update stored data
+	Serial.println("Updating stored data.");
+	EEPROM.put(0, InoID);
+	EEPROM.put(4, InoType);
+	EEPROM.put(10, steerSettings);
+	EEPROM.put(40, steerConfig);
+	EEPROM.put(110, MDL);
+}
+
+bool ValidData()
+{
+	bool Result = true;
+	if (MDL.Receiver > 41) Result = false;
+	if (MDL.ReceiverSerialPort > 41) Result = false;
+	if (MDL.IMUSerialPort > 41) Result = false;
+	if (MDL.NtripPort > 41) Result = false;
+	if (MDL.ZeroOffset > 10000) Result = false;
+	if (MDL.Dir1 > 41) Result = false;
+	if (MDL.PWM1 > 41) Result = false;
+	if (MDL.SteeringRelay > 41) Result = false;
+	
+	if (MDL.SteerSw > 41) Result = false;
+	if (MDL.WorkSw > 41) Result = false;
+	if (MDL.Encoder > 41) Result = false;
+	if (MDL.SpeedPulse > 41) Result = false;
+	if (MDL.PowerRelay > 41) Result = false;
+
+	if (Result && MDL.RelayControl == 1)
+	{
+		// check GPIOs for relays
+		for (int i = 0; i < 16; i++)
+		{
+			if (MDL.RelayPins[i] > 41 && MDL.RelayPins[i] != NC)
+			{
+				Result = false;
+				break;
+			}
+		}
+	}
+	return Result;
+}
+
+void LoadDefaults()
+{
+	Serial.println("Loading default settings.");
+
+	// AS15
+	MDL.Receiver = 1;
+	MDL.ReceiverSerialPort = 8;
+	MDL.IMUSerialPort = 5;
+	MDL.NtripPort = 2233;
+	MDL.ZeroOffset = 6500;
+	MDL.PulseCal = 255;
+	MDL.SwapRollPitch = 0;
+	MDL.InvertRoll = 0;
+	MDL.Dir1 = 23;
+	MDL.PWM1 = 22;
+	MDL.SteeringRelay = 7;
+
+	MDL.SteerSw = 26;
+	MDL.WorkSw = 27;
+	MDL.Encoder = 0;
+	MDL.SpeedPulse = 28;
+	MDL.IP0 = 192;
+	MDL.IP1 = 168;
+	MDL.IP2 = 1;
+	MDL.IP3 = 126;
+	MDL.PowerRelay = 0;
+	MDL.Use4_20 = 0;
+	MDL.RelayControl = 0;
+	MDL.RelayOnSignal = 1;
+	MDL.AdsAddress = 0x49;
+
+	for (int i = 0; i < 16; i++)
+	{
+		MDL.RelayPins[i] = NC;
+	}
+}
+
 
