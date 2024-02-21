@@ -22,8 +22,8 @@
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   19-Feb-2024"
-const uint16_t InoID = 19024;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   20-Feb-2024"
+const uint16_t InoID = 20024;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -233,14 +233,14 @@ void Blink()
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
 
-		Serial.print(" Micros: ");
-		Serial.print(MaxLoopTime);
+		//Serial.print(" Micros: ");
+		//Serial.print(MaxLoopTime);
 
-		Serial.print(", WAS: ");
-		Serial.print(AINs.AIN0);
+		//Serial.print(", WAS: ");
+		//Serial.print(AINs.AIN0);
 
-		Serial.print(", Heading: ");
-		Serial.print(IMU_Heading / 10.0);
+		//Serial.print(", Heading: ");
+		//Serial.print(IMU_Heading / 10.0);
 
 		//Serial.print(", ");
 		//Serial.print(debug1);
@@ -257,16 +257,16 @@ void Blink()
 		//Serial.print(", Temp: ");
 		//Serial.print(tempmonGetTemp());
 
-		Serial.println("");
+		//Serial.println("");
 
-		if (ResetRead++ > 5)
-		{
-			MaxLoopTime = 0;
-			ResetRead = 0;
-		}
+		//if (ResetRead++ > 5)
+		//{
+		//	MaxLoopTime = 0;
+		//	ResetRead = 0;
+		//}
 	}
-	if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
-	LoopTmr = 0;
+	//if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
+	//LoopTmr = 0;
 }
 
 uint32_t SpeedPulseTime;
@@ -307,75 +307,4 @@ byte CRC(byte Chk[], byte Length, byte Start)
 	Result = (byte)CK;
 	return Result;
 }
-
-
-//struct ModuleConfig
-//{
-//	//	AS15 config
-//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-//	uint8_t ReceiverSerialPort = 8;	// gps receiver
-//	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
-//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
-//	uint16_t ZeroOffset = 6500;
-//	uint8_t MinSpeed = 1;
-//	uint8_t MaxSpeed = 15;
-//	uint16_t PulseCal = 255;		// Hz/KMH X 10
-//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
-//	uint8_t InvertRoll = 0;
-//	uint8_t Dir1 = 23;
-//	uint8_t PWM1 = 22;
-//	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
-//	uint8_t SteerSw = 26;
-//	uint8_t WorkSw = 27;
-//	uint8_t CurrentSensor = 0;		// Ads1115
-//	uint8_t PressureSensor = 0;		// Ads1115
-//	uint8_t Encoder = 0;			// none
-//	uint8_t SpeedPulse = 28;
-//	uint8_t IP0 = 192;
-//	uint8_t IP1 = 168;
-//	uint8_t IP2 = 1;
-//	uint8_t IP3 = 126;
-//	uint8_t PowerRelay = 0;			// pin for 12V out relay
-//	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
-//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - GPIOs, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017
-//	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
-//	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
-//};
-
-
-
-
-//struct ModuleConfig
-//{
-//	//	AS14 config, IMU on serial 7
-//	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-//	uint8_t ReceiverSerialPort = 4;	// gps receiver
-//	uint8_t	IMUSerialPort = 7;		// Adafruit 5, Sparkfun 4
-//	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
-//	uint16_t ZeroOffset = 6500;
-//	uint8_t MinSpeed = 1;
-//	uint8_t MaxSpeed = 15;
-//	uint16_t PulseCal = 255;		// Hz/KMH X 10
-//	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
-//	uint8_t InvertRoll = 0;
-//	uint8_t Dir1 = 26;
-//	uint8_t PWM1 = 25;
-//	uint8_t SteeringRelay = 36;		// pin for steering disconnect relay
-//	uint8_t SteerSw = 39;
-//	uint8_t WorkSw = 27;
-//	uint8_t CurrentSensor = 0;		// Ads1115
-//	uint8_t PressureSensor = 0;		// Ads1115
-//	uint8_t Encoder = 0;			// none
-//	uint8_t SpeedPulse = 37;
-//	uint8_t IP0 = 192;
-//	uint8_t IP1 = 168;
-//	uint8_t IP2 = 1;
-//	uint8_t IP3 = 126;
-//	uint8_t PowerRelay = 0;			// pin for 12V out relay
-//	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-5V
-//	uint8_t RelayControl = 0;		// 0 - no relays, 1 - GPIOs, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017
-//	uint8_t RelayPins[16] = { 8,9,10,11,12,25,26,27,0,0,0,0,0,0,0,0 };		// pin numbers when GPIOs are used for relay control (5), default RC11
-//	uint8_t MCP20317Pins[16] = { 8,9,10,11,12,13,14,15,7,6,5,4,3,2,1,0 };   // 0 to 7 are on Port A, ex: GPA0 = 0, 8 to 15 are on Port B, ex: GPB0 = 8, default RC5 and RC8
-//};
-
 

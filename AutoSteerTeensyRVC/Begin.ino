@@ -365,10 +365,10 @@ void SaveData()
 bool ValidData()
 {
 	bool Result = true;
-	if (MDL.Receiver > 41) Result = false;
-	if (MDL.ReceiverSerialPort > 41) Result = false;
-	if (MDL.IMUSerialPort > 41) Result = false;
-	if (MDL.NtripPort > 41) Result = false;
+	if (MDL.Receiver > 3) Result = false;
+	if (MDL.ReceiverSerialPort > 8) Result = false;
+	if (MDL.IMUSerialPort > 8) Result = false;
+	if (MDL.NtripPort > 10000) Result = false;
 	if (MDL.ZeroOffset > 10000) Result = false;
 	if (MDL.Dir1 > 41) Result = false;
 	if (MDL.PWM1 > 41) Result = false;
