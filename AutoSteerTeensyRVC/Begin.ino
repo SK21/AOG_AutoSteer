@@ -54,35 +54,6 @@ void DoSetup()
 		break;
 	}
 
-	// serial bno
-	switch (MDL.IMUSerialPort)
-	{
-	case 1:
-		SerialIMU = &Serial1;
-		break;
-	case 2:
-		SerialIMU = &Serial2;
-		break;
-	case 3:
-		SerialIMU = &Serial3;
-		break;
-	case 4:
-		SerialIMU = &Serial4;
-		break;
-	case 5:
-		SerialIMU = &Serial5;
-		break;
-	case 6:
-		SerialIMU = &Serial6;
-		break;
-	case 7:
-		SerialIMU = &Serial7;
-		break;
-	default:
-		SerialIMU = &Serial8;
-		break;
-	}
-
 	if (MDL.Receiver != 0)
 	{
 		SerialReceiver->begin(ReceiverBaud);
@@ -94,6 +65,10 @@ void DoSetup()
 		parser.setErrorHandler(errorHandler);
 		parser.addHandler("G-GGA", GGA_Handler);
 		parser.addHandler("G-VTG", VTG_Handler);
+
+		Serial.print("Connecting to receiver on serial port ");
+		Serial.println(MDL.ReceiverSerialPort);
+		Serial.println("");
 	}
 
 	// pins
@@ -211,6 +186,35 @@ void DoSetup()
 	UDPconfig.begin(ConfigListeningPort);
 
 	// IMU
+	// serial bno
+	switch (MDL.IMUSerialPort)
+	{
+	case 1:
+		SerialIMU = &Serial1;
+		break;
+	case 2:
+		SerialIMU = &Serial2;
+		break;
+	case 3:
+		SerialIMU = &Serial3;
+		break;
+	case 4:
+		SerialIMU = &Serial4;
+		break;
+	case 5:
+		SerialIMU = &Serial5;
+		break;
+	case 6:
+		SerialIMU = &Serial6;
+		break;
+	case 7:
+		SerialIMU = &Serial7;
+		break;
+	default:
+		SerialIMU = &Serial8;
+		break;
+	}
+
 	SerialIMU->begin(IMUBaud);
 	static char IMUBufferIn[512];
 	static char IMUBufferOut[512];

@@ -22,8 +22,8 @@
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   20-Feb-2024"
-const uint16_t InoID = 20024;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   24-Feb-2024"
+const uint16_t InoID = 24024;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -164,7 +164,6 @@ Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 BNO08x_RVC_Data heading;
 
 uint32_t AOGTime;
-uint32_t ReceiverTime;
 uint32_t NtripTime;
 
 bool ADSfound = false;
@@ -233,14 +232,14 @@ void Blink()
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
 
-		//Serial.print(" Micros: ");
-		//Serial.print(MaxLoopTime);
+		Serial.print(" Micros: ");
+		Serial.print(MaxLoopTime);
 
-		//Serial.print(", WAS: ");
-		//Serial.print(AINs.AIN0);
+		Serial.print(", WAS: ");
+		Serial.print(AINs.AIN0);
 
-		//Serial.print(", Heading: ");
-		//Serial.print(IMU_Heading / 10.0);
+		Serial.print(", Heading: ");
+		Serial.print(IMU_Heading / 10.0);
 
 		//Serial.print(", ");
 		//Serial.print(debug1);
@@ -257,16 +256,16 @@ void Blink()
 		//Serial.print(", Temp: ");
 		//Serial.print(tempmonGetTemp());
 
-		//Serial.println("");
+		Serial.println("");
 
-		//if (ResetRead++ > 5)
-		//{
-		//	MaxLoopTime = 0;
-		//	ResetRead = 0;
-		//}
+		if (ResetRead++ > 5)
+		{
+			MaxLoopTime = 0;
+			ResetRead = 0;
+		}
 	}
-	//if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
-	//LoopTmr = 0;
+	if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
+	LoopTmr = 0;
 }
 
 uint32_t SpeedPulseTime;

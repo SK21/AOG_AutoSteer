@@ -158,8 +158,6 @@ void GGA_Handler() //Rec'd GGA
 
 void BuildPanda()
 {
-    ReceiverTime = millis();
-
     strcpy(nme, "");
 
     strcat(nme, "$PANDA,");
