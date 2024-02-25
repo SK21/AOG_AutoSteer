@@ -98,7 +98,7 @@ void ReadPGNs(byte Data[], uint16_t len)
 		//6     -
 		//7     Pulse Cal X 10, Lo
 		//8     Pulse Cal X 10, Hi
-		//9     relay control type  0 - no relays, 1 - PCA9685, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017, 5 - Teensy GPIO
+		//9     relay control type  0 - no relays, 1 - GPIOs, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017
 		//10    Commands
 		//          - bit 0, swap pitch for roll
 		//          - bit 1, invert roll

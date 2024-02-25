@@ -36,7 +36,7 @@ struct ModuleConfig
 {
 	//	AS15 config
 	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-	uint8_t ReceiverSerialPort = 8;	// 3 micro, 8 simpleRTK2B
+	uint8_t ReceiverSerialPort = 8;	// 8 for both micro and SimpleRTK2B
 	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
 	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
 	uint16_t ZeroOffset = 6500;
