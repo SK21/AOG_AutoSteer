@@ -50,6 +50,11 @@ void ReceiveSerialConfig()
 				PGNfound = true;
 				break;
 
+			case 32503:
+				SerialPGNlength = 6;
+				PGNfound = true;
+				break;
+
 			default:
 				// find pgn
 				SerialMSB = Serial.read();
@@ -125,7 +130,7 @@ void ReadPGNs(byte Data[], uint16_t len)
 				if (bitRead(Commands, 3)) MDL.RelayOnSignal = 1; else MDL.RelayOnSignal = 0;
 				if (bitRead(Commands, 4)) MDL.ZeroOffset = AINs.AIN0;
 
-				EEPROM.put(110, MDL);
+				SaveData();
 			}
 		}
 		break;
@@ -162,9 +167,36 @@ void ReadPGNs(byte Data[], uint16_t len)
 					MDL.RelayPins[i] = Data[i + 9];
 				}
 
-				EEPROM.put(110, MDL);
+				SaveData();
 
 				SCB_AIRCR = 0x05FA0004; //reset the Teensy   
+			}
+		}
+		break;
+
+	case 32503:
+		//PGN32503, Subnet change
+		//0     HeaderLo    247
+		//1     HeaderHI    126
+		//2     IP 0
+		//3     IP 1
+		//4     IP 2
+		//5     CRC
+
+		PGNlength = 6;
+
+		if (len > PGNlength - 1)
+		{
+			if (GoodCRC(Data, PGNlength))
+			{
+				MDL.IP0 = Data[2];
+				MDL.IP1 = Data[3];
+				MDL.IP2 = Data[4];
+
+				SaveData();
+
+				// restart the Teensy
+				SCB_AIRCR = 0x05FA0004;
 			}
 		}
 		break;

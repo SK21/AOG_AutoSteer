@@ -408,7 +408,7 @@ void LoadDefaults()
 	MDL.ReceiverSerialPort = 8;
 	MDL.IMUSerialPort = 5;
 	MDL.NtripPort = 2233;
-	MDL.ZeroOffset = 6500;
+	MDL.ZeroOffset = 0;
 	MDL.PulseCal = 255;
 	MDL.SwapRollPitch = 0;
 	MDL.InvertRoll = 0;

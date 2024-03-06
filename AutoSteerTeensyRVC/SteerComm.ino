@@ -28,7 +28,7 @@ void ReceiveSteerData()
                         MDL.IP0 = DataEthernet[7];
                         MDL.IP1 = DataEthernet[8];
                         MDL.IP2 = DataEthernet[9];
-                        EEPROM.put(110, MDL);
+                        SaveData();
 
                         //reset the Teensy
                         SCB_AIRCR = 0x05FA0004;
@@ -65,8 +65,7 @@ void ReceiveSteerData()
                     if (bitRead(sett, 2)) steerConfig.CurrentSensor = 1; else steerConfig.CurrentSensor = 0;
                     if (bitRead(sett, 3)) MDL.SwapRollPitch = 1; else MDL.SwapRollPitch = 0;
 
-                    EEPROM.put(40, steerConfig);
-                    EEPROM.put(110, MDL);
+                    SaveData();
 
                     //reset the Teensy
                     SCB_AIRCR = 0x05FA0004;
@@ -85,7 +84,7 @@ void ReceiveSteerData()
                     steerSettings.wasOffset = DataEthernet[10] | DataEthernet[11] << 8;
                     steerSettings.AckermanFix = (float)DataEthernet[12] * 0.01;
 
-                    EEPROM.put(10, steerSettings);
+                    SaveData();
                     break;
 
                 case 254:

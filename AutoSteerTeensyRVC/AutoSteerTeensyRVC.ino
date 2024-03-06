@@ -22,8 +22,8 @@
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   24-Feb-2024"
-const uint16_t InoID = 24024;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   05-Mar-2024"
+const uint16_t InoID = 5034;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -39,7 +39,7 @@ struct ModuleConfig
 	uint8_t ReceiverSerialPort = 8;	// 8 for both micro and SimpleRTK2B
 	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
 	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
-	uint16_t ZeroOffset = 6500;
+	int16_t ZeroOffset = 0;
 	uint16_t PulseCal = 255;		// Hz/KMH X 10
 	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
 	uint8_t InvertRoll = 0;
@@ -236,7 +236,7 @@ void Blink()
 		Serial.print(MaxLoopTime);
 
 		Serial.print(", WAS: ");
-		Serial.print(AINs.AIN0);
+		Serial.print(helloSteerPosition);
 
 		Serial.print(", Heading: ");
 		Serial.print(IMU_Heading / 10.0);
