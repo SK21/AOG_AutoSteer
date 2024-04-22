@@ -185,6 +185,11 @@ void DoSetup()
 	UDPntrip.begin(MDL.NtripPort);
 	UDPconfig.begin(ConfigListeningPort);
 
+	// NMEA from F9P uart2
+	UDPGPS.begin(1234);
+	GPSserial = &Serial3;
+	GPSserial->begin(57600);
+
 	// IMU
 	// serial bno
 	switch (MDL.IMUSerialPort)

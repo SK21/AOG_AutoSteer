@@ -22,8 +22,8 @@
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   05-Mar-2024"
-const uint16_t InoID = 5034;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   21-Apr-2024"
+const uint16_t InoID = 21044;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -117,6 +117,16 @@ IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
 EthernetUDP UDPntrip;	// from AGIO to receiver
 char NtripBuffer[512];	// buffer for ntrip data
 
+// Ethernet GPS, pass-through data from F9P uart2 to UDP
+// Serial3 @ 57,600
+EthernetUDP UDPGPS;
+uint16_t GPSport = 18020;
+char GPSdelim = '\n';
+char GPSbuffer[200];
+uint16_t GPSpos = 0;
+char GPSdata;
+HardwareSerial* GPSserial;
+
 // Ethernet config
 EthernetUDP UDPconfig;
 uint16_t ConfigListeningPort = 28888;
@@ -209,9 +219,30 @@ void loop()
 	}
 	ReadIMU();
 	DoPanda();
+	SendGPS();
 	ReceiveSteerData();
 	Blink();
 	wdt.feed();
+}
+
+void SendGPS()
+{
+	if (GPSserial->available())
+	{
+		GPSdata = GPSserial->read();
+		GPSbuffer[GPSpos++] = GPSdata;
+		if (GPSdata == GPSdelim) 
+		{
+			if (Ethernet.linkStatus() == LinkON)
+			{
+				UDPGPS.beginPacket(DestinationIP, GPSport);
+				UDPGPS.write(GPSbuffer, GPSpos);
+				UDPGPS.endPacket();
+			}
+			GPSpos = 0;
+		}
+		if (GPSpos > 199) GPSpos = 0;
+	}
 }
 
 bool State = false;
