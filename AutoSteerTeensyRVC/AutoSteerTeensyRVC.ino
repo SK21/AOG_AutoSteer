@@ -18,12 +18,17 @@
 #include <Adafruit_I2CRegister.h>
 #include <Adafruit_SPIDevice.h>
 
+#include "FXUtil.h"		// read_ascii_line(), hex file support
+extern "C" {
+#include "FlashTxx.h"		// TLC/T3x/T4x/TMM flash primitives
+}
+
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   21-Apr-2024"
-const uint16_t InoID = 21044;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   04-Jun-2024"
+const uint16_t InoID = 4064;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -199,6 +204,39 @@ uint16_t PGNconfig;
 
 bool IMUstarted = false;
 
+// firmware update
+EthernetUDP UpdateComm;
+uint16_t UpdateReceivePort = 29100;
+uint16_t UpdateSendPort = 29000;
+uint32_t buffer_addr, buffer_size;
+bool UpdateMode = false;
+
+//******************************************************************************
+// hex_info_t struct for hex record and hex file info
+//******************************************************************************
+typedef struct {  //
+	char* data;   // pointer to array allocated elsewhere
+	unsigned int addr;  // address in intel hex record
+	unsigned int code;  // intel hex record type (0=data, etc.)
+	unsigned int num; // number of data bytes in intel hex record
+
+	uint32_t base;  // base address to be added to intel hex 16-bit addr
+	uint32_t min;   // min address in hex file
+	uint32_t max;   // max address in hex file
+
+	int eof;    // set true on intel hex EOF (code = 1)
+	int lines;    // number of hex records received
+} hex_info_t;
+
+static char data[16];// buffer for hex data
+
+hex_info_t hex =
+{ // intel hex info struct
+  data, 0, 0, 0,        //   data,addr,num,code
+  0, 0xFFFFFFFF, 0,     //   base,min,max,
+  0, 0					//   eof,lines
+};
+
 void setup()
 {
 	DoSetup();
@@ -221,6 +259,7 @@ void loop()
 	DoPanda();
 	SendGPS();
 	ReceiveSteerData();
+	ReceiveUpdate();
 	Blink();
 	wdt.feed();
 }
@@ -262,37 +301,39 @@ void Blink()
 		BlinkTmr = 0;
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
-
-		Serial.print(" Micros: ");
-		Serial.print(MaxLoopTime);
-
-		Serial.print(", WAS: ");
-		Serial.print(helloSteerPosition);
-
-		Serial.print(", Heading: ");
-		Serial.print(IMU_Heading / 10.0);
-
-		//Serial.print(", ");
-		//Serial.print(debug1);
-
-		//Serial.print(", ");
-		//Serial.print(debug2);
-
-		//Serial.print(", ");
-		//Serial.print(debug3);
-
-		//Serial.print(", ");
-		//Serial.print(debug4);
-
-		//Serial.print(", Temp: ");
-		//Serial.print(tempmonGetTemp());
-
-		Serial.println("");
-
-		if (ResetRead++ > 5)
+		if (!UpdateMode)
 		{
-			MaxLoopTime = 0;
-			ResetRead = 0;
+			Serial.print(" Micros: ");
+			Serial.print(MaxLoopTime);
+
+			Serial.print(", WAS: ");
+			Serial.print(helloSteerPosition);
+
+			Serial.print(", Heading: ");
+			Serial.print(IMU_Heading / 10.0);
+
+			//Serial.print(", ");
+			//Serial.print(debug1);
+
+			//Serial.print(", ");
+			//Serial.print(debug2);
+
+			//Serial.print(", ");
+			//Serial.print(debug3);
+
+			//Serial.print(", ");
+			//Serial.print(debug4);
+
+			//Serial.print(", Temp: ");
+			//Serial.print(tempmonGetTemp());
+
+			Serial.println("");
+
+			if (ResetRead++ > 5)
+			{
+				MaxLoopTime = 0;
+				ResetRead = 0;
+			}
 		}
 	}
 	if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;

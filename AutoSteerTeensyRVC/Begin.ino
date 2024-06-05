@@ -190,6 +190,9 @@ void DoSetup()
 	GPSserial = &Serial3;
 	GPSserial->begin(57600);
 
+	// update
+	UpdateComm.begin(UpdateReceivePort);
+
 	// IMU
 	// serial bno
 	switch (MDL.IMUSerialPort)

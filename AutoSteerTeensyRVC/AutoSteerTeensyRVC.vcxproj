@@ -80,6 +80,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FlashTxx.c" />
+    <ClCompile Include="FXUtil.cpp" />
     <ClCompile Include="PCA95x5_RC.h">
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
@@ -88,6 +90,8 @@
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
+    <ClInclude Include="FlashTxx.h" />
+    <ClInclude Include="FXUtil.h" />
     <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
@@ -134,6 +138,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Config.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EthernetUpdate.ino">
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>

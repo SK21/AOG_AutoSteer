@@ -30,9 +30,22 @@
       <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="Config.ino" />
+    <ClCompile Include="FlashTxx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FXUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EthernetUpdate.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FlashTxx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FXUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
