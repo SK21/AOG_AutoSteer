@@ -238,7 +238,7 @@ elapsedMillis BlinkTmr;
 byte ResetRead;
 elapsedMicros LoopTmr;
 uint32_t MaxLoopTime;
-//uint16_t debug1;
+uint16_t debug1;
 
 void Blink()
 {
