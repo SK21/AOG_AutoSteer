@@ -3,10 +3,8 @@
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
 
-#include <Watchdog_t4.h>	// https://github.com/tonton81/WDT_T4
 #include "zNMEAParser.h"	
 #include "Adafruit_BNO08x_RVC.h"
-#include "PCA95x5_RC.h"		// modified from https://github.com/hideakitai/PCA95x5
 
 #include <Adafruit_MCP23008.h>
 #include <Adafruit_MCP23X08.h>
@@ -27,8 +25,8 @@ extern "C" {
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   04-Jun-2024"
-const uint16_t InoID = 4064;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC   07-Mar-2025"
+const uint16_t InoID = 7035;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -39,13 +37,12 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 
 struct ModuleConfig
 {
-	//	AS15 config
+	//	AS15-2 config
 	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
 	uint8_t ReceiverSerialPort = 8;	// 8 for both micro and SimpleRTK2B
 	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
 	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
 	int16_t ZeroOffset = 0;
-	uint16_t PulseCal = 255;		// Hz/KMH X 10
 	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
 	uint8_t InvertRoll = 0;
 	uint8_t Dir1 = 23;
@@ -53,18 +50,11 @@ struct ModuleConfig
 	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
 	uint8_t SteerSw = 26;
 	uint8_t WorkSw = 27;
-	uint8_t Encoder = 0;			// none
-	uint8_t SpeedPulse = 28;
 	uint8_t IP0 = 192;
 	uint8_t IP1 = 168;
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
-	uint8_t PowerRelay = 0;			// pin for 12V out relay
-	uint8_t	Use4_20 = 0;			// use 4-20 pressure sensor instead of 0-12V
-	uint8_t RelayControl = 0;		// 0 - no relays, 1 - GPIOs, 2 - PCA9555 8 relays, 3 - PCA9555 16 relays, 4 - MCP23017
-	uint8_t RelayPins[16];
-	uint8_t RelayOnSignal = 1;		// 0 or 1
-	uint8_t AdsAddress = 0x49;		// enter 0 to search all
+	uint8_t AdsAddress = 0x49;		
 };
 
 ModuleConfig MDL;
@@ -72,9 +62,9 @@ ModuleConfig MDL;
 struct PCBanalog
 {
 	int16_t AIN0;	// WAS
-	int16_t AIN1;	// 0-5V pressure sensor
-	int16_t AIN2;	// current sensor
-	int16_t AIN3;	// 4-20 pressure sensor
+	int16_t AIN1;	// -
+	int16_t AIN2;	// -
+	int16_t AIN3;	// current
 };
 
 PCBanalog AINs;
@@ -111,8 +101,6 @@ struct Setup
 
 Setup steerConfig;          //9 bytes
 
-extern float tempmonGetTemp(void);
-
 // Ethernet steering
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
 uint16_t ListeningPort = 8888;
@@ -122,15 +110,9 @@ IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
 EthernetUDP UDPntrip;	// from AGIO to receiver
 char NtripBuffer[512];	// buffer for ntrip data
 
-// Ethernet GPS, pass-through data from F9P uart2 to UDP
-// Serial3 @ 57,600
-EthernetUDP UDPGPS;
-uint16_t GPSport = 18020;
-char GPSdelim = '\n';
-char GPSbuffer[200];
-uint16_t GPSpos = 0;
-char GPSdata;
+// GPS pass-through from Serial 3 to Serial 1, 57600 baud
 HardwareSerial* GPSserial;
+HardwareSerial* SerialOut;
 
 // Ethernet config
 EthernetUDP UDPconfig;
@@ -170,7 +152,6 @@ uint8_t PGN_253[] = { 128, 129, 123, 253, 8, 0, 0, 0, 0, 0,0,0,0, 12 };
 //fromAutoSteerData FD 250 - sensor values etc
 uint8_t PGN_250[] = { 128, 129, 123, 250, 8, 0, 0, 0, 0, 0,0,0,0, 12 };
 
-WDT_T4<WDT1> wdt;
 const uint16_t  LOOP_TIME = 25;	// 40 hz, main loop
 uint32_t  LoopLast = LOOP_TIME;
 
@@ -190,14 +171,6 @@ HardwareSerial* SerialReceiver;
 elapsedMillis imuDelayTimer;
 bool isGGA_Updated = false;
 int ADS1115_Address;
-
-byte RelayLo = 0;	// sections 0-7
-byte RelayHi = 0;	// sections 8-15
-
-PCA9555 PCA;
-bool PCA9555PW_found = false;
-Adafruit_MCP23X17 MCP;
-bool MCP23017_found = false;
 
 byte DataConfig[MaxReadBuffer];
 uint16_t PGNconfig;
@@ -250,38 +223,14 @@ void loop()
 		ReadAnalog();
 		ReadSwitches();
 		DoSteering();
-		SendSpeedPulse();
 		ReceiveEthernetConfig();
-		ReceiveSerialConfig();
-		CheckRelays();
 	}
 	ReadIMU();
 	DoPanda();
-	SendGPS();
 	ReceiveSteerData();
 	ReceiveUpdate();
 	Blink();
-	wdt.feed();
-}
-
-void SendGPS()
-{
-	if (GPSserial->available())
-	{
-		GPSdata = GPSserial->read();
-		GPSbuffer[GPSpos++] = GPSdata;
-		if (GPSdata == GPSdelim) 
-		{
-			if (Ethernet.linkStatus() == LinkON)
-			{
-				UDPGPS.beginPacket(DestinationIP, GPSport);
-				UDPGPS.write(GPSbuffer, GPSpos);
-				UDPGPS.endPacket();
-			}
-			GPSpos = 0;
-		}
-		if (GPSpos > 199) GPSpos = 0;
-	}
+	if (GPSserial->available()) SerialOut->write(GPSserial->read());
 }
 
 bool State = false;
@@ -290,9 +239,6 @@ byte ResetRead;
 elapsedMicros LoopTmr;
 uint32_t MaxLoopTime;
 //uint16_t debug1;
-//uint16_t debug2;
-//uint16_t debug3;
-//uint16_t debug4;
 
 void Blink()
 {
@@ -315,18 +261,6 @@ void Blink()
 			//Serial.print(", ");
 			//Serial.print(debug1);
 
-			//Serial.print(", ");
-			//Serial.print(debug2);
-
-			//Serial.print(", ");
-			//Serial.print(debug3);
-
-			//Serial.print(", ");
-			//Serial.print(debug4);
-
-			//Serial.print(", Temp: ");
-			//Serial.print(tempmonGetTemp());
-
 			Serial.println("");
 
 			if (ResetRead++ > 5)
@@ -338,26 +272,6 @@ void Blink()
 	}
 	if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
 	LoopTmr = 0;
-}
-
-uint32_t SpeedPulseTime;
-void SendSpeedPulse()
-{
-	// https://discourse.agopengps.com/t/get-feed-rate-from-ago-and-transform-it-into-weedkiller-sprayer-computer-compatible-pulses/2958/39
-	// PulseCal: hz/mph - 41.0, hz/kmh - 25.5
-
-	if (millis() - SpeedPulseTime > 400) //This section runs every 400 millis.  It gets speed and changes the frequency of the tone generator.
-	{
-		SpeedPulseTime = millis();
-		if (Speed_KMH < 1.22) // If the speed is lower than (0.76 MPH, 1.22 KMH) or (31.1 Hz) it forces the output to 0. Tone will not work under 31 Hz 
-		{
-			noTone(MDL.SpeedPulse);
-		}
-		else
-		{
-			tone(MDL.SpeedPulse, (Speed_KMH * MDL.PulseCal / 10));
-		}
-	}
 }
 
 bool GoodCRC(byte Data[], byte Length)

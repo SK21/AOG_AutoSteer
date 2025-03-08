@@ -18,34 +18,30 @@
     <ClCompile Include="AutoSteerTeensyRVC.ino" />
     <ClCompile Include="Analog.ino" />
     <ClCompile Include="Begin.ino" />
-    <ClCompile Include="Panda.ino" />
-    <ClCompile Include="PCA95x5_RC.h">
+    <ClCompile Include="Config.ino" />
+    <ClCompile Include="EthernetUpdate.ino" />
+    <ClCompile Include="FlashTxx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FlashTxx.h">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="Relays.ino" />
+    <ClCompile Include="FXUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FXUtil.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Panda.ino" />
     <ClCompile Include="SteerComm.ino" />
     <ClCompile Include="Steering.ino" />
     <ClCompile Include="StrSwitches.ino" />
     <ClCompile Include="zNMEAParser.h">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="Config.ino" />
-    <ClCompile Include="FlashTxx.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FXUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EthernetUpdate.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FlashTxx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FXUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

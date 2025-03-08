@@ -1,13 +1,7 @@
 
 void DoSetup()
 {
-	int ADS[] = { 0x48,0x49,0x4A,0x4B };	// ADS1115 addresses
 	uint8_t ErrorCount;
-
-	// watchdog timer
-	WDT_timings_t config;
-	config.timeout = 60;	// seconds
-	wdt.begin(config);
 
 	pinMode(LED_BUILTIN, OUTPUT);
 
@@ -72,89 +66,42 @@ void DoSetup()
 	}
 
 	// pins
-	pinMode(MDL.Encoder, INPUT_PULLUP);
 	pinMode(MDL.WorkSw, INPUT_PULLUP);
 	pinMode(MDL.SteerSw, INPUT_PULLUP);
 	pinMode(MDL.SteeringRelay, OUTPUT);
 	pinMode(MDL.Dir1, OUTPUT);
 	pinMode(MDL.PWM1, OUTPUT);
-	pinMode(MDL.SpeedPulse, OUTPUT);
-	pinMode(MDL.PowerRelay, OUTPUT);
 
-	noTone(MDL.SpeedPulse);
 	SteerSwitch = HIGH;
 
 	Wire.begin();			// I2C on pins SCL 19, SDA 18
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
 
 	// ADS1115
-	if (MDL.AdsAddress == 0)
+	ADS1115_Address = MDL.AdsAddress;
+	Serial.println("Starting ADS1115 ... ");
+	ErrorCount = 0;
+	while (!ADSfound)
 	{
-		for (int i = 0; i < 4; i++)
-		{
-			ADS1115_Address = ADS[i];
-			Serial.print("Starting ADS1115 at address ");
-			Serial.println(ADS1115_Address);
-			ErrorCount = 0;
-			while (!ADSfound)
-			{
-				Wire.beginTransmission(ADS1115_Address);
-				Wire.write(0b00000000);	//Point to Conversion register
-				Wire.endTransmission();
-				Wire.requestFrom(ADS1115_Address, 2);
-				ADSfound = Wire.available();
-				Serial.print(".");
-				delay(500);
-				if (ErrorCount++ > 5) break;
-			}
-			Serial.println("");
-			if (ADSfound)
-			{
-				Serial.print("ADS1115 connected at address ");
-				Serial.println(ADS1115_Address);
-				Serial.println("");
-				break;
-			}
-			else
-			{
-				Serial.print("ADS1115 not found.");
-				Serial.println("");
-			}
-		}
+		Wire.beginTransmission(ADS1115_Address);
+		Wire.write(0b00000000);	//Point to Conversion register
+		Wire.endTransmission();
+		Wire.requestFrom(ADS1115_Address, 2);
+		ADSfound = Wire.available();
+		Serial.print(".");
+		delay(500);
+		if (ErrorCount++ > 5) break;
+	}
+	Serial.println("");
+	if (ADSfound)
+	{
+		Serial.print("ADS1115 connected at address ");
+		Serial.println(ADS1115_Address);
+		Serial.println("");
 	}
 	else
 	{
-		ADS1115_Address = MDL.AdsAddress;
-		Serial.print("Starting ADS1115 at address ");
-		Serial.println(ADS1115_Address);
-		ErrorCount = 0;
-		while (!ADSfound)
-		{
-			Wire.beginTransmission(ADS1115_Address);
-			Wire.write(0b00000000);	//Point to Conversion register
-			Wire.endTransmission();
-			Wire.requestFrom(ADS1115_Address, 2);
-			ADSfound = Wire.available();
-			Serial.print(".");
-			delay(500);
-			if (ErrorCount++ > 5) break;
-		}
-		Serial.println("");
-		if (ADSfound)
-		{
-			Serial.print("ADS1115 connected at address ");
-			Serial.println(ADS1115_Address);
-			Serial.println("");
-		}
-		else
-		{
-			Serial.print("ADS1115 not found.");
-			Serial.println("");
-		}
-	}
-
-	if (!ADSfound)
-	{
+		Serial.print("ADS1115 not found.");
 		Serial.println("ADS1115 disabled.");
 		Serial.println("");
 	}
@@ -185,10 +132,11 @@ void DoSetup()
 	UDPntrip.begin(MDL.NtripPort);
 	UDPconfig.begin(ConfigListeningPort);
 
-	// NMEA from F9P uart2
-	UDPGPS.begin(1234);
+	// GPS pass-through
 	GPSserial = &Serial3;
 	GPSserial->begin(57600);
+	SerialOut = &Serial1;
+	SerialOut->begin(57600);
 
 	// update
 	UpdateComm.begin(UpdateReceivePort);
@@ -247,86 +195,6 @@ void DoSetup()
 	else
 	{
 		Serial.println("BNO RVC IMU failed to start.");
-	}
-
-	// Relays
-	switch (MDL.RelayControl)
-	{
-	case 1:
-		// Relay GPIO Pins
-		for (int i = 0; i < 16; i++)
-		{
-			if (MDL.RelayPins[i] > 0)
-			{
-				pinMode(MDL.RelayPins[i], OUTPUT);
-			}
-		}
-		break;
-
-	case 2:
-	case 3:
-		// PCA9555 I/O expander on default address 0x20
-		Serial.println("");
-		Serial.println("Starting PCA9555 I/O Expander ...");
-		ErrorCount = 0;
-		while (!PCA9555PW_found)
-		{
-			Serial.print(".");
-			Wire.beginTransmission(0x20);
-			PCA9555PW_found = (Wire.endTransmission() == 0);
-			ErrorCount++;
-			delay(500);
-			if (ErrorCount > 5) break;
-		}
-
-		Serial.println("");
-		if (PCA9555PW_found)
-		{
-			Serial.println("PCA9555 expander found.");
-
-			PCA.attach(Wire);
-			PCA.polarity(PCA95x5::Polarity::ORIGINAL_ALL);
-			PCA.direction(PCA95x5::Direction::OUT_ALL);
-			PCA.write(PCA95x5::Level::H_ALL);
-		}
-		else
-		{
-			Serial.println("PCA9555 expander not found.");
-		}
-		Serial.println("");
-		break;
-
-	case 4:
-		// MCP23017 I/O expander on default address 0x20
-		Serial.println("");
-		Serial.println("Starting MCP23017 ...");
-		ErrorCount = 0;
-		while (!MCP23017_found)
-		{
-			Serial.print(".");
-			Wire.beginTransmission(0x20);
-			MCP23017_found = (Wire.endTransmission() == 0);
-			ErrorCount++;
-			delay(500);
-			if (ErrorCount > 5) break;
-		}
-
-		Serial.println("");
-		if (MCP23017_found)
-		{
-			Serial.println("MCP23017 found.");
-			MCP.begin_I2C();
-
-			for (int i = 0; i < 16; i++)
-			{
-				MCP.pinMode(MDL.RelayPins[i], OUTPUT);
-			}
-		}
-		else
-		{
-			Serial.println("MCP23017 not found.");
-		}
-		break;
 	}
 
 	Serial.println("");
@@ -388,22 +256,7 @@ bool ValidData()
 	
 	if (MDL.SteerSw > 41) Result = false;
 	if (MDL.WorkSw > 41) Result = false;
-	if (MDL.Encoder > 41) Result = false;
-	if (MDL.SpeedPulse > 41) Result = false;
-	if (MDL.PowerRelay > 41) Result = false;
 
-	if (Result && MDL.RelayControl == 1)
-	{
-		// check GPIOs for relays
-		for (int i = 0; i < 16; i++)
-		{
-			if (MDL.RelayPins[i] > 41 && MDL.RelayPins[i] != NC)
-			{
-				Result = false;
-				break;
-			}
-		}
-	}
 	return Result;
 }
 
@@ -417,7 +270,6 @@ void LoadDefaults()
 	MDL.IMUSerialPort = 5;
 	MDL.NtripPort = 2233;
 	MDL.ZeroOffset = 0;
-	MDL.PulseCal = 255;
 	MDL.SwapRollPitch = 0;
 	MDL.InvertRoll = 0;
 	MDL.Dir1 = 23;
@@ -426,22 +278,11 @@ void LoadDefaults()
 
 	MDL.SteerSw = 26;
 	MDL.WorkSw = 27;
-	MDL.Encoder = 0;
-	MDL.SpeedPulse = 28;
 	MDL.IP0 = 192;
 	MDL.IP1 = 168;
 	MDL.IP2 = 1;
 	MDL.IP3 = 126;
-	MDL.PowerRelay = 0;
-	MDL.Use4_20 = 0;
-	MDL.RelayControl = 0;
-	MDL.RelayOnSignal = 1;
 	MDL.AdsAddress = 0x49;
-
-	for (int i = 0; i < 16; i++)
-	{
-		MDL.RelayPins[i] = NC;
-	}
 }
 
 

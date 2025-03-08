@@ -28,7 +28,6 @@ void DoSteering()
 
 		// release relays
 		digitalWrite(MDL.SteeringRelay, LOW);
-		digitalWrite(MDL.PowerRelay, LOW);
 
 	}
 	else
@@ -69,7 +68,6 @@ void DoSteering()
 
 		// engage relays
 		digitalWrite(MDL.SteeringRelay, HIGH);
-		digitalWrite(MDL.PowerRelay, HIGH);
 	}
 
 	// pwm value out to motor

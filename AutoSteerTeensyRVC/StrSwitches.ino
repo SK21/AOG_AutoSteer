@@ -81,44 +81,6 @@ void ReadSwitches()
 			SWprevious = LOW;
 		}
 	}
-	else if (steerConfig.PressureSensor)
-	{
-		float SensorSample = 0;
-		if (MDL.Use4_20)
-		{
-			// analog 4-20
-			SensorSample = (float)(AINs.AIN2 );
-		}
-		else
-		{
-			// analog 12V
-			SensorSample = (float)(AINs.AIN1);
-		}
-
-		SensorReading = SensorReading * 0.6 + SensorSample * 0.4;
-		if (SensorReading >= steerConfig.PulseCountMax)
-		{
-			SteerSwitch = HIGH;
-			SWprevious = LOW;
-		}
-	}
-	else if (steerConfig.ShaftEncoder)
-	{
-		PulseRead = digitalRead(MDL.Encoder);
-		if ((PulseRead != PulseLast) && (millis() - PulseStart > SWdebounce))
-		{
-			PulseStart = millis();
-			PulseLast = PulseRead;
-			SwitchPulseCount++;
-
-			if (SwitchPulseCount >= steerConfig.PulseCountMax)
-			{
-				SteerSwitch = HIGH;
-				SWprevious = LOW;
-				SwitchPulseCount = 0;
-			}
-		}
-	}
 
 	switchByte = SteerSwitch << 1;
 	switchByte |= digitalRead(MDL.WorkSw);  // read work switch, Low on, High off
