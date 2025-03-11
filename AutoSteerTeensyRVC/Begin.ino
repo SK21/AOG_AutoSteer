@@ -133,10 +133,8 @@ void DoSetup()
 	UDPconfig.begin(ConfigListeningPort);
 
 	// GPS pass-through
-	GPSserial = &Serial3;
-	GPSserial->begin(57600);
-	SerialOut = &Serial1;
-	SerialOut->begin(57600);
+	PassThruInPort.begin(PassThruBaud);
+	PassThruOutPort.begin(PassThruBaud);
 
 	// update
 	UpdateComm.begin(UpdateReceivePort);

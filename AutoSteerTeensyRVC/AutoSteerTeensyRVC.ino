@@ -25,6 +25,10 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 #define LOW_HIGH_DEGREES 5.0	//How many degrees before decreasing Max PWM
 #define NC 0xFF		// Pin not connected
 
+#define PassThruInPort Serial3	// from F9P Uart2
+#define PassThruOutPort Serial1	// to Max232 for DB9 connector
+#define PassThruBaud 57600
+
 struct ModuleConfig
 {
 	//	AS15-2 config
@@ -220,7 +224,7 @@ void loop()
 	ReceiveSteerData();
 	ReceiveUpdate();
 	Blink();
-	if (GPSserial->available()) SerialOut->write(GPSserial->read());
+	if (PassThruInPort.available()) PassThruOutPort.write(PassThruInPort.read());
 }
 
 bool State = false;
