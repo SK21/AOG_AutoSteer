@@ -47,7 +47,7 @@ void ReceiveUpdate()
 					{
 						if (GoodCRC(ReceivedData, PGNlength))
 						{
-							if ((ReceivedData[4] == 1) || (ReceivedData[3] == InoType))
+							if ((ReceivedData[4] == 1) || (ReceivedData[3] == BuildType))
 							{
 								if (firmware_buffer_init(&buffer_addr, &buffer_size))
 								{
