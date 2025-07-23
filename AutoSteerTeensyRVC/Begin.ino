@@ -6,19 +6,18 @@ void DoSetup()
 	pinMode(LED_BUILTIN, OUTPUT);
 
 	Serial.begin(38400);
-	delay(3000);
-	Serial.println("");
-	Serial.println("");
-	Serial.println(BuildTypes[BuildType]);
-	Serial.print("Version:    v");
-	Serial.print(BuildYear + 2000);
-	Serial.print(".");
-	Serial.print(BuildMonth);
-	Serial.print(".");
-	Serial.println(BuildDay);
+	delay(5000);
+	Serial.println();
+	Serial.println(InoDescription);
+	Serial.println();
 
 	// eeprom data
 	LoadData();
+
+	Serial.println("");
+	Serial.print("Module Version: ");
+	Serial.println(InoID);
+	Serial.println("");
 
 	// receive data from gps receiver
 	switch (MDL.ReceiverSerialPort)
@@ -196,8 +195,6 @@ void DoSetup()
 		Serial.println("BNO RVC IMU failed to start.");
 	}
 
-	SendStatus();
-
 	Serial.println("");
 	Serial.println("Finished setup.");
 	Serial.println("");
@@ -206,13 +203,11 @@ void DoSetup()
 void LoadData()
 {
 	bool IsValid = false;
-	uint8_t ID[4];
-	for (int i = 0; i < 4; i++)
-	{
-		EEPROM.get(0 + i, ID[i]);
-	}
-
-	if (ID[0] == BuildDay && ID[1] == BuildMonth && ID[2] == BuildYear && ID[3] == BuildType)
+	int16_t StoredID;
+	int8_t StoredType;
+	EEPROM.get(0, StoredID);
+	EEPROM.get(4, StoredType);
+	if (StoredID == InoID && StoredType == InoType)
 	{
 		// load stored data
 		Serial.println("Loading stored settings.");
@@ -236,12 +231,10 @@ void LoadData()
 
 void SaveData()
 {
-	Serial.println("Updating stored settings.");
-	EEPROM.put(0, BuildDay);
-	EEPROM.put(1, BuildMonth);
-	EEPROM.put(2, BuildYear);
-	EEPROM.put(3, BuildType);
-
+	// update stored data
+	Serial.println("Updating stored data.");
+	EEPROM.put(0, InoID);
+	EEPROM.put(4, InoType);
 	EEPROM.put(10, steerSettings);
 	EEPROM.put(40, steerConfig);
 	EEPROM.put(110, MDL);

@@ -5,7 +5,6 @@
 
 #include "zNMEAParser.h"	
 #include "Adafruit_BNO08x_RVC.h"	// https://github.com/VikingVoltage/Adafruit_BNO08x_RVC/tree/Get-most-recent-BNO08x-Data-from-Serial-Buffer
-#include <Adafruit_Sensor.h>
 
 #include "FXUtil.h"		// read_ascii_line(), hex file support
 extern "C" {
@@ -14,12 +13,11 @@ extern "C" {
 
 // autosteer for Teensy 4.1
 // uses BNO in RVC mode over serial
-const uint8_t BuildYear = 25;
-const uint8_t BuildMonth = 7;
-const uint8_t BuildDay = 20;
-const uint8_t BuildType = 0;	// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
-const char* BuildTypes[] = { "Teensy AutoSteer","Teensy Rate","Nano Rate","Nano SwitchBox","ESP Rate" };
+#include <Adafruit_Sensor.h>
+#define InoDescription "AutoSteerTeensyRVC   10-Mar-2025"
+const uint16_t InoID = 10035;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
