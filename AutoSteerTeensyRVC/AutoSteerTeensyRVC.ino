@@ -15,8 +15,8 @@ extern "C" {
 // uses BNO in RVC mode over serial
 
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC   10-Mar-2025"
-const uint16_t InoID = 10035;	// change to send defaults to eeprom, ddmmy, no leading 0
+#define InoDescription "AutoSteerTeensyRVC"
+const uint16_t InoID = 23075;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800

@@ -6,18 +6,29 @@ void DoSetup()
 	pinMode(LED_BUILTIN, OUTPUT);
 
 	Serial.begin(38400);
-	delay(5000);
-	Serial.println();
-	Serial.println(InoDescription);
-	Serial.println();
+	delay(3000);
+	Serial.println("");
+	Serial.println("");
+	Serial.println("");
 
-	// eeprom data
+	// eeprom
 	LoadData();
 
 	Serial.println("");
-	Serial.print("Module Version: ");
-	Serial.println(InoID);
-	Serial.println("");
+	Serial.println(InoDescription);
+
+	// version
+	uint16_t yr = InoID % 10 + 2020;
+	uint16_t rest = InoID / 10;
+	uint8_t mn = rest % 100;
+	uint16_t dy = rest / 100;
+
+	Serial.print("Module Version: v");
+	Serial.print(yr);
+	Serial.print(".");
+	Serial.print(mn);
+	Serial.print(".");
+	Serial.println(dy);
 
 	// receive data from gps receiver
 	switch (MDL.ReceiverSerialPort)
