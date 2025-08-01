@@ -111,7 +111,7 @@ void SendSteerData()
     PGN_253[6] = tmp >> 8;
 
     // heading
-    if (MDL.Receiver == 0 && IMUstarted)
+    if (IMUstarted)
     {
         tmp = (int)(IMU_Heading);
     }
@@ -123,7 +123,7 @@ void SendSteerData()
     PGN_253[8] = tmp >> 8;
 
     // roll
-    if (MDL.Receiver == 0 && IMUstarted)
+    if (IMUstarted)
     {
         tmp = (int)(IMU_Roll);
     }

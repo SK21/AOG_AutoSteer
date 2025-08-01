@@ -32,30 +32,22 @@ float tmpIMU;
 
 void DoPanda()
 {
-    if (MDL.Receiver > 0)
+    // NMEA, from receiver to parser
+    if (SerialReceiver->available()) parser << SerialReceiver->read();
+
+    // GPS corrections from AGIO to receiver
+    int packetSize = UDPntrip.parsePacket();
+    if (packetSize)
     {
-        // NMEA, from receiver to parser
-        if (SerialReceiver->available()) parser << SerialReceiver->read();
-
-        // GPS corrections from AGIO to receiver
-        int packetSize = UDPntrip.parsePacket();
-        if (packetSize)
-        {
-            NtripTime = millis();
-            UDPntrip.read(NtripBuffer, packetSize);
-            SerialReceiver->write(NtripBuffer, packetSize);
-        }
-
-        if (isGGA_Updated && imuDelayTimer > 40 && IMUstarted)
-        {
-            imuHandler();
-            isGGA_Updated = false;
-        }
+        NtripTime = millis();
+        UDPntrip.read(NtripBuffer, packetSize);
+        SerialReceiver->write(NtripBuffer, packetSize);
     }
-    else
+
+    if (isGGA_Updated && imuDelayTimer > 40 && IMUstarted)
     {
-        // no receiver, just get imu data
         imuHandler();
+        isGGA_Updated = false;
     }
 }
 

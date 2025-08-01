@@ -59,29 +59,27 @@ void DoSetup()
 		break;
 	}
 
-	if (MDL.Receiver != 0)
-	{
-		SerialReceiver->begin(ReceiverBaud);
-		static char ReceiverBufferIn[512];
-		static char ReceiverBufferOut[512];
-		SerialReceiver->addMemoryForRead(ReceiverBufferIn, 512);
-		SerialReceiver->addMemoryForWrite(ReceiverBufferOut, 512);
+	// Receiver
+	SerialReceiver->begin(ReceiverBaud);
+	static char ReceiverBufferIn[512];
+	static char ReceiverBufferOut[512];
+	SerialReceiver->addMemoryForRead(ReceiverBufferIn, 512);
+	SerialReceiver->addMemoryForWrite(ReceiverBufferOut, 512);
 
-		parser.setErrorHandler(errorHandler);
-		parser.addHandler("G-GGA", GGA_Handler);
-		parser.addHandler("G-VTG", VTG_Handler);
+	parser.setErrorHandler(errorHandler);
+	parser.addHandler("G-GGA", GGA_Handler);
+	parser.addHandler("G-VTG", VTG_Handler);
 
-		Serial.print("Connecting to receiver on serial port ");
-		Serial.println(MDL.ReceiverSerialPort);
-		Serial.println("");
-	}
+	Serial.print("Connecting to receiver on serial port ");
+	Serial.println(MDL.ReceiverSerialPort);
+	Serial.println("");
 
 	// pins
-	pinMode(MDL.WorkSw, INPUT_PULLUP);
-	pinMode(MDL.SteerSw, INPUT_PULLUP);
-	pinMode(MDL.SteeringRelay, OUTPUT);
-	pinMode(MDL.Dir1, OUTPUT);
-	pinMode(MDL.PWM1, OUTPUT);
+	pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);
+	pinMode(MDL.SteerSwitchPin, INPUT_PULLUP);
+	pinMode(MDL.SteeringRelayPin, OUTPUT);
+	pinMode(MDL.DirPin, OUTPUT);
+	pinMode(MDL.PWMpin, OUTPUT);
 
 	SteerSwitch = HIGH;
 
@@ -145,15 +143,70 @@ void DoSetup()
 	Serial.println("");
 
 	UDPsteering.begin(ListeningPort);
-	UDPntrip.begin(MDL.NtripPort);
 	UDPconfig.begin(ConfigListeningPort);
-
-	// GPS pass-through
-	PassThruInPort.begin(PassThruBaud);
-	PassThruOutPort.begin(PassThruBaud);
+	UDPntrip.begin(NtripPort);
 
 	// update
 	UpdateComm.begin(UpdateReceivePort);
+
+	// GPS pass-through
+	switch (MDL.PassThruInSerialPort)
+	{
+	case 1:
+		SerialPassIn = &Serial1;
+		break;
+	case 2:
+		SerialPassIn = &Serial2;
+		break;
+	case 3:
+		SerialPassIn = &Serial3;
+		break;
+	case 4:
+		SerialPassIn = &Serial4;
+		break;
+	case 5:
+		SerialPassIn = &Serial5;
+		break;
+	case 6:
+		SerialPassIn = &Serial6;
+		break;
+	case 7:
+		SerialPassIn = &Serial7;
+		break;
+	default:
+		SerialPassIn = &Serial8;
+		break;
+	}
+	SerialPassIn->begin(PassThruBaud);
+
+	switch (MDL.PassThrOutSerialPort)
+	{
+	case 1:
+		SerialPassOut = &Serial1;
+		break;
+	case 2:
+		SerialPassOut = &Serial2;
+		break;
+	case 3:
+		SerialPassOut = &Serial3;
+		break;
+	case 4:
+		SerialPassOut = &Serial4;
+		break;
+	case 5:
+		SerialPassOut = &Serial5;
+		break;
+	case 6:
+		SerialPassOut = &Serial6;
+		break;
+	case 7:
+		SerialPassOut = &Serial7;
+		break;
+	default:
+		SerialPassOut = &Serial8;
+		break;
+	}
+	SerialPassOut->begin(PassThruBaud);
 
 	// IMU
 	// serial bno
@@ -259,17 +312,30 @@ void SaveData()
 bool ValidData()
 {
 	bool Result = true;
-	if (MDL.Receiver > 3) Result = false;
-	if (MDL.ReceiverSerialPort > 8) Result = false;
-	if (MDL.IMUSerialPort > 8) Result = false;
-	if (MDL.NtripPort > 10000) Result = false;
-	if (MDL.ZeroOffset > 10000) Result = false;
-	if (MDL.Dir1 > 41) Result = false;
-	if (MDL.PWM1 > 41) Result = false;
-	if (MDL.SteeringRelay > 41) Result = false;
-	
-	if (MDL.SteerSw > 41) Result = false;
-	if (MDL.WorkSw > 41) Result = false;
+	if (MDL.SteeringRelayPin > 41)
+	{
+		Result = false;
+	}
+	else if (MDL.WasPin > 41)
+	{
+		Result = false;
+	}
+	else if (MDL.DirPin > 41)
+	{
+		Result = false;
+	}
+	else if (MDL.PWMpin > 41)
+	{
+		Result = false;
+	}
+	else if (MDL.ReceiverSerialPort > 8)
+	{
+		Result = false;
+	}
+	else if (MDL.IMUSerialPort > 8)
+	{
+		Result = false;
+	}
 
 	return Result;
 }
@@ -279,26 +345,25 @@ void LoadDefaults()
 	Serial.println("Loading default settings.");
 
 	// AS15-3
-	MDL.Receiver = 1;
+	MDL.PowerRelayPin = 0;
+	MDL.SteeringRelayPin = 1;
+	MDL.WasPin = 25;
+	MDL.CurrentPin = 26;
+	MDL.SteerSwitchPin = 30;
+	MDL.WorkSwitchPin = 31;
+	MDL.DirPin = 23;
+	MDL.PWMpin = 22;
 	MDL.ReceiverSerialPort = 8;
+	MDL.PassThrOutSerialPort = 2;
+	MDL.PassThruInSerialPort = 4;
 	MDL.IMUSerialPort = 3;
-	MDL.NtripPort = 2233;
 	MDL.ZeroOffset = 0;
-	MDL.SwapRollPitch = 0;
-	MDL.InvertRoll = 0;
-	MDL.Dir1 = 23;
-	MDL.PWM1 = 22;
-	MDL.SteeringRelay = 1;
-
-	MDL.SteerSw = 30;
-	MDL.WorkSw = 31;
+	MDL.InvertRoll = false;
+	MDL.ADS1115Enabled = false;
 	MDL.IP0 = 192;
 	MDL.IP1 = 168;
 	MDL.IP2 = 1;
 	MDL.IP3 = 126;
-	MDL.ADS1115Enabled = false;
-	MDL.WasPin = 25;
-	MDL.CurrentPin = 26;
 }
 
 

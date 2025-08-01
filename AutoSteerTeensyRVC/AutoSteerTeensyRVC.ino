@@ -22,40 +22,35 @@ const int16_t ADS1115_Address = 0x48;
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
-#define MaxReadBuffer 100	// bytes
-#define LOW_HIGH_DEGREES 5.0	//How many degrees before decreasing Max PWM
-#define NC 0xFF		// Pin not connected
-
-#define PassThruInPort Serial3	// from F9P Uart2
-#define PassThruOutPort Serial1	// to Max232 for DB9 connector
-#define PassThruBaud 57600
+#define MaxReadBuffer 100		// bytes
+#define LOW_HIGH_DEGREES 5.0	// How many degrees before decreasing Max PWM
+#define NC 0xFF					// Pin not connected
+#define PassThruBaud 57600		// for RS232
+#define NtripPort 2233			// local port to listen on for NTRIP data
 
 struct ModuleConfig
 {
 	//	AS15-3 config
-	uint8_t PowerRelay = 0;
-	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
-	uint8_t PassThrOutPort = 2;
+	uint8_t PowerRelayPin = 0;
+	uint8_t SteeringRelayPin = 1;	// pin for steering disconnect relay
 	uint8_t WasPin = 25;
 	uint8_t CurrentPin = 26;
-	uint8_t SteerSw = 26;
-	uint8_t WorkSw = 27;
-	uint8_t Dir1 = 23;
-	uint8_t PWM1 = 22;
-	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
-	uint8_t PassThruInPort = 4;
-	uint8_t ReceiverSerialPort = 8;	// 8 for both micro and SimpleRTK2B
-	
-	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
+	uint8_t SteerSwitchPin = 30;
+	uint8_t WorkSwitchPin = 31;
+	uint8_t DirPin = 23;
+	uint8_t PWMpin = 22;
+	uint8_t ReceiverSerialPort = 8;	
+	uint8_t PassThrOutSerialPort = 2;		// to Max232 for DB9 connector
+	uint8_t PassThruInSerialPort = 4;		// from F9P Uart2
+	uint8_t	IMUSerialPort = 3;	
 	int16_t ZeroOffset = 0;
-	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
-	uint8_t InvertRoll = 0;
+	uint8_t SwapRollPitch = 0;		
+	bool InvertRoll = false;
+	bool ADS1115Enabled = false;
 	uint8_t IP0 = 192;
 	uint8_t IP1 = 168;
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
-	bool ADS1115Enabled = false;
 };
 
 ModuleConfig MDL;
@@ -100,10 +95,6 @@ IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
 
 EthernetUDP UDPntrip;	// from AGIO to receiver
 char NtripBuffer[512];	// buffer for ntrip data
-
-// GPS pass-through from Serial 3 to Serial 1, 57600 baud
-HardwareSerial* GPSserial;
-HardwareSerial* SerialOut;
 
 // Ethernet config
 EthernetUDP UDPconfig;
@@ -159,6 +150,8 @@ byte PGNlength;
 
 HardwareSerial* SerialIMU;
 HardwareSerial* SerialReceiver;
+HardwareSerial* SerialPassIn;
+HardwareSerial* SerialPassOut;
 
 elapsedMillis imuDelayTimer;
 bool isGGA_Updated = false;
@@ -214,14 +207,14 @@ void loop()
 		ReadAnalog();
 		ReadSwitches();
 		DoSteering();
-		ReceiveEthernetConfig();
+		ReceiveConfig();
 	}
 	ReadIMU();
 	DoPanda();
 	ReceiveSteerData();
 	ReceiveUpdate();
 	Blink();
-	if (PassThruInPort.available()) PassThruOutPort.write(PassThruInPort.read());
+	if (SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
 
 bool State = false;

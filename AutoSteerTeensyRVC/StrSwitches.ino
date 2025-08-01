@@ -18,7 +18,7 @@ void ReadSwitches()
 	if (steerConfig.SteerSwitch == 1)
 	{
 		// on off switch
-		SWreading = digitalRead(MDL.SteerSw);
+		SWreading = digitalRead(MDL.SteerSwitchPin);
 
 		if (SWreading)
 		{
@@ -37,7 +37,7 @@ void ReadSwitches()
 		// push button
 		// pin is pulled high and goes low when button is pushed
 
-		SWreading = digitalRead(MDL.SteerSw);
+		SWreading = digitalRead(MDL.SteerSwitchPin);
 		if (SWreading == LOW && SWprevious == HIGH && millis() - SWtime > SWdebounce)
 		{
 			if (SteerSwitch == HIGH)
@@ -83,5 +83,5 @@ void ReadSwitches()
 	}
 
 	switchByte = SteerSwitch << 1;
-	switchByte |= digitalRead(MDL.WorkSw);  // read work switch, Low on, High off
+	switchByte |= digitalRead(MDL.WorkSwitchPin);  // read work switch, Low on, High off
 }
