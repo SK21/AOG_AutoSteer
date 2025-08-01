@@ -2,19 +2,18 @@
 void DoSteering()
 {
 	//************** Steering Angle ******************
-	steeringPosition = AINs.AIN0;
-	helloSteerPosition = steeringPosition - MDL.ZeroOffset;
+	helloSteerPosition = WasReading - MDL.ZeroOffset;
 
 	//  ***** make sure that negative steer angle makes a left turn and positive value is a right turn *****
 	if (steerConfig.InvertWAS)
 	{
-		steeringPosition = (steeringPosition - MDL.ZeroOffset - steerSettings.wasOffset);   // 1/2 of full scale
-		steerAngleActual = (float)(steeringPosition) / -steerSettings.steerSensorCounts;
+		WasReading = (WasReading - MDL.ZeroOffset - steerSettings.wasOffset);   // 1/2 of full scale
+		steerAngleActual = (float)(WasReading) / -steerSettings.steerSensorCounts;
 	}
 	else
 	{
-		steeringPosition = (steeringPosition - MDL.ZeroOffset + steerSettings.wasOffset);   // 1/2 of full scale
-		steerAngleActual = (float)(steeringPosition) / steerSettings.steerSensorCounts;
+		WasReading = (WasReading - MDL.ZeroOffset + steerSettings.wasOffset);   // 1/2 of full scale
+		steerAngleActual = (float)(WasReading) / steerSettings.steerSensorCounts;
 	}
 
 	if (steerAngleActual < 0) steerAngleActual = (steerAngleActual * steerSettings.AckermanFix);

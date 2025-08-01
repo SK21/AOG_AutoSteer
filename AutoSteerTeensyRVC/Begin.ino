@@ -89,33 +89,38 @@ void DoSetup()
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
 
 	// ADS1115
-	ADS1115_Address = MDL.AdsAddress;
-	Serial.println("Starting ADS1115 ... ");
-	ErrorCount = 0;
-	while (!ADSfound)
+	if (MDL.ADS1115Enabled)
 	{
-		Wire.beginTransmission(ADS1115_Address);
-		Wire.write(0b00000000);	//Point to Conversion register
-		Wire.endTransmission();
-		Wire.requestFrom(ADS1115_Address, 2);
-		ADSfound = Wire.available();
-		Serial.print(".");
-		delay(500);
-		if (ErrorCount++ > 5) break;
-	}
-	Serial.println("");
-	if (ADSfound)
-	{
-		Serial.print("ADS1115 connected at address ");
+		ErrorCount = 0;
+		Serial.print("Starting ADS1115 at address ");
 		Serial.println(ADS1115_Address);
+		while (!ADSfound)
+		{
+			Wire.beginTransmission(ADS1115_Address);
+			Wire.write(0b00000000);	//Point to Conversion register
+			Wire.endTransmission();
+			Wire.requestFrom(ADS1115_Address, 2);
+			ADSfound = Wire.available();
+			Serial.print(".");
+			delay(500);
+			if (ErrorCount++ > 5) break;
+		}
 		Serial.println("");
+		if (ADSfound)
+		{
+			Serial.println("ADS1115 found.");
+			Serial.println("");
+		}
+		else
+		{
+			Serial.println("ADS1115 not found.");
+			Serial.println("ADS1115 disabled.");
+			Serial.println("");
+		}
 	}
-	else
-	{
-		Serial.print("ADS1115 not found.");
-		Serial.println("ADS1115 disabled.");
-		Serial.println("");
-	}
+
+	// analog pins
+	analogReadResolution(12);
 
 	// ethernet 
 	Serial.println("Starting Ethernet ...");
@@ -273,25 +278,27 @@ void LoadDefaults()
 {
 	Serial.println("Loading default settings.");
 
-	// AS15
+	// AS15-3
 	MDL.Receiver = 1;
 	MDL.ReceiverSerialPort = 8;
-	MDL.IMUSerialPort = 5;
+	MDL.IMUSerialPort = 3;
 	MDL.NtripPort = 2233;
 	MDL.ZeroOffset = 0;
 	MDL.SwapRollPitch = 0;
 	MDL.InvertRoll = 0;
 	MDL.Dir1 = 23;
 	MDL.PWM1 = 22;
-	MDL.SteeringRelay = 7;
+	MDL.SteeringRelay = 1;
 
-	MDL.SteerSw = 26;
-	MDL.WorkSw = 27;
+	MDL.SteerSw = 30;
+	MDL.WorkSw = 31;
 	MDL.IP0 = 192;
 	MDL.IP1 = 168;
 	MDL.IP2 = 1;
 	MDL.IP3 = 126;
-	MDL.AdsAddress = 0x49;
+	MDL.ADS1115Enabled = false;
+	MDL.WasPin = 25;
+	MDL.CurrentPin = 26;
 }
 
 

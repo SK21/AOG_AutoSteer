@@ -16,8 +16,9 @@ extern "C" {
 
 #include <Adafruit_Sensor.h>
 #define InoDescription "AutoSteerTeensyRVC"
-const uint16_t InoID = 23075;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 31075;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
+const int16_t ADS1115_Address = 0x48;
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
@@ -31,37 +32,33 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 
 struct ModuleConfig
 {
-	//	AS15-2 config
-	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
-	uint8_t ReceiverSerialPort = 8;	// 8 for both micro and SimpleRTK2B
+	//	AS15-3 config
+	uint8_t PowerRelay = 0;
+	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
+	uint8_t PassThrOutPort = 2;
+	uint8_t WasPin = 25;
+	uint8_t CurrentPin = 26;
+	uint8_t SteerSw = 26;
+	uint8_t WorkSw = 27;
+	uint8_t Dir1 = 23;
+	uint8_t PWM1 = 22;
 	uint8_t	IMUSerialPort = 5;		// Adafruit 5, Sparkfun 4
+	uint8_t PassThruInPort = 4;
+	uint8_t ReceiverSerialPort = 8;	// 8 for both micro and SimpleRTK2B
+	
+	uint8_t Receiver = 1;			// 0 none, 1 SimpleRTK2B, 2 Sparkfun F9p
 	uint16_t NtripPort = 2233;		// local port to listen on for NTRIP data
 	int16_t ZeroOffset = 0;
 	uint8_t SwapRollPitch = 0;		// 0 use roll value for roll, 1 use pitch value for roll
 	uint8_t InvertRoll = 0;
-	uint8_t Dir1 = 23;
-	uint8_t PWM1 = 22;
-	uint8_t SteeringRelay = 7;		// pin for steering disconnect relay
-	uint8_t SteerSw = 26;
-	uint8_t WorkSw = 27;
 	uint8_t IP0 = 192;
 	uint8_t IP1 = 168;
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
-	uint8_t AdsAddress = 0x49;		
+	bool ADS1115Enabled = false;
 };
 
 ModuleConfig MDL;
-
-struct PCBanalog
-{
-	int16_t AIN0;	// WAS
-	int16_t AIN1;	// -
-	int16_t AIN2;	// -
-	int16_t AIN3;	// current
-};
-
-PCBanalog AINs;
 
 struct Storage 
 {
@@ -116,7 +113,6 @@ uint16_t ConfigDestinationPort = 29999;
 //steering variables
 float steerAngleActual = 0;
 float steerAngleSetPoint = 0; //the desired angle from AgOpen
-int16_t steeringPosition = 0;
 float steerAngleError = 0; //setpoint - actual
 float Speed_KMH = 0.0;
 int8_t guidanceStatus;
@@ -156,6 +152,8 @@ BNO08x_RVC_Data heading;
 uint32_t AOGTime;
 uint32_t NtripTime;
 
+int16_t WasReading;
+int16_t CurrentReading;
 bool ADSfound = false;
 byte PGNlength;
 
@@ -164,7 +162,6 @@ HardwareSerial* SerialReceiver;
 
 elapsedMillis imuDelayTimer;
 bool isGGA_Updated = false;
-int ADS1115_Address;
 
 byte DataConfig[MaxReadBuffer];
 uint16_t PGNconfig;

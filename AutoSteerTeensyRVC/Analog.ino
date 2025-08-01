@@ -1,13 +1,19 @@
 
-uint8_t CurrentPin = 0;
+uint8_t AdsPin = 0;
 uint16_t Aread;
 elapsedMicros ReadTime;
 
 void ReadAnalog()
 {
-	// use ADS1115 through Teensy
 	if (ADSfound)
 	{
+		// use ADS1115
+		//	AS15 config
+		//	AIN0	WAS 5V
+		//	AIN1	
+		//	AIN2	
+		//	AIN3	Current
+		
 		// based on https://github.com/RalphBacon/ADS1115-ADC/blob/master/ADS1115_ADC_16_bit_SingleEnded.ino
 
 		// read current value
@@ -17,19 +23,13 @@ void ReadAnalog()
 		Wire.requestFrom(ADS1115_Address, 2);
 		Aread = (Wire.read() << 8 | Wire.read());
 
-		switch (CurrentPin)
+		switch (AdsPin)
 		{
 		case 0:
-			AINs.AIN0 = Aread >> 1;	// WAS
-			break;
-		case 1:
-			AINs.AIN1 = Aread >> 8;	// analog 12V, convert from 0-65535 to 0-255
-			break;
-		case 2:
-			AINs.AIN2 = Aread >> 8;	// analog 4-20
+			WasReading = Aread >> 1;
 			break;
 		default:
-			AINs.AIN3 = Aread >> 8;	// analog current
+			CurrentReading = Aread >> 8;
 			break;
 		}
 
@@ -45,9 +45,16 @@ void ReadAnalog()
 		// Bits 11:9  Programmable Gain 000=6.144v 001=4.096v 010=2.048v .... 111=0.256v
 		// Bits 8     0=Continuous conversion mode, 1=Power down single shot
 
-		CurrentPin++;
-		if (CurrentPin > 3) CurrentPin = 0;	
-		switch (CurrentPin)
+		if (AdsPin == 0)
+		{
+			AdsPin = 3;
+		}
+		else
+		{
+			AdsPin = 0;
+		}
+
+		switch (AdsPin)
 		{
 			// single ended
 		case 0:
@@ -75,10 +82,11 @@ void ReadAnalog()
 		Wire.write(0b11100011);	//860 samples/sec
 		Wire.endTransmission();
 	}
+	else
+	{
+		// use Teensy analog pins
+		if (MDL.WasPin < NC) WasReading = analogRead(MDL.WasPin);
+		if (MDL.CurrentPin < NC)CurrentReading = analogRead(MDL.CurrentPin);
+	}
 }
 
-//	AS15 config
-//	AIN0	WAS 5V
-//	AIN1	Analog 12V
-//	AIN2	Analog 4-20
-//	AIN3	Current

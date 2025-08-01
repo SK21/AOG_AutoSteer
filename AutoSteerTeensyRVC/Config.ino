@@ -28,16 +28,16 @@ void ReadPGNs(byte Data[], uint16_t len)
 		//2     Receiver    0 none, 1 simpleRTK2B
 		//3     Receiver serial port
 		//4     IMU serial port
-		//5     -
-		//6     -
+		//5     WAS pin
+		//6     Current pin
 		//7     Pulse Cal X 10, Lo
 		//8     Pulse Cal X 10, Hi
 		//9     -
 		//10    Commands
 		//          - bit 0, swap pitch for roll
 		//          - bit 1, invert roll
-		//          - bit 2, use 4-20 pressure sensor
-		//          - bit 3, relay on signal
+		//          - bit 2, use ADS1115
+		//          - 
 		//          - bit 4, zero WAS
 		//11    CRC
 
@@ -49,11 +49,14 @@ void ReadPGNs(byte Data[], uint16_t len)
 				MDL.Receiver = Data[2];
 				MDL.ReceiverSerialPort = Data[3];
 				MDL.IMUSerialPort = Data[4];
+				MDL.WasPin = data[5];
+				MDL.CurrentPin = data[6];
 
 				uint8_t Commands = Data[10];
 				if (bitRead(Commands, 0)) MDL.SwapRollPitch = 1; else MDL.SwapRollPitch = 0;
 				if (bitRead(Commands, 1)) MDL.InvertRoll = 1; else MDL.InvertRoll = 0;
-				if (bitRead(Commands, 4)) MDL.ZeroOffset = AINs.AIN0;
+				if (bitRead(Commands, 2))MDL.ADS1115Enabled = true; else MDL.ADS1115Enabled = false;
+				if (bitRead(Commands, 4)) MDL.ZeroOffset = WasReading;
 
 				SaveData();
 			}
