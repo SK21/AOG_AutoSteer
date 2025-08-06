@@ -364,6 +364,7 @@ void LoadDefaults()
 	MDL.IP1 = 168;
 	MDL.IP2 = 1;
 	MDL.IP3 = 126;
+	MDL.IMUtype = 0;
 }
 
 

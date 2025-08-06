@@ -1,3 +1,6 @@
+
+// autosteer for Teensy 4.1
+
 #include <Wire.h>
 #include <EEPROM.h> 
 #include <NativeEthernet.h>
@@ -13,13 +16,11 @@ extern "C" {
 
 #include <Adafruit_Sensor.h>
 
-// Motion Module Interface:
+// Motion Module Interface:				https://www.syd-dynamics.com/download-center/
 #include <EasyObjectDictionary.h>
 #include <EasyProfile.h>
 EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
-
-// autosteer for Teensy 4.1
 
 #define InoDescription "AutoSteerTeensy"
 const uint16_t InoID = 6085;	// change to send defaults to eeprom, ddmmy, no leading 0
@@ -118,6 +119,7 @@ float IMU_Heading = 0;
 float IMU_Roll = 0;
 float IMU_Pitch = 0;
 float IMU_YawRate = 0;
+uint32_t IMUtime;
 
 // switches
 int8_t SteerSwitch = LOW;	// Low on, High off
@@ -148,7 +150,6 @@ BNO08x_RVC_Data BNOdata;
 
 uint32_t AOGTime;
 uint32_t NtripTime;
-uint32_t IMUtime;
 
 int16_t WasReading;
 int16_t CurrentReading;
