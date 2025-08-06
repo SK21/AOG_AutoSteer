@@ -33,7 +33,7 @@ void ReceiveConfig()
 				//          - bit 0, zero WAS
 				//          - bit 1, invert roll
 				//          - bit 2, use ADS1115
-				//15	-
+				//15	IMU type	// 0 BNO080, 1 TM171
 				//16	CRC
 
 				PGNlength = 17;
@@ -58,6 +58,8 @@ void ReceiveConfig()
 						if (bitRead(Commands, 0)) MDL.ZeroOffset = WasReading;
 						if (bitRead(Commands, 1)) MDL.InvertRoll = true; else MDL.InvertRoll = false;
 						if (bitRead(Commands, 2)) MDL.ADS1115Enabled = true; else MDL.ADS1115Enabled = false;
+
+						MDL.IMUtype = Data[15];
 
 						SaveData();
 						SCB_AIRCR = 0x05FA0004; //reset the Teensy   

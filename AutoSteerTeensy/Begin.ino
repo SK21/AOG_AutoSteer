@@ -216,7 +216,6 @@ void DoSetup()
 	SerialPassOut->begin(PassThruBaud);
 
 	// IMU
-	// serial bno
 	switch (MDL.IMUSerialPort)
 	{
 	case 1:
