@@ -244,24 +244,18 @@ void DoSetup()
 	SerialIMU->addMemoryForRead(IMUBufferIn, 512);
 	SerialIMU->addMemoryForWrite(IMUBufferOut, 512);
 
-	Serial.println("Starting  BNO RVC  ...");
-	rvc.begin(SerialIMU);
-	ErrorCount = 0;
-	while (!IMUstarted)
+	switch (MDL.IMUtype)
 	{
-		IMUstarted = rvc.read(&heading);
-		Serial.print(".");
-		delay(500);
-		if (ErrorCount++ > 10) break;
-	}
-	Serial.println("");
-	if (IMUstarted)
-	{
-		Serial.println("BNO RVC IMU started.");
-	}
-	else
-	{
-		Serial.println("BNO RVC IMU failed to start.");
+	case 0:
+		// BNO080
+		Serial.println("Using BNO080 IMU.");
+		rvc.begin(SerialIMU);
+		break;
+
+	case 1:
+		// TM171
+		Serial.println("Using TM171 IMU.");
+		break;
 	}
 
 	Serial.println("");

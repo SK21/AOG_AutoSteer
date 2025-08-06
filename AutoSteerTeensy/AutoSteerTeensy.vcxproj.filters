@@ -15,7 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AutoSteerTeensyRVC.ino" />
+    <ClCompile Include="AutoSteerTeensy.ino" />
+    <ClCompile Include="Adafruit_BNO08x_RVC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Adafruit_BNO08x_RVC.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
     <ClCompile Include="Analog.ino" />
     <ClCompile Include="Begin.ino" />
     <ClCompile Include="Config.ino" />
@@ -32,6 +38,7 @@
     <ClCompile Include="FXUtil.h">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="IMU.ino" />
     <ClCompile Include="Panda.ino" />
     <ClCompile Include="SteerComm.ino" />
     <ClCompile Include="Steering.ino" />
@@ -39,15 +46,9 @@
     <ClCompile Include="zNMEAParser.h">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="Adafruit_BNO08x_RVC.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Adafruit_BNO08x_RVC.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="__vm\.AutoSteerTeensyRVC.vsarduino.h">
+    <ClInclude Include="__vm\.AutoSteerTeensy.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

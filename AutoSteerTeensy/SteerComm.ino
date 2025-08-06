@@ -109,26 +109,26 @@ void SendSteerData()
     PGN_253[5] = (byte)tmp;
     PGN_253[6] = tmp >> 8;
 
-    // heading
-    if (IMUstarted)
+    // BNOdata
+    if (IMU_Connected())
     {
         tmp = (int)(IMU_Heading);
+        PGN_253[7] = (byte)tmp;
+        PGN_253[8] = tmp >> 8;
+
+        tmp = (int)(IMU_Roll);
+        PGN_253[9] = (byte)tmp;
+        PGN_253[10] = tmp >> 8;
     }
     else
     {
         tmp = 9999;
-    }
-    PGN_253[7] = (byte)tmp;
-    PGN_253[8] = tmp >> 8;
+        PGN_253[7] = (byte)tmp;
+        PGN_253[8] = tmp >> 8;
 
-    // roll
-    if (IMUstarted)
-    {
-        tmp = (int)(IMU_Roll);
-    }
-    else
-    {
         tmp = 8888;
+        PGN_253[9] = (byte)tmp;
+        PGN_253[10] = tmp >> 8;
     }
 
     PGN_253[9] = (byte)tmp;
@@ -202,7 +202,7 @@ void SendHelloReply()
         UDPsteering.write(helloFromAutoSteer, sizeof(helloFromAutoSteer));
         UDPsteering.endPacket();
 
-        if (IMUstarted)
+        if (IMU_Connected())
         {
             UDPsteering.beginPacket(DestinationIP, DestinationPort);
             UDPsteering.write(helloFromIMU, sizeof(helloFromIMU));

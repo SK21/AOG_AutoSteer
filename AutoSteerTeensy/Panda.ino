@@ -44,55 +44,22 @@ void DoPanda()
         SerialReceiver->write(NtripBuffer, packetSize);
     }
 
-    if (isGGA_Updated && imuDelayTimer > 40 && IMUstarted)
+    if (isGGA_Updated && imuDelayTimer > 40 && IMU_Connected())
     {
-        imuHandler();
+        // read IMU data
+        Ptemp = (int16_t)IMU_Heading;
+        itoa(Ptemp, imuHeading, 10);
+
+        Ptemp = (int16_t)IMU_Roll;
+        itoa(Ptemp, imuRoll, 10);
+
+        Ptemp = (int16_t)IMU_Pitch;
+        itoa(Ptemp, imuPitch, 10);
+
+        Ptemp = (int16_t)IMU_YawRate;
+        itoa(Ptemp, imuYawRate, 10);
+
         isGGA_Updated = false;
-    }
-}
-
-void imuHandler()
-{
-    Ptemp = (int16_t)IMU_Heading;
-    itoa(Ptemp, imuHeading, 10);
-
-    Ptemp = (int16_t)IMU_Roll;
-    itoa(Ptemp, imuRoll, 10);
-
-    Ptemp = (int16_t)IMU_Pitch;
-    itoa(Ptemp, imuPitch, 10);
-
-    Ptemp = (int16_t)IMU_YawRate;
-    itoa(Ptemp, imuYawRate, 10);
-}
-
-void ReadIMU()
-{
-    if (rvc.read(&heading))
-    {
-        IMU_Heading = heading.yaw;
-        if (IMU_Heading < 0 && IMU_Heading >= -180) //Scale BNO085 yaw from [-180?;180?] to [0;360?]
-        {
-            IMU_Heading = IMU_Heading + 360;
-        }
-        IMU_Heading *= 10.0;
-
-        if (SteerConfig.UseIMU_Y_Axis)
-        {
-            IMU_Roll = heading.pitch * 10;
-            if (MDL.InvertRoll) IMU_Roll *= -1.0;
-
-            IMU_Pitch = heading.roll * 10;
-        }
-        else
-        {
-            IMU_Roll = heading.roll * 10;
-            if (MDL.InvertRoll) IMU_Roll *= -1.0;
-
-            IMU_Pitch = heading.pitch * 10;
-        }
-
-        IMU_YawRate = heading.z_accel;
     }
 }
 
@@ -104,7 +71,7 @@ void errorHandler()
 
 void VTG_Handler()
 {
-    //vtg heading
+    //vtg BNOdata
     if (parser.getArg(0, vtgHeading));
 
     //vtg Speed knots

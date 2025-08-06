@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <Keyword>Linux</Keyword>
+    <RootNamespace>
+    </RootNamespace>
+    <ProjectName>AutoSteerTeensy</ProjectName>
+    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <ApplicationType>Linux</ApplicationType>
+    <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
+    <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
+    <LinuxProjectType>{D51BCBC9-82E9-4017-911E-C93873C4EA2B}</LinuxProjectType>
+    <ProjectGuid>{7799638D-FD7A-EAE2-1F7A-81D3258794FF}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <LinuxIncludePath>c:\visualmicro\ignore</LinuxIncludePath>
+    <wiringPiIncludePath>c:\visualmicro\pi-ignore</wiringPiIncludePath>
+    <TargetOSAndVersion>Arduino</TargetOSAndVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <IncludePath>$(ProjectDir)..\AutoSteerTeensy;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;$(ProjectDir)..\..\..\..\Arduino\libraries\Adafruit_Unified_Sensor;$(ProjectDir)..\..\..\..\Arduino\libraries\EasyProfile;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\arm-none-eabi\armv7e-m\fpu\fpv5-d16;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\backward;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\5.4.1\include;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\5.4.1\include-fixed;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;$(ProjectDir)..\..\..\..\Arduino\libraries\Adafruit_Unified_Sensor;$(ProjectDir)..\..\..\..\Arduino\libraries\EasyProfile</IncludePath>
+    <RemoteCCompileToolExe>C:\Program Files (x86)\Arduino\hardware\tools\arm\bin\arm-none-eabi-g++</RemoteCCompileToolExe>
+    <RemoteCppCompileToolExe>C:\Program Files (x86)\Arduino\hardware\tools\arm\bin\arm-none-eabi-g++</RemoteCppCompileToolExe>
+    <ValidateArchitecture>false</ValidateArchitecture>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectCapability Include="VisualMicro" />
+    <ProjectCapability Include="VisualMicroLinux" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Adafruit_BNO08x_RVC.cpp">
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+    <ClCompile Include="AutoSteerTeensy.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+    <ClCompile Include="FlashTxx.c">
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+    <ClCompile Include="FXUtil.cpp">
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Adafruit_BNO08x_RVC.h">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+    <ClCompile Include="FlashTxx.h">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+    <ClCompile Include="FXUtil.h">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+    <ClCompile Include="zNMEAParser.h">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+    <ClInclude Include="__vm\.AutoSteerTeensy.vsarduino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Analog.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Begin.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Config.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EthernetUpdate.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="IMU.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Panda.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SteerComm.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Steering.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="StrSwitches.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <PropertyGroup>
+    <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\AutoSteerTeensy;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;$(ProjectDir)..\..\..\..\Arduino\libraries\Adafruit_Unified_Sensor;$(ProjectDir)..\..\..\..\Arduino\libraries\EasyProfile;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\arm-none-eabi\armv7e-m\fpu\fpv5-d16;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\backward;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\5.4.1\include;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\5.4.1\include-fixed;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;$(ProjectDir)..\..\..\..\Arduino\libraries\Adafruit_Unified_Sensor;$(ProjectDir)..\..\..\..\Arduino\libraries\EasyProfile;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <GccToolChain>C:\Program Files (x86)\Arduino\hardware\tools\arm\bin\arm-none-eabi-g++</GccToolChain>
+      <CppLanguageStandard>gnu++1y</CppLanguageStandard>
+      <CLanguageStandard>gnu11</CLanguageStandard>
+      <CAdditionalWarning />
+      <CppAdditionalWarning />
+      <ForcedIncludeFiles>c:\program files\microsoft visual studio\2022\community\common7\ide\extensions\hj5dr3md.sit\Micro Platforms\default\vm-intelli-pre.h;C:\Users\CoxDa\AppData\Local\Temp\VMBuilds\AutoSteerTeensy\teensy41\Release\.vmintelli\cf7057bf44164cad874e3d48b2dab793\vm-intelli-gcc-defines.h;c:\program files\microsoft visual studio\2022\community\common7\ide\extensions\hj5dr3md.sit\Micro Platforms\default\vm-intelli-post.h;$(ProjectDir)__vm\.AutoSteerTeensy.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <UndefineAllPreprocessorDefinitions>true</UndefineAllPreprocessorDefinitions>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <PreprocessorDefinitions>_VMICRO_INTELLISENSE;__HARDWARE_imxrt1062__;__HARDWARE_IMXRT1062__;__IMXRT1062__;TEENSYDUINO=157;ARDUINO=108019;ARDUINO_TEENSY41;F_CPU=450000000;USB_SERIAL;LAYOUT_US_ENGLISH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

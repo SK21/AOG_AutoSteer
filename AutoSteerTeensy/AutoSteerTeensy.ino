@@ -11,11 +11,17 @@ extern "C" {
 #include "FlashTxx.h"		// TLC/T3x/T4x/TMM flash primitives
 }
 
-// autosteer for Teensy 4.1
-// uses BNO in RVC mode over serial
-
 #include <Adafruit_Sensor.h>
-#define InoDescription "AutoSteerTeensyRVC"
+
+// Motion Module Interface:
+#include <EasyObjectDictionary.h>
+#include <EasyProfile.h>
+EasyObjectDictionary eOD;
+EasyProfile          eP(&eOD);
+
+// autosteer for Teensy 4.1
+
+#define InoDescription "AutoSteerTeensy"
 const uint16_t InoID = 6085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 const int16_t ADS1115_Address = 0x48;
@@ -50,6 +56,7 @@ struct ModuleConfig
 	uint8_t IP1 = 168;
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
+	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
 };
 
 ModuleConfig MDL;
@@ -138,10 +145,11 @@ uint32_t  LoopLast = LOOP_TIME;
 
 NMEAParser<2> parser;
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
-BNO08x_RVC_Data heading;
+BNO08x_RVC_Data BNOdata;
 
 uint32_t AOGTime;
 uint32_t NtripTime;
+uint32_t IMUtime;
 
 int16_t WasReading;
 int16_t CurrentReading;
@@ -158,8 +166,6 @@ bool isGGA_Updated = false;
 
 byte DataConfig[MaxReadBuffer];
 uint16_t PGNconfig;
-
-bool IMUstarted = false;
 
 // firmware update
 EthernetUDP UpdateComm;
