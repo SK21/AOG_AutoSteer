@@ -78,7 +78,7 @@ bool Adafruit_BNO08x_RVC::read(BNO08x_RVC_Data *RVC_Data) {
   }
 
   if (!serial_dev->available()) {
-    Serial.println("No bytes available to read.");
+    //Serial.println("No bytes available to read.");
     return false;
   }
 

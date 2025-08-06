@@ -24,7 +24,6 @@ EasyProfile          eP(&eOD);
 #define InoDescription "AutoSteerTeensy"
 const uint16_t InoID = 6085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
-const int16_t ADS1115_Address = 0x48;
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
@@ -154,6 +153,7 @@ uint32_t IMUtime;
 int16_t WasReading;
 int16_t CurrentReading;
 bool ADSfound = false;
+int16_t ADS1115_Address = 72;
 byte PGNlength;
 
 HardwareSerial* SerialIMU;

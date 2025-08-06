@@ -89,27 +89,34 @@ void DoSetup()
 	// ADS1115
 	if (MDL.ADS1115Enabled)
 	{
-		ErrorCount = 0;
-		Serial.print("Starting ADS1115 at address ");
-		Serial.println(ADS1115_Address);
-		while (!ADSfound)
+		ADSfound = false;
+		for (int i = 0; i < 2; i++)
 		{
-			Wire.beginTransmission(ADS1115_Address);
-			Wire.write(0b00000000);	//Point to Conversion register
-			Wire.endTransmission();
-			Wire.requestFrom(ADS1115_Address, 2);
-			ADSfound = Wire.available();
-			Serial.print(".");
-			delay(500);
-			if (ErrorCount++ > 5) break;
-		}
-		Serial.println("");
-		if (ADSfound)
-		{
-			Serial.println("ADS1115 found.");
+			if (i == 0) ADS1115_Address = 72; else ADS1115_Address = 73;
+
+			ErrorCount = 0;
+			Serial.print("Starting ADS1115 at address ");
+			Serial.println(ADS1115_Address);
+			while (!ADSfound)
+			{
+				Wire.beginTransmission(ADS1115_Address);
+				Wire.write(0b00000000);	//Point to Conversion register
+				Wire.endTransmission();
+				Wire.requestFrom(ADS1115_Address, 2);
+				ADSfound = Wire.available();
+				Serial.print(".");
+				delay(500);
+				if (ErrorCount++ > 5) break;
+			}
 			Serial.println("");
+			if (ADSfound)
+			{
+				Serial.println("ADS1115 found.");
+				Serial.println("");
+				break;
+			}
 		}
-		else
+		if (!ADSfound)
 		{
 			Serial.println("ADS1115 not found.");
 			Serial.println("ADS1115 disabled.");
