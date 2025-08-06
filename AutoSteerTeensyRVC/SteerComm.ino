@@ -1,8 +1,4 @@
 
-byte DataEthernet[MaxReadBuffer];
-
-uint8_t sett;
-
 void ReceiveSteerData()
 {
     // ethernet
@@ -11,10 +7,12 @@ void ReceiveSteerData()
         uint16_t len = UDPsteering.parsePacket();
         if (len)
         {
-            UDPsteering.read(DataEthernet, MaxReadBuffer);
-            if ((DataEthernet[0] == 0x80) && (DataEthernet[1] == 0x81 && DataEthernet[2] == 0x7F))  // 0x7F is source, AGIO
+            uint8_t SettingsByte;
+            byte Data[MaxReadBuffer];
+            UDPsteering.read(Data, MaxReadBuffer);
+            if ((Data[0] == 0x80) && (Data[1] == 0x81 && Data[2] == 0x7F))  // 0x7F is source, AGIO
             {
-                switch (DataEthernet[3])
+                switch (Data[3])
                 {
                 case 200:
                     // hello from AGIO
@@ -23,11 +21,11 @@ void ReceiveSteerData()
 
                 case 201:
                     // update IP
-                    if (DataEthernet[4] == 5 && DataEthernet[5] == 201 && DataEthernet[6] == 201)
+                    if (Data[4] == 5 && Data[5] == 201 && Data[6] == 201)
                     {
-                        MDL.IP0 = DataEthernet[7];
-                        MDL.IP1 = DataEthernet[8];
-                        MDL.IP2 = DataEthernet[9];
+                        MDL.IP0 = Data[7];
+                        MDL.IP1 = Data[8];
+                        MDL.IP2 = Data[9];
                         SaveData();
 
                         //reset the Teensy
@@ -37,7 +35,7 @@ void ReceiveSteerData()
 
                 case 202:
                     // ID scan request
-                    if (DataEthernet[4] == 3 && DataEthernet[5] == 202 && DataEthernet[6] == 202)
+                    if (Data[4] == 3 && Data[5] == 202 && Data[6] == 202)
                     {
                         SendScanIDreply();
                     }
@@ -45,25 +43,26 @@ void ReceiveSteerData()
 
                 case 251:
                     // steer config
-                    sett = DataEthernet[5];
+                    SettingsByte = Data[5];
 
-                    if (bitRead(sett, 0)) steerConfig.InvertWAS = 1; else steerConfig.InvertWAS = 0;
-                    if (bitRead(sett, 1)) steerConfig.IsRelayActiveHigh = 1; else steerConfig.IsRelayActiveHigh = 0;
-                    if (bitRead(sett, 2)) steerConfig.MotorDriveDirection = 1; else steerConfig.MotorDriveDirection = 0;
-                    if (bitRead(sett, 3)) steerConfig.SingleInputWAS = 1; else steerConfig.SingleInputWAS = 0;
-                    if (bitRead(sett, 4)) steerConfig.CytronDriver = 1; else steerConfig.CytronDriver = 0;
-                    if (bitRead(sett, 5)) steerConfig.SteerSwitch = 1; else steerConfig.SteerSwitch = 0;
-                    if (bitRead(sett, 6)) steerConfig.SteerButton = 1; else steerConfig.SteerButton = 0;
-                    if (bitRead(sett, 7)) steerConfig.ShaftEncoder = 1; else steerConfig.ShaftEncoder = 0;
+                    if (bitRead(SettingsByte, 0)) SteerConfig.InvertWAS = 1; else SteerConfig.InvertWAS = 0;
+                    if (bitRead(SettingsByte, 1)) SteerConfig.InvertRelays = 1; else SteerConfig.InvertRelays = 0;
+                    if (bitRead(SettingsByte, 2)) SteerConfig.InvertSteer = 1; else SteerConfig.InvertSteer = 0;
+                    if (bitRead(SettingsByte, 3)) SteerConfig.SingleInputWAS = 1; else SteerConfig.SingleInputWAS = 0;
+                    if (bitRead(SettingsByte, 4)) SteerConfig.CytronDriver = 1; else SteerConfig.CytronDriver = 0;
+                    if (bitRead(SettingsByte, 5)) SteerConfig.SteerSwitch = 1; else SteerConfig.SteerSwitch = 0;
+                    if (bitRead(SettingsByte, 6)) SteerConfig.SteerButton = 1; else SteerConfig.SteerButton = 0;
+                    if (bitRead(SettingsByte, 7)) SteerConfig.ShaftEncoder = 1; else SteerConfig.ShaftEncoder = 0;
 
-                    steerConfig.PulseCountMax = DataEthernet[6];
+                    SteerConfig.PulseCountMax = Data[6];
+                    //SteerConfig.MinSpeed = (double)Data[7] * 0.1;
 
-                    sett = DataEthernet[8]; //setting1 - Danfoss valve etc
+                    SettingsByte = Data[8]; //setting1 - Danfoss valve etc
 
-                    if (bitRead(sett, 0)) steerConfig.IsDanfoss = 1; else steerConfig.IsDanfoss = 0;
-                    if (bitRead(sett, 1)) steerConfig.PressureSensor = 1; else steerConfig.PressureSensor = 0;
-                    if (bitRead(sett, 2)) steerConfig.CurrentSensor = 1; else steerConfig.CurrentSensor = 0;
-                    if (bitRead(sett, 3)) MDL.SwapRollPitch = 1; else MDL.SwapRollPitch = 0;
+                    if (bitRead(SettingsByte, 0)) SteerConfig.IsDanfoss = 1; else SteerConfig.IsDanfoss = 0;
+                    if (bitRead(SettingsByte, 1)) SteerConfig.PressureSensor = 1; else SteerConfig.PressureSensor = 0;
+                    if (bitRead(SettingsByte, 2)) SteerConfig.CurrentSensor = 1; else SteerConfig.CurrentSensor = 0;
+                    if (bitRead(SettingsByte, 3)) SteerConfig.UseIMU_Y_Axis = 1; else SteerConfig.UseIMU_Y_Axis = 0;
 
                     SaveData();
 
@@ -73,25 +72,25 @@ void ReceiveSteerData()
 
                 case 252:
                     // autosteer settings
-                    steerSettings.Kp = DataEthernet[5];
-                    steerSettings.highPWM = DataEthernet[6];
-                    steerSettings.minPWM = DataEthernet[8];
+                    SteerSettings.Kp = Data[5];
+                    SteerSettings.highPWM = Data[6];
+                    SteerSettings.minPWM = Data[8];
 
-                    //steerSettings.lowPWM = DataEthernet[7];
-                    steerSettings.lowPWM = (byte)((float)steerSettings.minPWM * 1.2);
+                    //SteerSettings.lowPWM = Data[7];
+                    SteerSettings.lowPWM = (byte)((float)SteerSettings.minPWM * 1.2);
 
-                    steerSettings.steerSensorCounts = (float)DataEthernet[9];
-                    steerSettings.wasOffset = DataEthernet[10] | DataEthernet[11] << 8;
-                    steerSettings.AckermanFix = (float)DataEthernet[12] * 0.01;
+                    SteerSettings.steerSensorCounts = (float)Data[9];
+                    SteerSettings.wasOffset = Data[10] | Data[11] << 8;
+                    SteerSettings.AckermanFix = (float)Data[12] * 0.01;
 
                     SaveData();
                     break;
 
                 case 254:
                     // autosteer data
-                    Speed_KMH = (DataEthernet[6] << 8 | DataEthernet[5]) * 0.1;
-                    guidanceStatus = DataEthernet[7];
-                    steerAngleSetPoint = (float)((int16_t)(DataEthernet[9] << 8 | DataEthernet[8])) * 0.01;
+                    Speed_KMH = (Data[6] << 8 | Data[5]) * 0.1;
+                    guidanceStatus = Data[7];
+                    steerAngleSetPoint = (float)((int16_t)(Data[9] << 8 | Data[8])) * 0.01;
 
                     SendSteerData();
                     AOGTime = millis();
@@ -155,7 +154,7 @@ void SendSteerData()
     }
 
     // Steer Data 2
-    if (steerConfig.PressureSensor || steerConfig.CurrentSensor)
+    if (SteerConfig.PressureSensor || SteerConfig.CurrentSensor)
     {
         PGN_250[5] = (byte)SensorReading;
 

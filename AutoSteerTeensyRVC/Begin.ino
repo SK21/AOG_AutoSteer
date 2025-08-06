@@ -280,8 +280,8 @@ void LoadData()
 	{
 		// load stored data
 		Serial.println("Loading stored settings.");
-		EEPROM.get(10, steerSettings);
-		EEPROM.get(40, steerConfig);
+		EEPROM.get(10, SteerSettings);
+		EEPROM.get(40, SteerConfig);
 		EEPROM.get(110, MDL);
 
 		IsValid = ValidData();
@@ -304,8 +304,8 @@ void SaveData()
 	Serial.println("Updating stored data.");
 	EEPROM.put(0, InoID);
 	EEPROM.put(4, InoType);
-	EEPROM.put(10, steerSettings);
-	EEPROM.put(40, steerConfig);
+	EEPROM.put(10, SteerSettings);
+	EEPROM.put(40, SteerConfig);
 	EEPROM.put(110, MDL);
 }
 

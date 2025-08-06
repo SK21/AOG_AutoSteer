@@ -16,7 +16,7 @@ extern "C" {
 
 #include <Adafruit_Sensor.h>
 #define InoDescription "AutoSteerTeensyRVC"
-const uint16_t InoID = 31075;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 6085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 const int16_t ADS1115_Address = 0x48;
 
@@ -31,6 +31,10 @@ const int16_t ADS1115_Address = 0x48;
 struct ModuleConfig
 {
 	//	AS15-3 config
+	uint8_t ReceiverSerialPort = 8;	
+	uint8_t	IMUSerialPort = 3;	
+	uint8_t PassThruInSerialPort = 4;		// from F9P Uart2
+	uint8_t PassThrOutSerialPort = 2;		// to Max232 for DB9 connector
 	uint8_t PowerRelayPin = 0;
 	uint8_t SteeringRelayPin = 1;	// pin for steering disconnect relay
 	uint8_t WasPin = 25;
@@ -39,12 +43,7 @@ struct ModuleConfig
 	uint8_t WorkSwitchPin = 31;
 	uint8_t DirPin = 23;
 	uint8_t PWMpin = 22;
-	uint8_t ReceiverSerialPort = 8;	
-	uint8_t PassThrOutSerialPort = 2;		// to Max232 for DB9 connector
-	uint8_t PassThruInSerialPort = 4;		// from F9P Uart2
-	uint8_t	IMUSerialPort = 3;	
 	int16_t ZeroOffset = 0;
-	uint8_t SwapRollPitch = 0;		
 	bool InvertRoll = false;
 	bool ADS1115Enabled = false;
 	uint8_t IP0 = 192;
@@ -66,26 +65,27 @@ struct Storage
 	float AckermanFix = 1;     //sent as percent
 };  
 
-Storage steerSettings;  //11 bytes
+Storage SteerSettings;  //11 bytes
 
 struct Setup
 {
 	uint8_t InvertWAS = 0;
-	uint8_t IsRelayActiveHigh = 0; //if zero, active low (default)
-	uint8_t MotorDriveDirection = 0;
+	uint8_t InvertRelays = 0;	//if zero, active low (default)
+	uint8_t InvertSteer = 0;
 	uint8_t SingleInputWAS = 1;
 	uint8_t CytronDriver = 1;
-	uint8_t SteerSwitch = 0;  //1 if switch selected
-	uint8_t SteerButton = 0;  //1 if button selected
+	uint8_t SteerSwitch = 0;	//1 if switch selected
+	uint8_t SteerButton = 0;	//1 if button selected
 	uint8_t ShaftEncoder = 0;
 	uint8_t PressureSensor = 0;
 	uint8_t CurrentSensor = 0;
 	uint8_t PulseCountMax = 5;
 	uint8_t IsDanfoss = 0;
-	uint8_t IsUseY_Axis = 0;     //Set to 0 to use X Axis, 1 to use Y avis
+	uint8_t UseIMU_Y_Axis = 0;	//Set to 0 to use X Axis, 1 to use Y avis
+	double MinSpeed = 0;		// minimum kmh X 10
 };
 
-Setup steerConfig;          //9 bytes
+Setup SteerConfig;          //9 bytes
 
 // Ethernet steering
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO

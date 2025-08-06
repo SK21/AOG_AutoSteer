@@ -15,7 +15,7 @@ void ReadSwitches()
 	// guidanceStatus	- low, steering off
 	//					- high, steering on
 
-	if (steerConfig.SteerSwitch == 1)
+	if (SteerConfig.SteerSwitch == 1)
 	{
 		// on off switch
 		SWreading = digitalRead(MDL.SteerSwitchPin);
@@ -32,7 +32,7 @@ void ReadSwitches()
 		}
 		SWprevious = SWreading;
 	}
-	else if (steerConfig.SteerButton == 1)
+	else if (SteerConfig.SteerButton == 1)
 	{
 		// push button
 		// pin is pulled high and goes low when button is pushed
@@ -70,12 +70,12 @@ void ReadSwitches()
 	}
 
 	// sensors
-	if (steerConfig.CurrentSensor)
+	if (SteerConfig.CurrentSensor)
 	{
 		float SensorSample = (float)(CurrentReading);	
 		SensorSample = (abs(512 - SensorSample)) * 0.5;
 		SensorReading = SensorReading * 0.7 + SensorSample * 0.3;
-		if (SensorReading >= steerConfig.PulseCountMax)
+		if (SensorReading >= SteerConfig.PulseCountMax)
 		{
 			SteerSwitch = HIGH;
 			SWprevious = LOW;

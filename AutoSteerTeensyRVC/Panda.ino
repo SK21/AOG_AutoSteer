@@ -77,7 +77,7 @@ void ReadIMU()
         }
         IMU_Heading *= 10.0;
 
-        if (MDL.SwapRollPitch)
+        if (SteerConfig.UseIMU_Y_Axis)
         {
             IMU_Roll = heading.pitch * 10;
             if (MDL.InvertRoll) IMU_Roll *= -1.0;
