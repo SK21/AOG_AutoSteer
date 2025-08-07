@@ -245,10 +245,6 @@ void DoSetup()
 	}
 
 	SerialIMU->begin(IMUBaud);
-	static char IMUBufferIn[512];
-	static char IMUBufferOut[512];
-	SerialIMU->addMemoryForRead(IMUBufferIn, 512);
-	SerialIMU->addMemoryForWrite(IMUBufferOut, 512);
 
 	switch (MDL.IMUtype)
 	{

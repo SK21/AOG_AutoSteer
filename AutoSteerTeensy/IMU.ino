@@ -13,6 +13,8 @@ void ReadIMU()
         if (rvc.read(&BNOdata))
         {
             IMUtime = millis();
+            IMU_YawRate = BNOdata.z_accel;
+            IMU_Heading = BNOdata.yaw;
             if (IMU_Heading < 0 && IMU_Heading >= -180) //Scale BNO085 yaw from [-180?;180?] to [0;360?]
             {
                 IMU_Heading = IMU_Heading + 360;
@@ -30,14 +32,12 @@ void ReadIMU()
                 IMU_Pitch = BNOdata.pitch * 10;
             }
             if (MDL.InvertRoll) IMU_Roll *= -1.0;
-            IMU_Heading = BNOdata.yaw;
-            IMU_YawRate = BNOdata.z_accel;
         }
         break;
 
     case 1:
         // TM171
-        if (SerialIMU->available())
+        while (SerialIMU->available())
         {
             IMUtime = millis();
             char rxByte = (char)SerialIMU->read();
@@ -52,6 +52,8 @@ void ReadIMU()
                     Ep_RPY RPY_Data;
                     if (EP_SUCC_ == eOD.Read_Ep_RPY(&RPY_Data))
                     {
+                        IMU_YawRate = 0;
+                        IMU_Heading = RPY_Data.yaw * 10.0;
                         if (SteerConfig.UseIMU_Y_Axis)
                         {
                             IMU_Roll = RPY_Data.pitch * 10;
@@ -63,8 +65,6 @@ void ReadIMU()
                             IMU_Pitch = RPY_Data.pitch * 10;
                         }
                         if (MDL.InvertRoll) IMU_Roll *= -1.0;
-                        IMU_Heading = RPY_Data.yaw * 10.0;
-                        IMU_YawRate = 0;
                     }
                     break;
 
@@ -72,6 +72,8 @@ void ReadIMU()
                     Ep_Combo ComboData;
                     if (EP_SUCC_ == eOD.Read_Ep_Combo(&ComboData))
                     {
+                        IMU_YawRate = (ComboData.wz) * (1e-5f);         // rad/s
+                        IMU_Heading = (ComboData.yaw) * (1e-2f) * 10;   // degree
                         if (SteerConfig.UseIMU_Y_Axis)
                         {
                             IMU_Roll = (ComboData.pitch) * (1e-2f) * 10;
@@ -83,8 +85,6 @@ void ReadIMU()
                             IMU_Pitch = (ComboData.pitch) * (1e-2f) * 10;
                         }
                         if (MDL.InvertRoll) IMU_Roll *= -1.0;
-                        IMU_Heading = (ComboData.yaw) * (1e-2f) * 10;   // degree
-                        IMU_YawRate = (ComboData.wz) * (1e-5f);         // rad/s
                     }
                     break;
                 }

@@ -115,6 +115,7 @@ float steerAngleError = 0; //setpoint - actual
 float Speed_KMH = 0.0;
 int8_t guidanceStatus;
 
+// IMU
 float IMU_Heading = 0;
 float IMU_Roll = 0;
 float IMU_Pitch = 0;
