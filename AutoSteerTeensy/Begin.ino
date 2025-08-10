@@ -38,7 +38,7 @@ void DoSetup()
 	}
 
 	// receiver
-	SerialReceiver = beginSerialFromPort(MDL.ReceiverSerialPort, ReceiverBaud);
+	SerialReceiver = SetSerial(MDL.ReceiverSerialPort, ReceiverBaud);
 	SerialReceiverEnabled = (SerialReceiver != nullptr);
 	if (SerialReceiverEnabled)
 	{
@@ -78,6 +78,7 @@ void DoSetup()
 
 	// ADS1115
 	ADSfound = false;
+	ADSoffset = 0;
 	if (MDL.ADS1115Enabled)
 	{
 		for (int i = 0; i < 2; i++)
@@ -92,8 +93,7 @@ void DoSetup()
 				Wire.beginTransmission(ADS1115_Address);
 				Wire.write(0b00000000);	//Point to Conversion register
 				Wire.endTransmission();
-				Wire.requestFrom(ADS1115_Address, 2);
-				ADSfound = Wire.available();
+				ADSfound = (Wire.requestFrom(ADS1115_Address, 2) == 2);
 				Serial.print(".");
 				delay(500);
 				if (ErrorCount++ > 5) break;
@@ -101,6 +101,7 @@ void DoSetup()
 			Serial.println("");
 			if (ADSfound)
 			{
+				ADSoffset = ADSzero;
 				Serial.println("ADS1115 found.");
 				Serial.println("");
 				break;
@@ -146,8 +147,8 @@ void DoSetup()
 	UpdateComm.begin(UpdateReceivePort);
 
 	// GPS pass-through
-	SerialPassIn = beginSerialFromPort(MDL.PassThruInSerialPort, PassThruBaud);
-	SerialPassOut = beginSerialFromPort(MDL.PassThrOutSerialPort, PassThruBaud);
+	SerialPassIn = SetSerial(MDL.PassThruInSerialPort, PassThruBaud);
+	SerialPassOut = SetSerial(MDL.PassThrOutSerialPort, PassThruBaud);
 	SerialPassThruEnabled = (SerialPassIn != nullptr && SerialPassOut != nullptr);
 	if (SerialPassThruEnabled)
 	{
@@ -161,7 +162,7 @@ void DoSetup()
 	}
 
 	// IMU
-	SerialIMU = beginSerialFromPort(MDL.IMUSerialPort, IMUBaud);
+	SerialIMU = SetSerial(MDL.IMUSerialPort, IMUBaud);
 	SerialIMUEnabled = (SerialIMU != nullptr);
 	if (SerialIMUEnabled)
 	{
@@ -289,9 +290,10 @@ void LoadDefaults()
 	MDL.IP2 = 1;
 	MDL.IP3 = 126;
 	MDL.IMUtype = 0;
+	MDL.AutoZero = false;
 }
 
-HardwareSerial* getSerialFromPort(uint8_t port)
+HardwareSerial* GetSerialByID(uint8_t port)
 {
 	switch (port) 
 	{
@@ -307,9 +309,9 @@ HardwareSerial* getSerialFromPort(uint8_t port)
 	}
 }
 
-HardwareSerial* beginSerialFromPort(uint8_t port, uint32_t baud)
+HardwareSerial* SetSerial(uint8_t port, uint32_t baud)
 {
-	HardwareSerial* serial = getSerialFromPort(port);
+	HardwareSerial* serial = GetSerialByID(port);
 	if (serial != nullptr) serial->begin(baud);
 	return serial;
 }

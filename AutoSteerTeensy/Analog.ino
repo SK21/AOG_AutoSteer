@@ -1,10 +1,10 @@
 
-uint8_t AdsPin = 0;
-uint16_t Aread;
-elapsedMicros ReadTime;
-
 void ReadAnalog()
 {
+	static uint8_t AdsPin = 0;
+	static uint16_t Aread;
+	static elapsedMicros ReadTime;
+
 	if (ADSfound)
 	{
 		// use ADS1115
@@ -29,6 +29,7 @@ void ReadAnalog()
 			case 0:
 				WasReading = Aread >> 1;
 				break;
+
 			default:
 				CurrentReading = Aread >> 8;
 				break;

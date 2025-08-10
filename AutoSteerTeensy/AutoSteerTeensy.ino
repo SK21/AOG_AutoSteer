@@ -23,16 +23,17 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 9085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 10085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
+#define PassThruBaud 57600		// for RS232
 #define MaxReadBuffer 100		// bytes
 #define LOW_HIGH_DEGREES 5.0	// How many degrees before decreasing Max PWM
 #define NC 0xFF					// Pin not connected
-#define PassThruBaud 57600		// for RS232
 #define NtripPort 2233			// local port to listen on for NTRIP data
+#define ADSzero 6800			// additional WAS offset used with ADS1115
 
 struct ModuleConfig
 {
@@ -51,13 +52,14 @@ struct ModuleConfig
 	uint8_t DirPin = 23;
 	uint8_t PWMpin = 22;
 	int16_t ZeroOffset = 0;
-	bool InvertRoll = false;
-	bool ADS1115Enabled = false;
 	uint8_t IP0 = 192;
 	uint8_t IP1 = 168;
 	uint8_t IP2 = 1;
 	uint8_t IP3 = 126;
 	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
+	bool InvertRoll = false;
+	bool ADS1115Enabled = false;
+	bool AutoZero = false;
 };
 
 ModuleConfig MDL;
@@ -155,6 +157,7 @@ uint32_t NtripTime;
 
 int16_t WasReading;
 int16_t CurrentReading;
+int16_t ADSoffset;	// used when ADS1115 is enabled
 bool ADSfound = false;
 int16_t ADS1115_Address = 72;
 byte PGNlength;
@@ -165,8 +168,8 @@ HardwareSerial* SerialPassIn;
 HardwareSerial* SerialPassOut;
 
 bool SerialIMUEnabled = false;
-bool SerialPassThruEnabled = false;
 bool SerialReceiverEnabled = false;
+bool SerialPassThruEnabled = false;
 
 elapsedMillis imuDelayTimer;
 bool isGGA_Updated = false;
@@ -248,11 +251,11 @@ void Blink()
 			Serial.print(" Micros: ");
 			Serial.print(MaxLoopTime);
 
-			Serial.print(", WAS: ");
-			Serial.print(helloSteerPosition);
-
-			Serial.print(", Heading: ");
+			Serial.print(", ");
 			Serial.print(IMU_Heading / 10.0);
+
+			Serial.print(", ");
+			Serial.print(WasReading);
 
 			Serial.println("");
 
