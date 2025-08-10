@@ -164,6 +164,10 @@ HardwareSerial* SerialReceiver;
 HardwareSerial* SerialPassIn;
 HardwareSerial* SerialPassOut;
 
+bool SerialIMUEnabled = false;
+bool SerialPassThruEnabled = false;
+bool SerialReceiverEnabled = false;
+
 elapsedMillis imuDelayTimer;
 bool isGGA_Updated = false;
 
@@ -223,7 +227,7 @@ void loop()
 	ReceiveSteerData();
 	ReceiveUpdate();
 	Blink();
-	if (SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
+	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
 
 void Blink()

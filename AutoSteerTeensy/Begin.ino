@@ -37,49 +37,32 @@ void DoSetup()
 		Serial.println("Module Version: invalid");
 	}
 
-	// receive data from gps receiver
-	switch (MDL.ReceiverSerialPort)
+	// receiver
+	SerialReceiver = beginSerialFromPort(MDL.ReceiverSerialPort, ReceiverBaud);
+	SerialReceiverEnabled = (SerialReceiver != nullptr);
+	if (SerialReceiverEnabled)
 	{
-	case 1:
-		SerialReceiver = &Serial1;
-		break;
-	case 2:
-		SerialReceiver = &Serial2;
-		break;
-	case 3:
-		SerialReceiver = &Serial3;
-		break;
-	case 4:
-		SerialReceiver = &Serial4;
-		break;
-	case 5:
-		SerialReceiver = &Serial5;
-		break;
-	case 6:
-		SerialReceiver = &Serial6;
-		break;
-	case 7:
-		SerialReceiver = &Serial7;
-		break;
-	default:
-		SerialReceiver = &Serial8;
-		break;
-	}
+		static char ReceiverBufferIn[512];
+		static char ReceiverBufferOut[512];
+		SerialReceiver->addMemoryForRead(ReceiverBufferIn, 512);
+		SerialReceiver->addMemoryForWrite(ReceiverBufferOut, 512);
 
-	// Receiver
-	SerialReceiver->begin(ReceiverBaud);
-	static char ReceiverBufferIn[512];
-	static char ReceiverBufferOut[512];
-	SerialReceiver->addMemoryForRead(ReceiverBufferIn, 512);
-	SerialReceiver->addMemoryForWrite(ReceiverBufferOut, 512);
+		Serial.println("");
+		Serial.print("Connecting to receiver on serial port ");
+		Serial.println(MDL.ReceiverSerialPort);
+		Serial.println("");
+	}
+	else
+	{
+		Serial.println("");
+		Serial.print("Invalid Receiver Port: ");
+		Serial.println(MDL.ReceiverSerialPort);
+		Serial.println("");
+	}
 
 	parser.setErrorHandler(errorHandler);
 	parser.addHandler("G-GGA", GGA_Handler);
 	parser.addHandler("G-VTG", VTG_Handler);
-
-	Serial.print("Connecting to receiver on serial port ");
-	Serial.println(MDL.ReceiverSerialPort);
-	Serial.println("");
 
 	// pins
 	pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);
@@ -154,7 +137,6 @@ void DoSetup()
 	Serial.print("IP Address: ");
 	Serial.println(Ethernet.localIP());
 	DestinationIP = IPAddress(MDL.IP0, MDL.IP1, MDL.IP2, 255);	// update from saved data
-	Serial.println("");
 
 	UDPsteering.begin(ListeningPort);
 	UDPconfig.begin(ConfigListeningPort);
@@ -164,107 +146,45 @@ void DoSetup()
 	UpdateComm.begin(UpdateReceivePort);
 
 	// GPS pass-through
-	switch (MDL.PassThruInSerialPort)
+	SerialPassIn = beginSerialFromPort(MDL.PassThruInSerialPort, PassThruBaud);
+	SerialPassOut = beginSerialFromPort(MDL.PassThrOutSerialPort, PassThruBaud);
+	SerialPassThruEnabled = (SerialPassIn != nullptr && SerialPassOut != nullptr);
+	if (SerialPassThruEnabled)
 	{
-	case 1:
-		SerialPassIn = &Serial1;
-		break;
-	case 2:
-		SerialPassIn = &Serial2;
-		break;
-	case 3:
-		SerialPassIn = &Serial3;
-		break;
-	case 4:
-		SerialPassIn = &Serial4;
-		break;
-	case 5:
-		SerialPassIn = &Serial5;
-		break;
-	case 6:
-		SerialPassIn = &Serial6;
-		break;
-	case 7:
-		SerialPassIn = &Serial7;
-		break;
-	default:
-		SerialPassIn = &Serial8;
-		break;
+		Serial.println("");
+		Serial.println("GPS pass-through enabled.");
 	}
-	SerialPassIn->begin(PassThruBaud);
-
-	switch (MDL.PassThrOutSerialPort)
+	else
 	{
-	case 1:
-		SerialPassOut = &Serial1;
-		break;
-	case 2:
-		SerialPassOut = &Serial2;
-		break;
-	case 3:
-		SerialPassOut = &Serial3;
-		break;
-	case 4:
-		SerialPassOut = &Serial4;
-		break;
-	case 5:
-		SerialPassOut = &Serial5;
-		break;
-	case 6:
-		SerialPassOut = &Serial6;
-		break;
-	case 7:
-		SerialPassOut = &Serial7;
-		break;
-	default:
-		SerialPassOut = &Serial8;
-		break;
+		Serial.println("");
+		Serial.println("GPS pass-through disabled.");
 	}
-	SerialPassOut->begin(PassThruBaud);
 
 	// IMU
-	switch (MDL.IMUSerialPort)
+	SerialIMU = beginSerialFromPort(MDL.IMUSerialPort, IMUBaud);
+	SerialIMUEnabled = (SerialIMU != nullptr);
+	if (SerialIMUEnabled)
 	{
-	case 1:
-		SerialIMU = &Serial1;
-		break;
-	case 2:
-		SerialIMU = &Serial2;
-		break;
-	case 3:
-		SerialIMU = &Serial3;
-		break;
-	case 4:
-		SerialIMU = &Serial4;
-		break;
-	case 5:
-		SerialIMU = &Serial5;
-		break;
-	case 6:
-		SerialIMU = &Serial6;
-		break;
-	case 7:
-		SerialIMU = &Serial7;
-		break;
-	default:
-		SerialIMU = &Serial8;
-		break;
+		switch (MDL.IMUtype)
+		{
+		case 0:
+			// BNO080
+			Serial.println("");
+			Serial.println("Using BNO080 IMU.");
+			rvc.begin(SerialIMU);
+			break;
+
+		case 1:
+			// TM171
+			Serial.println("");
+			Serial.println("Using TM171 IMU.");
+			break;
+		}
 	}
-
-	SerialIMU->begin(IMUBaud);
-
-	switch (MDL.IMUtype)
+	else
 	{
-	case 0:
-		// BNO080
-		Serial.println("Using BNO080 IMU.");
-		rvc.begin(SerialIMU);
-		break;
-
-	case 1:
-		// TM171
-		Serial.println("Using TM171 IMU.");
-		break;
+		Serial.println("");
+		Serial.println("IMU serial port invalid. IMU disabled.");
 	}
 
 	Serial.println("");
@@ -371,4 +291,26 @@ void LoadDefaults()
 	MDL.IMUtype = 0;
 }
 
+HardwareSerial* getSerialFromPort(uint8_t port)
+{
+	switch (port) 
+	{
+	case 1: return &Serial1;
+	case 2: return &Serial2;
+	case 3: return &Serial3;
+	case 4: return &Serial4;
+	case 5: return &Serial5;
+	case 6: return &Serial6;
+	case 7: return &Serial7;
+	case 8: return &Serial8;
+	default: return nullptr; // invalid port
+	}
+}
+
+HardwareSerial* beginSerialFromPort(uint8_t port, uint32_t baud)
+{
+	HardwareSerial* serial = getSerialFromPort(port);
+	if (serial != nullptr) serial->begin(baud);
+	return serial;
+}
 

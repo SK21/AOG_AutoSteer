@@ -1,5 +1,5 @@
 
-//Conversion to Hexidecimal
+//Conversion to Hexadecimal
 const char* asciiHex = "0123456789ABCDEF";
 
 //the new PANDA sentence buffer
@@ -33,7 +33,7 @@ float tmpIMU;
 void DoPanda()
 {
     // NMEA, from receiver to parser
-    if (SerialReceiver->available()) parser << SerialReceiver->read();
+    if (SerialReceiverEnabled && SerialReceiver->available()) parser << SerialReceiver->read();
 
     // GPS corrections from AGIO to receiver
     int packetSize = UDPntrip.parsePacket();
@@ -41,7 +41,7 @@ void DoPanda()
     {
         NtripTime = millis();
         UDPntrip.read(NtripBuffer, packetSize);
-        SerialReceiver->write(NtripBuffer, packetSize);
+        if (SerialReceiverEnabled) SerialReceiver->write(NtripBuffer, packetSize);
     }
 
     if (isGGA_Updated && imuDelayTimer > 40 && IMU_Connected())
