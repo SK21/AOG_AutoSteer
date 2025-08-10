@@ -23,7 +23,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 6085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 9085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -37,6 +37,7 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 struct ModuleConfig
 {
 	//	AS15-3 config
+	uint8_t ID = 0;
 	uint8_t ReceiverSerialPort = 8;	
 	uint8_t	IMUSerialPort = 3;	
 	uint8_t PassThruInSerialPort = 4;		// from F9P Uart2
@@ -174,7 +175,7 @@ EthernetUDP UpdateComm;
 uint16_t UpdateReceivePort = 29100;
 uint16_t UpdateSendPort = 29000;
 uint32_t buffer_addr, buffer_size;
-bool UpdateMode = false;
+bool FirmwareUpdateMode = false;
 
 //******************************************************************************
 // hex_info_t struct for hex record and hex file info
@@ -225,21 +226,20 @@ void loop()
 	if (SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
 
-bool State = false;
-elapsedMillis BlinkTmr;
-byte ResetRead;
-elapsedMicros LoopTmr;
-uint32_t MaxLoopTime;
-uint16_t debug1;
-
 void Blink()
 {
+	static bool State = false;
+	static elapsedMillis BlinkTmr;
+	static elapsedMicros LoopTmr;
+	static byte Count = 0;
+	static uint32_t MaxLoopTime = 0;
+	
 	if (BlinkTmr > 1000)
 	{
 		BlinkTmr = 0;
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
-		if (!UpdateMode)
+		if (!FirmwareUpdateMode)
 		{
 			Serial.print(" Micros: ");
 			Serial.print(MaxLoopTime);
@@ -250,15 +250,12 @@ void Blink()
 			Serial.print(", Heading: ");
 			Serial.print(IMU_Heading / 10.0);
 
-			//Serial.print(", ");
-			//Serial.print(debug1);
-
 			Serial.println("");
 
-			if (ResetRead++ > 5)
+			if (Count++ > 10)
 			{
+				Count = 0;
 				MaxLoopTime = 0;
-				ResetRead = 0;
 			}
 		}
 	}
@@ -276,12 +273,17 @@ bool GoodCRC(byte Data[], byte Length)
 byte CRC(byte Chk[], byte Length, byte Start)
 {
 	byte Result = 0;
-	int CK = 0;
 	for (int i = Start; i < Length; i++)
 	{
-		CK += Chk[i];
+		Result += Chk[i];
 	}
-	Result = (byte)CK;
 	return Result;
 }
+
+byte ParseModID(byte ID)
+{
+	// top 4 bits
+	return ID >> 4;
+}
+
 

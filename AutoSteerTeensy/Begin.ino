@@ -23,12 +23,19 @@ void DoSetup()
 	uint8_t mn = rest % 100;
 	uint16_t dy = rest / 100;
 
-	Serial.print("Module Version: v");
-	Serial.print(yr);
-	Serial.print(".");
-	Serial.print(mn);
-	Serial.print(".");
-	Serial.println(dy);
+	if (mn <= 12 && dy <= 31)
+	{
+		Serial.print("Module Version: v");
+		Serial.print(yr);
+		Serial.print(".");
+		Serial.print(mn);
+		Serial.print(".");
+		Serial.println(dy);
+	}
+	else
+	{
+		Serial.println("Module Version: invalid");
+	}
 
 	// receive data from gps receiver
 	switch (MDL.ReceiverSerialPort)
@@ -87,9 +94,9 @@ void DoSetup()
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
 
 	// ADS1115
+	ADSfound = false;
 	if (MDL.ADS1115Enabled)
 	{
-		ADSfound = false;
 		for (int i = 0; i < 2; i++)
 		{
 			if (i == 0) ADS1115_Address = 72; else ADS1115_Address = 73;
@@ -341,6 +348,7 @@ void LoadDefaults()
 	Serial.println("Loading default settings.");
 
 	// AS15-3
+	MDL.ID = 0;
 	MDL.PowerRelayPin = 0;
 	MDL.SteeringRelayPin = 1;
 	MDL.WasPin = 25;
