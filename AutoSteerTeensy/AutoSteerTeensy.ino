@@ -119,7 +119,7 @@ float Speed_KMH = 0.0;
 bool SteeringIsOn = false;
 int8_t SteerSwitch = HIGH;	// Low on, High off
 int8_t switchByte = 0;
-float DisableSensorReading;
+float AnalogReadingAverage;
 
 // IMU
 float IMU_Heading = 0;
@@ -148,7 +148,7 @@ Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 BNO08x_RVC_Data BNOdata;
 
 int16_t WasReading;
-int16_t CurrentReading;
+int16_t AnalogReadingValue;
 int16_t ADSoffset;	// used when ADS1115 is enabled
 bool ADSfound = false;
 int16_t ADS1115_Address = 72;
@@ -194,6 +194,7 @@ void loop()
 	Blink();
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
+int16_t debug1;
 
 void Blink()
 {
@@ -218,6 +219,9 @@ void Blink()
 
 			Serial.print(", ");
 			Serial.print(WasReading);
+
+			Serial.print(", ");
+			Serial.print(debug1);
 
 			Serial.println("");
 

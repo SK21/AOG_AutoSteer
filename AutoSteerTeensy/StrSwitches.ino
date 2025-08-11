@@ -72,10 +72,21 @@ void ReadSwitches()
 	// sensors
 	if (SteerConfig.CurrentSensor)
 	{
-		float SensorSample = (float)(CurrentReading);	
+		float SensorSample = (float)AnalogReadingValue;
 		SensorSample = (abs(512 - SensorSample)) * 0.5;
-		DisableSensorReading = DisableSensorReading * 0.7 + SensorSample * 0.3;
-		if (DisableSensorReading >= SteerConfig.PulseCountMax)
+		AnalogReadingAverage = AnalogReadingAverage * 0.7 + SensorSample * 0.3;
+		if (AnalogReadingAverage >= SteerConfig.PulseCountMax)
+		{
+			SteerSwitch = HIGH;
+			SWprevious = LOW;
+		}
+	}
+
+	if (SteerConfig.PressureSensor)
+	{
+		float SensorSample = (float)AnalogReadingValue * 0.25;
+		AnalogReadingAverage = AnalogReadingAverage * 0.7 + SensorSample * 0.3;
+		if (AnalogReadingAverage >= SteerConfig.PulseCountMax)
 		{
 			SteerSwitch = HIGH;
 			SWprevious = LOW;

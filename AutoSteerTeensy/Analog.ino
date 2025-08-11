@@ -11,7 +11,7 @@ void ReadAnalog()
 		//	AIN0	WAS 5V
 		//	AIN1	
 		//	AIN2	
-		//	AIN3	Current
+		//	AIN3	Current/pressure
 
 		// based on https://github.com/RalphBacon/ADS1115-ADC/blob/master/ADS1115_ADC_16_bit_SingleEnded.ino
 
@@ -30,7 +30,7 @@ void ReadAnalog()
 				break;
 
 			default:
-				CurrentReading = Aread >> 8;
+				AnalogReadingValue = Aread >> 8;
 				break;
 			}
 
@@ -87,7 +87,7 @@ void ReadAnalog()
 	{
 		// use Teensy analog pins
 		if (MDL.WasPin < NC) WasReading = analogRead(MDL.WasPin);
-		if (MDL.CurrentPin < NC) CurrentReading = analogRead(MDL.CurrentPin);
+		if (MDL.CurrentPin < NC) AnalogReadingValue = analogRead(MDL.CurrentPin);
 	}
 }
 

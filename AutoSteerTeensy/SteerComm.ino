@@ -158,7 +158,7 @@ void SendSteerData()
     // Steer Data 2
     if (SteerConfig.PressureSensor || SteerConfig.CurrentSensor)
     {
-        PGN_250[5] = (byte)DisableSensorReading;
+        PGN_250[5] = (byte)AnalogReadingAverage;
 
         //add the checksum for AOG2
         CK_A = 0;
@@ -206,6 +206,7 @@ void SendHelloReply()
 
         if (IMU_Connected())
         {
+            debug1++;
             UDPsteering.beginPacket(DestinationIP, DestinationPort);
             UDPsteering.write(helloFromIMU, sizeof(helloFromIMU));
             UDPsteering.endPacket();

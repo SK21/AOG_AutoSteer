@@ -289,22 +289,21 @@ void LoadDefaults()
 
 HardwareSerial* SetSerialPort(uint8_t port, uint32_t baud)
 {
-	HardwareSerial* NewPort;
+	HardwareSerial* NewPort = nullptr;
 
 	switch (port)
 	{
-	case 1: NewPort = &Serial1;
-	case 2: NewPort = &Serial2;
-	case 3: NewPort = &Serial3;
-	case 4: NewPort = &Serial4;
-	case 5: NewPort = &Serial5;
-	case 6: NewPort = &Serial6;
-	case 7: NewPort = &Serial7;
-	case 8: NewPort = &Serial8;
-	default: NewPort = nullptr;
+	case 1: NewPort = &Serial1; break;
+	case 2: NewPort = &Serial2; break;
+	case 3: NewPort = &Serial3; break;
+	case 4: NewPort = &Serial4; break;
+	case 5: NewPort = &Serial5; break;
+	case 6: NewPort = &Serial6; break;
+	case 7: NewPort = &Serial7; break;
+	case 8: NewPort = &Serial8; break;
+	default: NewPort = nullptr; break;
 	}
 
 	if (NewPort != nullptr) NewPort->begin(baud);
 	return NewPort;
 }
-
