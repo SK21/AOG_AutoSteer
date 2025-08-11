@@ -25,7 +25,7 @@ void DoSetup()
 
 	if (mn <= 12 && dy <= 31)
 	{
-		Serial.print("Module Version: v");
+		Serial.print("Firmware Version: v");
 		Serial.print(yr);
 		Serial.print(".");
 		Serial.print(mn);
@@ -34,7 +34,7 @@ void DoSetup()
 	}
 	else
 	{
-		Serial.println("Module Version: invalid");
+		Serial.println("Firmware Version: invalid");
 	}
 
 	// receiver

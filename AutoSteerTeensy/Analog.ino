@@ -3,7 +3,6 @@ void ReadAnalog()
 {
 	static uint8_t AdsPin = 0;
 	static uint16_t Aread;
-	static elapsedMicros ReadTime;
 
 	if (ADSfound)
 	{
