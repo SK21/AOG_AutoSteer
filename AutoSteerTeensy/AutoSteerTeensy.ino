@@ -32,7 +32,6 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 #define MaxReadBuffer 100		// bytes
 #define LOW_HIGH_DEGREES 5.0	// How many degrees before decreasing Max PWM
 #define NC 0xFF					// Pin not connected
-#define NtripPort 2233			// local port to listen on for NTRIP data
 #define ADSzero 6800			// additional WAS offset used with ADS1115
 
 struct ModuleConfig
@@ -99,24 +98,28 @@ Setup SteerConfig;          //9 bytes
 
 // Ethernet steering
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
-uint16_t ListeningPort = 8888;
-uint16_t DestinationPort = 9999;	// port that AGIO listens on
+const uint16_t ListeningPort = 8888;
+const uint16_t DestinationPort = 9999;	// port that AGIO listens on
 IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
+uint32_t AOGTime;
 
-EthernetUDP UDPntrip;	// from AGIO to receiver
-char NtripBuffer[512];	// buffer for ntrip data
+EthernetUDP UDPntrip;				// from AGIO to receiver
+const uint16_t NtripPort = 2233;	// local port to listen on for NTRIP data
+char NtripBuffer[512];				// buffer for ntrip data
 
 // Ethernet config
 EthernetUDP UDPconfig;
-uint16_t ConfigListeningPort = 28888;
-uint16_t ConfigDestinationPort = 29999;
+const uint16_t ConfigListeningPort = 28888;
+const uint16_t ConfigDestinationPort = 29999;
 
 //steering variables
 float steerAngleActual = 0;
 float steerAngleSetPoint = 0; //the desired angle from AgOpen
-float steerAngleError = 0; //setpoint - actual
 float Speed_KMH = 0.0;
-int8_t guidanceStatus;
+bool SteeringIsOn = false;
+int8_t SteerSwitch = HIGH;	// Low on, High off
+int8_t switchByte = 0;
+float DisableSensorReading;
 
 // IMU
 float IMU_Heading = 0;
@@ -124,11 +127,6 @@ float IMU_Roll = 0;
 float IMU_Pitch = 0;
 float IMU_YawRate = 0;
 uint32_t IMUtime;
-
-// switches
-int8_t SteerSwitch = LOW;	// Low on, High off
-int8_t switchByte = 0;
-float SensorReading;
 
 //pwm variables
 int16_t pwmDrive = 0;
@@ -145,15 +143,9 @@ uint8_t PGN_253[] = { 128, 129, 123, 253, 8, 0, 0, 0, 0, 0,0,0,0, 12 };
 //fromAutoSteerData FD 250 - sensor values etc
 uint8_t PGN_250[] = { 128, 129, 123, 250, 8, 0, 0, 0, 0, 0,0,0,0, 12 };
 
-const uint16_t  LOOP_TIME = 25;	// 40 hz, main loop
-uint32_t  LoopLast = LOOP_TIME;
-
 NMEAParser<2> parser;
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 BNO08x_RVC_Data BNOdata;
-
-uint32_t AOGTime;
-uint32_t NtripTime;
 
 int16_t WasReading;
 int16_t CurrentReading;
@@ -171,44 +163,15 @@ bool SerialIMUEnabled = false;
 bool SerialReceiverEnabled = false;
 bool SerialPassThruEnabled = false;
 
-elapsedMillis imuDelayTimer;
-bool isGGA_Updated = false;
-
-byte DataConfig[MaxReadBuffer];
-uint16_t PGNconfig;
-
 // firmware update
 EthernetUDP UpdateComm;
-uint16_t UpdateReceivePort = 29100;
-uint16_t UpdateSendPort = 29000;
+const uint16_t UpdateReceivePort = 29100;
+const uint16_t UpdateSendPort = 29000;
 uint32_t buffer_addr, buffer_size;
 bool FirmwareUpdateMode = false;
 
-//******************************************************************************
-// hex_info_t struct for hex record and hex file info
-//******************************************************************************
-typedef struct {  //
-	char* data;   // pointer to array allocated elsewhere
-	unsigned int addr;  // address in intel hex record
-	unsigned int code;  // intel hex record type (0=data, etc.)
-	unsigned int num; // number of data bytes in intel hex record
-
-	uint32_t base;  // base address to be added to intel hex 16-bit addr
-	uint32_t min;   // min address in hex file
-	uint32_t max;   // max address in hex file
-
-	int eof;    // set true on intel hex EOF (code = 1)
-	int lines;    // number of hex records received
-} hex_info_t;
-
-static char data[16];// buffer for hex data
-
-hex_info_t hex =
-{ // intel hex info struct
-  data, 0, 0, 0,        //   data,addr,num,code
-  0, 0xFFFFFFFF, 0,     //   base,min,max,
-  0, 0					//   eof,lines
-};
+const uint16_t  LOOP_TIME = 25;	// 40 hz, main loop
+uint32_t  LoopLast = LOOP_TIME;
 
 void setup()
 {

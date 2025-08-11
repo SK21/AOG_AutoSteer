@@ -12,8 +12,8 @@ void ReadSwitches()
 	// steer switch		- low, steering on 
 	//					- high, steering off
 
-	// guidanceStatus	- low, steering off
-	//					- high, steering on
+	// SteeringIsOn		- false, steering off
+	//					- true, steering on
 
 	if (SteerConfig.SteerSwitch == 1)
 	{
@@ -55,7 +55,7 @@ void ReadSwitches()
 	else
 	{
 		// no switch, match status
-		if (guidanceStatus)
+		if (SteeringIsOn)
 		{
 			// steering on
 			// previously off, turn on
@@ -66,7 +66,7 @@ void ReadSwitches()
 			// steering off
 			SteerSwitch = HIGH;
 		}
-		SWprevious = !guidanceStatus;
+		SWprevious = !SteeringIsOn;
 	}
 
 	// sensors
@@ -74,8 +74,8 @@ void ReadSwitches()
 	{
 		float SensorSample = (float)(CurrentReading);	
 		SensorSample = (abs(512 - SensorSample)) * 0.5;
-		SensorReading = SensorReading * 0.7 + SensorSample * 0.3;
-		if (SensorReading >= SteerConfig.PulseCountMax)
+		DisableSensorReading = DisableSensorReading * 0.7 + SensorSample * 0.3;
+		if (DisableSensorReading >= SteerConfig.PulseCountMax)
 		{
 			SteerSwitch = HIGH;
 			SWprevious = LOW;

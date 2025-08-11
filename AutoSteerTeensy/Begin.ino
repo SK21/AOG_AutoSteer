@@ -71,8 +71,6 @@ void DoSetup()
 	pinMode(MDL.DirPin, OUTPUT);
 	pinMode(MDL.PWMpin, OUTPUT);
 
-	SteerSwitch = HIGH;
-
 	Wire.begin();			// I2C on pins SCL 19, SDA 18
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
 
@@ -139,11 +137,10 @@ void DoSetup()
 	Serial.println(Ethernet.localIP());
 	DestinationIP = IPAddress(MDL.IP0, MDL.IP1, MDL.IP2, 255);	// update from saved data
 
+	// UDP
 	UDPsteering.begin(ListeningPort);
 	UDPconfig.begin(ConfigListeningPort);
 	UDPntrip.begin(NtripPort);
-
-	// update
 	UpdateComm.begin(UpdateReceivePort);
 
 	// GPS pass-through

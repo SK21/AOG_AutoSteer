@@ -89,7 +89,9 @@ void ReceiveSteerData()
                 case 254:
                     // autosteer data
                     Speed_KMH = (Data[6] << 8 | Data[5]) * 0.1;
-                    guidanceStatus = Data[7];
+
+                    if (bitRead(Data[7], 0) == 1) SteeringIsOn = true; else SteeringIsOn = false;
+
                     steerAngleSetPoint = (float)((int16_t)(Data[9] << 8 | Data[8])) * 0.01;
 
                     SendSteerData();
@@ -156,7 +158,7 @@ void SendSteerData()
     // Steer Data 2
     if (SteerConfig.PressureSensor || SteerConfig.CurrentSensor)
     {
-        PGN_250[5] = (byte)SensorReading;
+        PGN_250[5] = (byte)DisableSensorReading;
 
         //add the checksum for AOG2
         CK_A = 0;

@@ -30,6 +30,9 @@ char imuYawRate[6];
 int16_t Ptemp;
 float tmpIMU;
 
+elapsedMillis imuDelayTimer;
+bool isGGA_Updated = false;
+
 void DoPanda()
 {
     // NMEA, from receiver to parser
@@ -39,7 +42,6 @@ void DoPanda()
     int packetSize = UDPntrip.parsePacket();
     if (packetSize)
     {
-        NtripTime = millis();
         UDPntrip.read(NtripBuffer, packetSize);
         if (SerialReceiverEnabled) SerialReceiver->write(NtripBuffer, packetSize);
     }
@@ -158,7 +160,7 @@ void BuildPanda()
     strcat(nme, ",");
 
     //12
-    Ptemp = (int16_t)IMU_Heading;
+    Ptemp = (int16_t)IMU_Heading;   // duplicated in DoPanda
     itoa(Ptemp, imuHeading, 10);
     strcat(nme, imuHeading);
     strcat(nme, ",");
