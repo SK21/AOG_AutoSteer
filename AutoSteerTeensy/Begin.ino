@@ -38,7 +38,7 @@ void DoSetup()
 	}
 
 	// receiver
-	SerialReceiver = SetSerial(MDL.ReceiverSerialPort, ReceiverBaud);
+	SerialReceiver = SetSerialPort(MDL.ReceiverSerialPort, ReceiverBaud);
 	SerialReceiverEnabled = (SerialReceiver != nullptr);
 	if (SerialReceiverEnabled)
 	{
@@ -144,8 +144,8 @@ void DoSetup()
 	UpdateComm.begin(UpdateReceivePort);
 
 	// GPS pass-through
-	SerialPassIn = SetSerial(MDL.PassThruInSerialPort, PassThruBaud);
-	SerialPassOut = SetSerial(MDL.PassThrOutSerialPort, PassThruBaud);
+	SerialPassIn = SetSerialPort(MDL.PassThruInSerialPort, PassThruBaud);
+	SerialPassOut = SetSerialPort(MDL.PassThrOutSerialPort, PassThruBaud);
 	SerialPassThruEnabled = (SerialPassIn != nullptr && SerialPassOut != nullptr);
 	if (SerialPassThruEnabled)
 	{
@@ -159,7 +159,7 @@ void DoSetup()
 	}
 
 	// IMU
-	SerialIMU = SetSerial(MDL.IMUSerialPort, IMUBaud);
+	SerialIMU = SetSerialPort(MDL.IMUSerialPort, IMUBaud);
 	SerialIMUEnabled = (SerialIMU != nullptr);
 	if (SerialIMUEnabled)
 	{
@@ -306,7 +306,7 @@ HardwareSerial* GetSerialByID(uint8_t port)
 	}
 }
 
-HardwareSerial* SetSerial(uint8_t port, uint32_t baud)
+HardwareSerial* SetSerialPort(uint8_t port, uint32_t baud)
 {
 	HardwareSerial* serial = GetSerialByID(port);
 	if (serial != nullptr) serial->begin(baud);
