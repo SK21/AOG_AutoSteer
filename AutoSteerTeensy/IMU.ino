@@ -39,14 +39,14 @@ void ReadIMU()
 
         case 1:
             // TM171
-            while (SerialIMU->available())
+            int MaxReads = 2;    // max bytes read per call
+            if (SerialIMU->available() > 64) MaxReads = 6;
+
+            for (int i = 0; i < MaxReads && SerialIMU->available(); i++)
             {
-                IMUtime = millis();
                 char rxByte = (char)SerialIMU->read();
-                char* rxData = &rxByte;
-                int rxSize = 1;
                 Ep_Header header;
-                if (EP_SUCC_ == eP.On_RecvPkg(rxData, rxSize, &header))
+                if (EP_SUCC_ == eP.On_RecvPkg(&rxByte, 1, &header))
                 {
                     switch (header.cmd)
                     {
@@ -54,8 +54,11 @@ void ReadIMU()
                         Ep_RPY RPY_Data;
                         if (EP_SUCC_ == eOD.Read_Ep_RPY(&RPY_Data))
                         {
+                            IMUtime = millis();
                             IMU_YawRate = 0;
                             IMU_Heading = RPY_Data.yaw * 10.0;
+                            if (IMU_Heading < 0) IMU_Heading += 3600;   // normalize to [0, 3600] (tenths of degrees)
+                            
                             if (SteerConfig.UseIMU_Y_Axis)
                             {
                                 IMU_Roll = RPY_Data.pitch * 10;
@@ -74,8 +77,11 @@ void ReadIMU()
                         Ep_Combo ComboData;
                         if (EP_SUCC_ == eOD.Read_Ep_Combo(&ComboData))
                         {
+                            IMUtime = millis();
                             IMU_YawRate = (ComboData.wz) * (1e-5f);         // rad/s
                             IMU_Heading = (ComboData.yaw) * (1e-2f) * 10;   // degree
+                            if (IMU_Heading < 0) IMU_Heading += 3600;       // normalize to [0, 3600] (tenths of degrees)
+
                             if (SteerConfig.UseIMU_Y_Axis)
                             {
                                 IMU_Roll = (ComboData.pitch) * (1e-2f) * 10;

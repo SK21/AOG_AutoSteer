@@ -206,14 +206,11 @@ void LoadData()
 		EEPROM.get(110, MDL);
 
 		IsValid = ValidData();
-		if (!IsValid)
-		{
-			Serial.println("Stored settings not valid.");
-		}
 	}
 
 	if (!IsValid)
 	{
+		Serial.println("Stored settings not valid.");
 		LoadDefaults();
 		SaveData();
 	}
@@ -290,26 +287,24 @@ void LoadDefaults()
 	MDL.AutoZero = false;
 }
 
-HardwareSerial* GetSerialByID(uint8_t port)
-{
-	switch (port) 
-	{
-	case 1: return &Serial1;
-	case 2: return &Serial2;
-	case 3: return &Serial3;
-	case 4: return &Serial4;
-	case 5: return &Serial5;
-	case 6: return &Serial6;
-	case 7: return &Serial7;
-	case 8: return &Serial8;
-	default: return nullptr; // invalid port
-	}
-}
-
 HardwareSerial* SetSerialPort(uint8_t port, uint32_t baud)
 {
-	HardwareSerial* serial = GetSerialByID(port);
-	if (serial != nullptr) serial->begin(baud);
-	return serial;
+	HardwareSerial* NewPort;
+
+	switch (port)
+	{
+	case 1: NewPort = &Serial1;
+	case 2: NewPort = &Serial2;
+	case 3: NewPort = &Serial3;
+	case 4: NewPort = &Serial4;
+	case 5: NewPort = &Serial5;
+	case 6: NewPort = &Serial6;
+	case 7: NewPort = &Serial7;
+	case 8: NewPort = &Serial8;
+	default: NewPort = nullptr;
+	}
+
+	if (NewPort != nullptr) NewPort->begin(baud);
+	return NewPort;
 }
 

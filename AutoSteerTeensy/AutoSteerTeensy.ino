@@ -23,7 +23,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 10085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 11085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -152,7 +152,6 @@ int16_t CurrentReading;
 int16_t ADSoffset;	// used when ADS1115 is enabled
 bool ADSfound = false;
 int16_t ADS1115_Address = 72;
-byte PGNlength;
 
 HardwareSerial* SerialIMU;
 HardwareSerial* SerialReceiver;
