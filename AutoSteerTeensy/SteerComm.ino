@@ -206,7 +206,6 @@ void SendHelloReply()
 
         if (IMU_Connected())
         {
-            debug1++;
             UDPsteering.beginPacket(DestinationIP, DestinationPort);
             UDPsteering.write(helloFromIMU, sizeof(helloFromIMU));
             UDPsteering.endPacket();

@@ -110,7 +110,7 @@ char NtripBuffer[512];				// buffer for ntrip data
 // Ethernet config
 EthernetUDP UDPconfig;
 const uint16_t ConfigListeningPort = 28888;
-const uint16_t ConfigDestinationPort = 29999;
+const uint16_t ConfigDestinationPort = 29500;
 
 //steering variables
 float steerAngleActual = 0;
@@ -171,6 +171,7 @@ bool FirmwareUpdateMode = false;
 
 const uint16_t  LOOP_TIME = 25;	// 40 hz, main loop
 uint32_t  LoopLast = LOOP_TIME;
+uint16_t MaxLoopTime = 0;	// micros
 
 void setup()
 {
@@ -194,7 +195,6 @@ void loop()
 	Blink();
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
-int16_t debug1;
 
 void Blink()
 {
@@ -202,7 +202,7 @@ void Blink()
 	static elapsedMillis BlinkTmr;
 	static elapsedMicros LoopTmr;
 	static byte Count = 0;
-	static uint32_t MaxLoopTime = 0;
+	static bool Initialized = false;
 	
 	if (BlinkTmr > 1000)
 	{
@@ -220,9 +220,6 @@ void Blink()
 			Serial.print(", ");
 			Serial.print(WasReading);
 
-			Serial.print(", ");
-			Serial.print(debug1);
-
 			Serial.println("");
 
 			if (Count++ > 10)
@@ -232,6 +229,13 @@ void Blink()
 			}
 		}
 	}
+
+	if (!Initialized)
+	{
+		Initialized = true;
+		MaxLoopTime = LoopTmr;
+	}
+
 	if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
 	LoopTmr = 0;
 }

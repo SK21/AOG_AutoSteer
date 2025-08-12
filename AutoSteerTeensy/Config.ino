@@ -95,8 +95,93 @@ void ReceiveConfig()
 					}
 				}
 				break;
+
+			case 32504:
+				// PGN32504, commands
+				// 0	HeaderLo	248
+				// 1	HeaderHi	126
+				// 2	Command
+				// 3	CRC
+				PGNlength = 4;
+				
+				if (len > PGNlength - 1)
+				{
+					if (GoodCRC(Data, PGNlength))
+					{
+						if (bitRead(Data[2], 0)) SendStatus();
+					}
+				}
+				break;
 			}
 		}
+	}
+}
+
+void SendStatus()
+{
+	// PGN32505
+	// 0	HeaderLo	249
+	// 1	HeaderHi	126
+	// 2	InoID Lo
+	// 3	InoID Hi
+	// 4	IMU heading Lo
+	// 5	IMU heading Hi
+	// 6	WAS reading Lo
+	// 7	WAS reading Hi
+	// 8	Analog reading Lo
+	// 9	Analog reading Hi
+	// 10	Status
+	//			- bit 0, IMU enabled
+	//			- bit 1, Receiver enabled
+	//			- bit 2, Pass Thru enabled
+	//			- bit 3, ADS1115 found
+	//			- bit 4, AOG connected
+	//			- bit 5, Steering On
+	//			- bit 6, Steer switch On
+	// 11	MaxLoopTime Lo
+	// 12	MaxLoopTime Hi
+	// 13	-
+	// 14	CRC
+
+	byte Data[15];
+	Data[0] = 249;
+	Data[1] = 126;
+
+	Data[2] = (byte)InoID;
+	Data[3] = InoID >> 8;
+
+	uint16_t heading = (int)IMU_Heading;
+	Data[4] = (byte)heading;
+	Data[5] = heading >> 8;
+
+	Data[6] = (byte)WasReading;
+	Data[7] = WasReading >> 8;
+
+	uint16_t reading = (int)AnalogReadingAverage;
+	Data[8] = (byte)reading;
+	Data[9] = reading >> 8;
+
+	byte status = 0;
+	if (SerialIMUEnabled) status |= 0b00000001;
+	if (SerialReceiverEnabled) status |= 0b00000010;
+	if (SerialPassThruEnabled) status |= 0b00000100;
+	if (ADSfound) status |= 0b00001000;
+	if (millis() - AOGTime < 4000) status |= 0b00010000;
+	if (SteeringIsOn) status |= 0b00100000;
+	if (SteerSwitch == LOW) status |= 0b01000000;
+
+	Data[10] = status;
+	Data[11] = (byte)MaxLoopTime;
+	Data[12] = MaxLoopTime >> 8;
+	Data[13] = 0;
+
+	Data[14] = CRC(Data, 14, 0);
+
+	if (Ethernet.linkStatus() == LinkON)
+	{
+		UDPconfig.beginPacket(DestinationIP, ConfigDestinationPort);
+		UDPconfig.write(Data, 15);
+		UDPconfig.endPacket();
 	}
 }
 
