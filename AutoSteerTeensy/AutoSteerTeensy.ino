@@ -29,8 +29,6 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 #define ReceiverBaud 460800
 #define IMUBaud 115200
 #define PassThruBaud 57600		// for RS232
-#define MaxReadBuffer 100		// bytes
-#define LOW_HIGH_DEGREES 5.0	// How many degrees before decreasing Max PWM
 #define NC 0xFF					// Pin not connected
 #define ADSzero 6800			// additional WAS offset used with ADS1115
 

@@ -1,7 +1,8 @@
 
 void ReceiveSteerData()
 {
-    // ethernet
+    static const int MaxReadBuffer = 100;	// bytes
+
     if (Ethernet.linkStatus() == LinkON)
     {
         uint16_t len = UDPsteering.parsePacket();

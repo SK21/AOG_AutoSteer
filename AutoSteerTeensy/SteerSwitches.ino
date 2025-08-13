@@ -1,8 +1,8 @@
 
 void ReadSwitches()
 {
-	static bool LatchedOff = false;
-	static int ReadingLast = HIGH;
+	static bool LatchedOff = false;		// keeps steering off after sensor shut-off until reset
+	static int ReadingLast = HIGH;		
 	static const int DebounceTime = 50;	// ms
 	static uint32_t LastTime;
 	static bool ModuleSteeringReady = false;
