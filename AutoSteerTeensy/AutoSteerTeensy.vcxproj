@@ -156,7 +156,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="StrSwitches.ino">
+    <ClCompile Include="SteerSwitches.ino">
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
@@ -183,7 +183,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties arduino.upload.port="COM12" />
+      <UserProperties arduino.upload.port="usb:0/140000/0/9" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

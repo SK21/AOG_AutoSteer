@@ -42,10 +42,10 @@
     <ClCompile Include="Panda.ino" />
     <ClCompile Include="SteerComm.ino" />
     <ClCompile Include="Steering.ino" />
-    <ClCompile Include="StrSwitches.ino" />
     <ClCompile Include="zNMEAParser.h">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="SteerSwitches.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensy.vsarduino.h">

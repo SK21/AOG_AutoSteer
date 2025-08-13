@@ -90,7 +90,7 @@ void ReceiveSteerData()
                     // autosteer data
                     Speed_KMH = (Data[6] << 8 | Data[5]) * 0.1;
 
-                    if (bitRead(Data[7], 0) == 1) SteeringIsOn = true; else SteeringIsOn = false;
+                    if (bitRead(Data[7], 0) == 1) AOGsteeringReady = true; else AOGsteeringReady = false;
 
                     steerAngleSetPoint = (float)((int16_t)(Data[9] << 8 | Data[8])) * 0.01;
 

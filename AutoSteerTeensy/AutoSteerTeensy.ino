@@ -23,7 +23,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 11085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 12085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -116,7 +116,7 @@ const uint16_t ConfigDestinationPort = 29500;
 float steerAngleActual = 0;
 float steerAngleSetPoint = 0; //the desired angle from AgOpen
 float Speed_KMH = 0.0;
-bool SteeringIsOn = false;
+bool AOGsteeringReady = false;	// AOG is ready to steer pending steer switch 
 int8_t SteerSwitch = HIGH;	// Low on, High off
 int8_t switchByte = 0;
 float AnalogReadingAverage;
@@ -219,6 +219,9 @@ void Blink()
 
 			Serial.print(", ");
 			Serial.print(WasReading);
+
+			Serial.print(", ");
+			Serial.print(AnalogReadingValue);
 
 			Serial.println("");
 

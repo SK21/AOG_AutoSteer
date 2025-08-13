@@ -167,7 +167,7 @@ void SendStatus()
 	if (SerialPassThruEnabled) status |= 0b00000100;
 	if (ADSfound) status |= 0b00001000;
 	if (millis() - AOGTime < 4000) status |= 0b00010000;
-	if (SteeringIsOn) status |= 0b00100000;
+	if (AOGsteeringReady) status |= 0b00100000;
 	if (SteerSwitch == LOW) status |= 0b01000000;
 
 	Data[10] = status;

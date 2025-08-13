@@ -30,7 +30,7 @@ void ReadAnalog()
 				break;
 
 			default:
-				AnalogReadingValue = Aread >> 8;
+				AnalogReadingValue = Aread >> 5;
 				break;
 			}
 
