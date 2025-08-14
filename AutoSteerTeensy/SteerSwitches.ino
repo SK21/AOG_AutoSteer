@@ -1,4 +1,6 @@
 
+volatile uint16_t EncoderCounts = 0;
+
 void ReadSwitches()
 {
 	static bool LatchedOff = false;		// keeps steering off after sensor shut-off until reset
@@ -88,5 +90,20 @@ bool SensorsSteeringReady()
 		AnalogReadingAverage = AnalogReadingAverage * 0.7 + SensorSample * 0.3;
 		Result = (AnalogReadingAverage <= SteerConfig.PulseCountMax);
 	}
+	else if (SteerConfig.ShaftEncoder)
+	{
+		if (EncoderCounts > SteerConfig.PulseCountMax)
+		{
+			EncoderCounts = 0;
+			Result = false;
+		}
+	}
 	return Result;
+}
+
+void EncoderISR()
+{
+	static uint32_t LastTime;
+	if (millis() - LastTime > 100) EncoderCounts++;
+	LastTime = millis();
 }

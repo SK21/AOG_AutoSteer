@@ -43,7 +43,8 @@ struct ModuleConfig
 	uint8_t PowerRelayPin = 0;
 	uint8_t SteeringRelayPin = 1;	// pin for steering disconnect relay
 	uint8_t WasPin = 25;
-	uint8_t CurrentPin = 26;
+	uint8_t AnalogPin = 26;
+	uint8_t EncoderPin = NC;
 	uint8_t SteerSwitchPin = 30;
 	uint8_t WorkSwitchPin = 31;
 	uint8_t DirPin = 23;
@@ -168,7 +169,7 @@ uint32_t buffer_addr, buffer_size;
 bool FirmwareUpdateMode = false;
 
 const uint16_t  LOOP_TIME = 25;	// 40 hz, main loop
-uint32_t  LoopLast = LOOP_TIME;
+uint32_t  LoopLast;
 uint16_t MaxLoopTime = 0;	// micros
 
 void setup()

@@ -45,7 +45,7 @@ void ReceiveConfig()
 						MDL.PowerRelayPin = Data[2];
 						MDL.SteeringRelayPin = Data[3];
 						MDL.WasPin = Data[4];
-						MDL.CurrentPin = Data[5];
+						MDL.AnalogPin = Data[5];
 						MDL.SteerSwitchPin = Data[6];
 						MDL.WorkSwitchPin = Data[7];
 						MDL.DirPin = Data[8];

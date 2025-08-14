@@ -87,7 +87,7 @@ void ReadAnalog()
 	{
 		// use Teensy analog pins
 		if (MDL.WasPin < NC) WasReading = analogRead(MDL.WasPin);
-		if (MDL.CurrentPin < NC) AnalogReadingValue = analogRead(MDL.CurrentPin);
+		if (MDL.AnalogPin < NC) AnalogReadingValue = analogRead(MDL.AnalogPin);
 	}
 }
 

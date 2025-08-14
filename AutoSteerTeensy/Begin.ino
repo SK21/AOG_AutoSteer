@@ -116,6 +116,13 @@ void DoSetup()
 	// analog pins
 	analogReadResolution(12);
 
+	// encoder
+	if (MDL.EncoderPin < NC && SteerConfig.ShaftEncoder)
+	{
+		pinMode(MDL.EncoderPin, INPUT_PULLUP);
+		attachInterrupt(digitalPinToInterrupt(MDL.EncoderPin), EncoderISR, FALLING);
+	}
+
 	// ethernet 
 	Serial.println("Starting Ethernet ...");
 	IPAddress LocalIP(MDL.IP0, MDL.IP1, MDL.IP2, MDL.IP3);
@@ -184,6 +191,8 @@ void DoSetup()
 		Serial.println("");
 		Serial.println("IMU serial port invalid. IMU disabled.");
 	}
+
+	LoopLast = millis();
 
 	Serial.println("");
 	Serial.println("Finished setup.");
@@ -267,7 +276,7 @@ void LoadDefaults()
 	MDL.PowerRelayPin = 0;
 	MDL.SteeringRelayPin = 1;
 	MDL.WasPin = 25;
-	MDL.CurrentPin = 26;
+	MDL.AnalogPin = 26;
 	MDL.SteerSwitchPin = 30;
 	MDL.WorkSwitchPin = 31;
 	MDL.DirPin = 23;
