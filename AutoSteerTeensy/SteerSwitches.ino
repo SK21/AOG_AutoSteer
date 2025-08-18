@@ -1,15 +1,13 @@
 
-volatile uint16_t EncoderCounts = 0;
-
 void ReadSwitches()
 {
 	static bool LatchedOff = false;		// keeps steering off after sensor shut-off until reset
-	static int ReadingLast = HIGH;		
-	static const int DebounceTime = 50;	// ms
-	static uint32_t LastTime;
 	static bool ModuleSteeringReady = false;
+	static uint8_t ReadingLast = HIGH;
+	static const uint8_t DebounceTime = 50;	// ms
+	static uint32_t LastTime;
 
-	int SWreading = digitalRead(MDL.SteerSwitchPin);
+	uint8_t SWreading = digitalRead(MDL.SteerSwitchPin);
 
 	if (SteerConfig.SteerSwitch == 1)
 	{
@@ -18,7 +16,7 @@ void ReadSwitches()
 		if (SWreading)
 		{
 			// pin high, turn off
-			ModuleSteeringReady = false; 
+			ModuleSteeringReady = false;
 			LatchedOff = false;	// reset LatchedOff
 		}
 		else
@@ -44,26 +42,27 @@ void ReadSwitches()
 		// no switch, match AOG status
 		if (AOGsteeringReady)
 		{
-			if(!LatchedOff) ModuleSteeringReady = true;
+			if (!LatchedOff) ModuleSteeringReady = true;
 		}
 		else
 		{
-			ModuleSteeringReady = false; 
+			ModuleSteeringReady = false;
 			LatchedOff = false;	// reset LatchedOff
 		}
 	}
 
-	if (!SensorsSteeringReady())
+	if (LatchedOff || !SensorsSteeringReady())
 	{
 		ModuleSteeringReady = false;
 		LatchedOff = true;
 	}
-	
+
 	switchByte = digitalRead(MDL.WorkSwitchPin);  // read work switch, Low on, High off
 
 	if (ModuleSteeringReady)
 	{
 		SteerSwitch = LOW;
+		//switchByte |= 0b00000000;
 	}
 	else
 	{
@@ -74,6 +73,12 @@ void ReadSwitches()
 
 bool SensorsSteeringReady()
 {
+	static uint16_t EncoderCounts = 0;
+	static uint32_t LastTime;
+	static uint8_t EncoderRead;
+	static uint8_t EncoderReadLast;
+	static const uint8_t DebounceTime = 50;	// ms
+
 	bool Result = true;
 
 	if (SteerConfig.CurrentSensor)
@@ -81,29 +86,39 @@ bool SensorsSteeringReady()
 		float SensorSample = (float)AnalogReadingValue;
 		SensorSample = (512.0 - SensorSample) * 0.5;
 		if (SensorSample < 0) SensorSample = 0;
-		AnalogReadingAverage = AnalogReadingAverage * 0.7f + SensorSample * 0.3f;
-		Result = (AnalogReadingAverage <= SteerConfig.PulseCountMax);
+		AnalogReadingAverage = AnalogReadingAverage * 0.7 + SensorSample * 0.3;
+		if (AnalogReadingAverage > SteerConfig.PulseCountMax)
+		{
+			AnalogReadingAverage = 0;
+			Result = false;
+		}
 	}
 	else if (SteerConfig.PressureSensor)
 	{
 		float SensorSample = (float)AnalogReadingValue * 0.25;
 		AnalogReadingAverage = AnalogReadingAverage * 0.7 + SensorSample * 0.3;
-		Result = (AnalogReadingAverage <= SteerConfig.PulseCountMax);
+		if (AnalogReadingAverage > SteerConfig.PulseCountMax)
+		{
+			AnalogReadingAverage = 0;
+			Result = false;
+		}
 	}
 	else if (SteerConfig.ShaftEncoder)
 	{
-		if (EncoderCounts > SteerConfig.PulseCountMax)
+		EncoderRead = digitalRead(MDL.EncoderPin);
+		if ((EncoderRead != EncoderReadLast) && (millis() - LastTime > DebounceTime))
 		{
-			EncoderCounts = 0;
-			Result = false;
+			LastTime = millis();
+			EncoderReadLast = EncoderRead;
+			EncoderCounts++;
+
+			if (EncoderCounts >= SteerConfig.PulseCountMax)
+			{
+				EncoderCounts = 0;
+				Result = false;
+			}
 		}
 	}
 	return Result;
 }
 
-void EncoderISR()
-{
-	static uint32_t LastTime;
-	if (millis() - LastTime > 100) EncoderCounts++;
-	LastTime = millis();
-}

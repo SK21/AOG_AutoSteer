@@ -8,13 +8,12 @@
 
 #include "zNMEAParser.h"	
 #include "Adafruit_BNO08x_RVC.h"	// https://github.com/VikingVoltage/Adafruit_BNO08x_RVC/tree/Get-most-recent-BNO08x-Data-from-Serial-Buffer
+#include <Adafruit_Sensor.h>
 
 #include "FXUtil.h"		// read_ascii_line(), hex file support
 extern "C" {
 #include "FlashTxx.h"		// TLC/T3x/T4x/TMM flash primitives
 }
-
-#include <Adafruit_Sensor.h>
 
 // Motion Module Interface:				https://www.syd-dynamics.com/download-center/
 #include <EasyObjectDictionary.h>
@@ -23,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 12085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 17085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -45,6 +44,8 @@ struct ModuleConfig
 	uint8_t WasPin = 25;
 	uint8_t AnalogPin = 26;
 	uint8_t EncoderPin = NC;
+	uint8_t SpeedPulsePin = NC;
+	uint16_t SpeedPulseCal = 255;	// Hz/KMH X 10
 	uint8_t SteerSwitchPin = 30;
 	uint8_t WorkSwitchPin = 31;
 	uint8_t DirPin = 23;
@@ -116,8 +117,8 @@ float steerAngleActual = 0;
 float steerAngleSetPoint = 0; //the desired angle from AgOpen
 float Speed_KMH = 0.0;
 bool AOGsteeringReady = false;	// AOG is ready to steer pending steer switch 
-int8_t SteerSwitch = HIGH;	// Low on, High off
-int8_t switchByte = 0;
+uint8_t SteerSwitch = HIGH;	// Low on, High off
+uint8_t switchByte = 0;
 float AnalogReadingAverage;
 
 // IMU
@@ -186,6 +187,7 @@ void loop()
 		ReadSwitches();
 		DoSteering();
 		ReceiveConfig();
+		SendSpeedPulse(Speed_KMH);
 	}
 	ReadIMU();
 	DoPanda();
@@ -263,6 +265,56 @@ byte ParseModID(byte ID)
 {
 	// top 4 bits
 	return ID >> 4;
+}
+
+void SendSpeedPulse(double GroundSpeed)
+{
+	// https://discourse.agopengps.com/t/get-feed-rate-from-ago-and-transform-it-into-weedkiller-sprayer-computer-compatible-pulses/2958/39
+	// PulseCal: hz/mph - 41.0, hz/kmh - 25.5
+
+	const uint16_t UpdateMS = 200;
+	const uint16_t MinHz = 31;	// Tone will not work under 31 Hz 
+	const uint16_t MaxHz = 4000;
+
+	static double LastSpeed = 0;
+	static uint32_t LastTime = 0;
+	static bool ToneIsOn = false;
+
+	double PulseCal = MDL.SpeedPulseCal / 10.0;
+	if (PulseCal < 1) PulseCal = 25.5;
+
+	double CutOffSpeed = MinHz / PulseCal;
+
+	if (MDL.SpeedPulsePin < NC && (millis() - LastTime > UpdateMS))
+	{
+		LastTime = millis();
+		if (ToneIsOn)
+		{
+			if (GroundSpeed < CutOffSpeed)
+			{
+				noTone(MDL.SpeedPulsePin);
+				ToneIsOn = false;
+			}
+			else if (abs(GroundSpeed - LastSpeed) > 0.2)
+			{
+				uint16_t hz = GroundSpeed * PulseCal + 0.5;	// round up
+				hz = constrain(hz, MinHz, MaxHz);
+				tone(MDL.SpeedPulsePin, hz);
+				LastSpeed = GroundSpeed;
+			}
+		}
+		else
+		{
+			if (GroundSpeed >= (CutOffSpeed * 1.05))	// Add 5% to stop chatter
+			{
+				uint16_t hz = GroundSpeed * PulseCal + 0.5;
+				hz = constrain(hz, MinHz, MaxHz);
+				tone(MDL.SpeedPulsePin, hz);
+				ToneIsOn = true;
+				LastSpeed = GroundSpeed;
+			}
+		}
+	}
 }
 
 

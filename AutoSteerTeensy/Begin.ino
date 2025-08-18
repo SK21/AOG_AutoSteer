@@ -65,11 +65,19 @@ void DoSetup()
 	parser.addHandler("G-VTG", VTG_Handler);
 
 	// pins
-	pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);
-	pinMode(MDL.SteerSwitchPin, INPUT_PULLUP);
-	pinMode(MDL.SteeringRelayPin, OUTPUT);
-	pinMode(MDL.DirPin, OUTPUT);
-	pinMode(MDL.PWMpin, OUTPUT);
+	if (MDL.WorkSwitchPin < NC) pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);
+	if (MDL.SteerSwitchPin < NC) pinMode(MDL.SteerSwitchPin, INPUT_PULLUP);
+	if (MDL.SteeringRelayPin < NC) pinMode(MDL.SteeringRelayPin, OUTPUT);
+	if (MDL.DirPin < NC) pinMode(MDL.DirPin, OUTPUT);
+	if (MDL.PWMpin < NC) pinMode(MDL.PWMpin, OUTPUT);
+	if (MDL.PowerRelayPin < NC) pinMode(MDL.PowerRelayPin, OUTPUT);
+	if (MDL.EncoderPin < NC && SteerConfig.ShaftEncoder) pinMode(MDL.EncoderPin, INPUT_PULLUP);
+
+	if (MDL.SpeedPulsePin < NC)
+	{
+		pinMode(MDL.SpeedPulsePin, OUTPUT);
+		noTone(MDL.SpeedPulsePin);
+	}
 
 	Wire.begin();			// I2C on pins SCL 19, SDA 18
 	Wire.setClock(400000);	//Increase I2C data rate to 400kHz
@@ -115,13 +123,6 @@ void DoSetup()
 
 	// analog pins
 	analogReadResolution(12);
-
-	// encoder
-	if (MDL.EncoderPin < NC && SteerConfig.ShaftEncoder)
-	{
-		pinMode(MDL.EncoderPin, INPUT_PULLUP);
-		attachInterrupt(digitalPinToInterrupt(MDL.EncoderPin), EncoderISR, FALLING);
-	}
 
 	// ethernet 
 	Serial.println("Starting Ethernet ...");
@@ -255,6 +256,18 @@ bool ValidData()
 	{
 		Result = false;
 	}
+	else if (MDL.EncoderPin > 41)
+	{
+		Result = false;
+	}
+	else if (MDL.SpeedPulsePin > 41)
+	{
+		Result = false;
+	}
+	else if (MDL.PowerRelayPin > 41)
+	{
+		Result = false;
+	}
 	else if (MDL.ReceiverSerialPort > 8)
 	{
 		Result = false;
@@ -273,26 +286,29 @@ void LoadDefaults()
 
 	// AS15-3
 	MDL.ID = 0;
+	MDL.ReceiverSerialPort = 8;
+	MDL.IMUSerialPort = 3;
+	MDL.PassThruInSerialPort = 4;
+	MDL.PassThrOutSerialPort = 2;
 	MDL.PowerRelayPin = 0;
 	MDL.SteeringRelayPin = 1;
 	MDL.WasPin = 25;
 	MDL.AnalogPin = 26;
+	MDL.EncoderPin = NC;
+	MDL.SpeedPulsePin = NC;
+	MDL.SpeedPulseCal = 255;
 	MDL.SteerSwitchPin = 30;
 	MDL.WorkSwitchPin = 31;
 	MDL.DirPin = 23;
 	MDL.PWMpin = 22;
-	MDL.ReceiverSerialPort = 8;
-	MDL.PassThrOutSerialPort = 2;
-	MDL.PassThruInSerialPort = 4;
-	MDL.IMUSerialPort = 3;
 	MDL.ZeroOffset = 0;
-	MDL.InvertRoll = false;
-	MDL.ADS1115Enabled = false;
 	MDL.IP0 = 192;
 	MDL.IP1 = 168;
 	MDL.IP2 = 1;
 	MDL.IP3 = 126;
 	MDL.IMUtype = 0;
+	MDL.InvertRoll = false;
+	MDL.ADS1115Enabled = false;
 	MDL.AutoZero = false;
 }
 
