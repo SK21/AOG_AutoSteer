@@ -187,7 +187,7 @@ void loop()
 		ReadSwitches();
 		DoSteering();
 		ReceiveConfig();
-		SendSpeedPulse(Speed_KMH);
+		SendSpeedPulse();
 	}
 	ReadIMU();
 	DoPanda();
@@ -267,51 +267,51 @@ byte ParseModID(byte ID)
 	return ID >> 4;
 }
 
-void SendSpeedPulse(double GroundSpeed)
+void SendSpeedPulse()
 {
 	// https://discourse.agopengps.com/t/get-feed-rate-from-ago-and-transform-it-into-weedkiller-sprayer-computer-compatible-pulses/2958/39
 	// PulseCal: hz/mph - 41.0, hz/kmh - 25.5
 
 	const uint16_t UpdateMS = 200;
 	const uint16_t MinHz = 31;	// Tone will not work under 31 Hz 
-	const uint16_t MaxHz = 4000;
+	const uint16_t MaxHz = 1000;
 
 	static double LastSpeed = 0;
 	static uint32_t LastTime = 0;
 	static bool ToneIsOn = false;
 
-	double PulseCal = MDL.SpeedPulseCal / 10.0;
-	if (PulseCal < 1) PulseCal = 25.5;
-
-	double CutOffSpeed = MinHz / PulseCal;
-
 	if (MDL.SpeedPulsePin < NC && (millis() - LastTime > UpdateMS))
 	{
 		LastTime = millis();
+		double PulseCal = MDL.SpeedPulseCal / 10.0;
+		if (PulseCal < 1) PulseCal = 25.5;
+
+		double CutOffSpeed = MinHz / PulseCal;
+
 		if (ToneIsOn)
 		{
-			if (GroundSpeed < CutOffSpeed)
+			if (Speed_KMH < CutOffSpeed)
 			{
 				noTone(MDL.SpeedPulsePin);
 				ToneIsOn = false;
 			}
-			else if (abs(GroundSpeed - LastSpeed) > 0.2)
+			else if (abs(Speed_KMH - LastSpeed) > 0.2)
 			{
-				uint16_t hz = GroundSpeed * PulseCal + 0.5;	// round up
+				uint16_t hz = Speed_KMH * PulseCal + 0.5;	// round up
 				hz = constrain(hz, MinHz, MaxHz);
 				tone(MDL.SpeedPulsePin, hz);
-				LastSpeed = GroundSpeed;
+				LastSpeed = Speed_KMH;
 			}
 		}
 		else
 		{
-			if (GroundSpeed >= (CutOffSpeed * 1.05))	// Add 5% to stop chatter
+			if (Speed_KMH >= (CutOffSpeed * 1.05))	// Add 5% to stop chatter
 			{
-				uint16_t hz = GroundSpeed * PulseCal + 0.5;
+				uint16_t hz = Speed_KMH * PulseCal + 0.5;
 				hz = constrain(hz, MinHz, MaxHz);
 				tone(MDL.SpeedPulsePin, hz);
 				ToneIsOn = true;
-				LastSpeed = GroundSpeed;
+				LastSpeed = Speed_KMH;
 			}
 		}
 	}
