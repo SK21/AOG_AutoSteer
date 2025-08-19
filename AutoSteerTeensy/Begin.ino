@@ -240,31 +240,31 @@ void SaveData()
 bool ValidData()
 {
 	bool Result = true;
-	if (MDL.SteeringRelayPin > 41)
+	if (MDL.SteeringRelayPin > 41 && MDL.SteeringRelayPin!=NC)
 	{
 		Result = false;
 	}
-	else if (MDL.WasPin > 41)
+	else if (MDL.WasPin > 41 && MDL.WasPin != NC)
 	{
 		Result = false;
 	}
-	else if (MDL.DirPin > 41)
+	else if (MDL.DirPin > 41 && MDL.DirPin != NC)
 	{
 		Result = false;
 	}
-	else if (MDL.PWMpin > 41)
+	else if (MDL.PWMpin > 41 && MDL.PWMpin != NC)
 	{
 		Result = false;
 	}
-	else if (MDL.EncoderPin > 41)
+	else if (MDL.EncoderPin > 41 && MDL.EncoderPin != NC)
 	{
 		Result = false;
 	}
-	else if (MDL.SpeedPulsePin > 41)
+	else if (MDL.SpeedPulsePin > 41 && MDL.SpeedPulsePin != NC)
 	{
 		Result = false;
 	}
-	else if (MDL.PowerRelayPin > 41)
+	else if (MDL.PowerRelayPin > 41 && MDL.PowerRelayPin != NC)
 	{
 		Result = false;
 	}

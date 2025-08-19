@@ -6,7 +6,7 @@ void ReceiveConfig()
 		uint16_t len = UDPconfig.parsePacket();
 		if (len)
 		{
-			byte PGNlength;
+			uint8_t PGNlength;
 			byte Data[35];
 			UDPconfig.read(Data, 35);
 
@@ -140,26 +140,31 @@ void SendStatus()
 	//			- bit 6, Steer switch On
 	// 11	MaxLoopTime Lo
 	// 12	MaxLoopTime Hi
-	// 13	-
-	// 14	CRC
+	// 13	ZeroOffset Lo
+	// 14	ZeroOffset Hi
+	// 15	Current WAS Lo
+	// 16	Current WAS Hi
+	// 17	CRC
 
-	byte Data[15];
-	Data[0] = 249;
-	Data[1] = 126;
+	const uint8_t PGNlength = 18;
 
-	Data[2] = (byte)InoID;
-	Data[3] = InoID >> 8;
+	byte data[PGNlength];
+	data[0] = 249;
+	data[1] = 126;
+
+	data[2] = (byte)InoID;
+	data[3] = InoID >> 8;
 
 	uint16_t heading = (int)IMU_Heading;
-	Data[4] = (byte)heading;
-	Data[5] = heading >> 8;
+	data[4] = (byte)heading;
+	data[5] = heading >> 8;
 
-	Data[6] = (byte)WasReading;
-	Data[7] = WasReading >> 8;
+	data[6] = (byte)WasReading;
+	data[7] = WasReading >> 8;
 
 	uint16_t reading = (int)AnalogReadingAverage;
-	Data[8] = (byte)reading;
-	Data[9] = reading >> 8;
+	data[8] = (byte)reading;
+	data[9] = reading >> 8;
 
 	byte status = 0;
 	if (SerialIMUEnabled) status |= 0b00000001;
@@ -170,17 +175,22 @@ void SendStatus()
 	if (AOGsteeringReady) status |= 0b00100000;
 	if (SteerSwitch == LOW) status |= 0b01000000;
 
-	Data[10] = status;
-	Data[11] = (byte)MaxLoopTime;
-	Data[12] = MaxLoopTime >> 8;
-	Data[13] = 0;
+	data[10] = status;
+	data[11] = (byte)MaxLoopTime;
+	data[12] = MaxLoopTime >> 8;
+	data[13] = (byte)MDL.ZeroOffset;
+	data[14] = MDL.ZeroOffset >> 8;
 
-	Data[14] = CRC(Data, 14, 0);
+	int16_t CurrentWas = WasReading - MDL.ZeroOffset - ADSoffset;
+	data[15] = (byte)CurrentWas;
+	data[16] = CurrentWas >> 8;
+
+	data[17] = CRC(data, 17, 0);
 
 	if (Ethernet.linkStatus() == LinkON)
 	{
 		UDPconfig.beginPacket(DestinationIP, ConfigDestinationPort);
-		UDPconfig.write(Data, 15);
+		UDPconfig.write(data, PGNlength);
 		UDPconfig.endPacket();
 	}
 }

@@ -22,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 17085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 18085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -112,6 +112,13 @@ EthernetUDP UDPconfig;
 const uint16_t ConfigListeningPort = 28888;
 const uint16_t ConfigDestinationPort = 29500;
 
+// firmware update
+EthernetUDP UpdateComm;
+const uint16_t UpdateReceivePort = 29100;
+const uint16_t UpdateSendPort = 29000;
+uint32_t buffer_addr, buffer_size;
+bool FirmwareUpdateMode = false;
+
 //steering variables
 float steerAngleActual = 0;
 float steerAngleSetPoint = 0; //the desired angle from AgOpen
@@ -161,13 +168,6 @@ HardwareSerial* SerialPassOut;
 bool SerialIMUEnabled = false;
 bool SerialReceiverEnabled = false;
 bool SerialPassThruEnabled = false;
-
-// firmware update
-EthernetUDP UpdateComm;
-const uint16_t UpdateReceivePort = 29100;
-const uint16_t UpdateSendPort = 29000;
-uint32_t buffer_addr, buffer_size;
-bool FirmwareUpdateMode = false;
 
 const uint16_t  LOOP_TIME = 25;	// 40 hz, main loop
 uint32_t  LoopLast;
@@ -274,7 +274,7 @@ void SendSpeedPulse()
 
 	const uint16_t UpdateMS = 200;
 	const uint16_t MinHz = 31;	// Tone will not work under 31 Hz 
-	const uint16_t MaxHz = 1000;
+	const uint16_t MaxHz = 1200;
 
 	static double LastSpeed = 0;
 	static uint32_t LastTime = 0;
@@ -307,10 +307,11 @@ void SendSpeedPulse()
 		{
 			if (Speed_KMH >= (CutOffSpeed * 1.05))	// Add 5% to stop chatter
 			{
+				ToneIsOn = true;
+
 				uint16_t hz = Speed_KMH * PulseCal + 0.5;
 				hz = constrain(hz, MinHz, MaxHz);
 				tone(MDL.SpeedPulsePin, hz);
-				ToneIsOn = true;
 				LastSpeed = Speed_KMH;
 			}
 		}
