@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36327.8
+VisualStudioVersion = 17.14.36408.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoSteerTeensy", "AutoSteerTeensy.vcxproj", "{7799638D-FD7A-EAE2-1F7A-81D3258794FF}"
 EndProject
@@ -30,6 +30,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {705D096F-5A2A-4C53-A541-CD7EDD5EB50D}
+		SolutionGuid = {46784F8A-6095-4199-B7F4-CF578524B338}
 	EndGlobalSection
 EndGlobal
