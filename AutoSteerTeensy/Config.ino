@@ -56,7 +56,7 @@ void ReceiveConfig()
 						MDL.IMUSerialPort = Data[13];
 
 						uint8_t Commands = Data[14];
-						if (bitRead(Commands, 0)) MDL.ZeroOffset = WasReading - ADSoffset;
+						if (bitRead(Commands, 0)) MDL.ZeroOffset = WasReading;
 						if (bitRead(Commands, 1)) MDL.InvertRoll = true; else MDL.InvertRoll = false;
 						if (bitRead(Commands, 2)) MDL.ADS1115Enabled = true; else MDL.ADS1115Enabled = false;
 						if (bitRead(Commands, 3)) MDL.AutoZero = true; else MDL.AutoZero = false;
@@ -181,7 +181,7 @@ void SendStatus()
 	data[13] = (byte)MDL.ZeroOffset;
 	data[14] = MDL.ZeroOffset >> 8;
 
-	int16_t CurrentWas = WasReading - MDL.ZeroOffset - ADSoffset;
+	int16_t CurrentWas = WasReading - MDL.ZeroOffset;
 	data[15] = (byte)CurrentWas;
 	data[16] = CurrentWas >> 8;
 

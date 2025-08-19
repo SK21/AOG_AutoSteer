@@ -22,14 +22,13 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 18085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 19085;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
 #define PassThruBaud 57600		// for RS232
 #define NC 0xFF					// Pin not connected
-#define ADSzero 6800			// additional WAS offset used with ADS1115
 
 struct ModuleConfig
 {
@@ -156,7 +155,6 @@ BNO08x_RVC_Data BNOdata;
 
 int16_t WasReading;
 int16_t AnalogReadingValue;
-int16_t ADSoffset;	// used when ADS1115 is enabled
 bool ADSfound = false;
 int16_t ADS1115_Address = 72;
 

@@ -84,7 +84,6 @@ void DoSetup()
 
 	// ADS1115
 	ADSfound = false;
-	ADSoffset = 0;
 	if (MDL.ADS1115Enabled)
 	{
 		for (int i = 0; i < 2; i++)
@@ -107,7 +106,6 @@ void DoSetup()
 			Serial.println("");
 			if (ADSfound)
 			{
-				ADSoffset = ADSzero;
 				Serial.println("ADS1115 found.");
 				Serial.println("");
 				break;
