@@ -15,6 +15,7 @@ void ReadAnalog()
 		//	AIN3	Current/pressure
 		// Only do one of either a read or a request per loop. Saves loop time and
 		// doesn't affect ADC read time that much.
+		// Shifting by 2 gives an effective range of 0-6666 for a 5V sensor. About 12.7 bits of resolution.
 
 		if (ConversionPending)
 		{
@@ -26,12 +27,12 @@ void ReadAnalog()
 			{
 				Aread = (int16_t)(Wire.read() << 8 | Wire.read());
 				if (Aread < 0) Aread = 0;
-				uint16_t ScaledReading = (uint16_t)((uint16_t)Aread >> 4);
+				uint16_t ScaledReading = (uint16_t)((uint16_t)Aread >> 2);
 
 				switch (AdsPin)
 				{
 				case 0:
-					UpdateWAS(ScaledReading);
+					WasReading = ScaledReading;
 					break;
 
 				default:
@@ -67,16 +68,16 @@ void ReadAnalog()
 			{
 				// single ended
 			case 0:
-				Wire.write(0b11000011);	// AIN0
+				Wire.write(0b11000001);	// AIN0
 				break;
 			case 1:
-				Wire.write(0b11010011);	// AIN1
+				Wire.write(0b11010001);	// AIN1
 				break;
 			case 2:
-				Wire.write(0b11100011);	// AIN2
+				Wire.write(0b11100001);	// AIN2
 				break;
 			case 3:
-				Wire.write(0b11110011);	// AIN3
+				Wire.write(0b11110001);	// AIN3
 				break;
 			}
 
@@ -97,58 +98,9 @@ void ReadAnalog()
 	else
 	{
 		// use Teensy analog pins
-		if (MDL.WasPin < NC) UpdateWAS((uint16_t)analogRead(MDL.WasPin));
+		if (MDL.WasPin < NC) WasReading = (uint16_t)analogRead(MDL.WasPin);
 		if (MDL.AnalogPin < NC) AnalogReadingValue = (uint16_t)analogRead(MDL.AnalogPin);
 	}
 }
 
-void UpdateWAS(uint16_t Reading)
-{
-	const uint16_t SampleSize = 11;
-	static uint16_t index = 0;
-	static uint16_t count = 0;
-	static uint16_t samples[SampleSize];
-
-	samples[index] = Reading;
-	index = (index + 1) % SampleSize;
-	if (count < SampleSize) count++;
-
-	WasReading = MedianFromArray(samples, count, SampleSize);
-}
-
-uint16_t MedianFromArray(uint16_t buf[], int count, uint16_t SampleSize)
-{
-	uint16_t Result = 0;
-	if (count > 0)
-	{
-		uint16_t sorted[SampleSize];
-		for (int i = 0; i < count; i++) sorted[i] = buf[i];
-
-		// insertion sort
-		for (int i = 1; i < count; i++)
-		{
-			uint16_t key = sorted[i];
-			int j = i - 1;
-			while (j >= 0 && sorted[j] > key)
-			{
-				sorted[j + 1] = sorted[j];
-				j--;
-			}
-			sorted[j + 1] = key;
-		}
-
-		if (count % 2 == 1)
-		{
-			Result = sorted[count / 2];
-		}
-		else
-		{
-			int mid = count / 2;
-			// average of middle two
-			uint32_t sum = (uint32_t(sorted[mid - 1]) + uint32_t(sorted[mid])) / 2;
-			Result = uint16_t(sum);
-		}
-	}
-	return Result;
-}
 

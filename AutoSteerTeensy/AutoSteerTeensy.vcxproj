@@ -181,4 +181,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties arduino.upload.port="usb:0/140000/0/9" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

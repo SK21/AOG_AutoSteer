@@ -153,8 +153,8 @@ NMEAParser<2> parser;
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 BNO08x_RVC_Data BNOdata;
 
-int16_t WasReading;
-int16_t AnalogReadingValue;
+uint16_t WasReading;
+uint16_t AnalogReadingValue;
 bool ADSfound = false;
 int16_t ADS1115_Address = 72;
 
