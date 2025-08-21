@@ -56,7 +56,7 @@ void ReceiveSteerData()
                     if (bitRead(SettingsByte, 7)) SteerConfig.ShaftEncoder = 1; else SteerConfig.ShaftEncoder = 0;
 
                     SteerConfig.PulseCountMax = Data[6];
-                    //SteerConfig.MinSpeed = (double)Data[7] * 0.1;
+                    //SteerConfig.MinSpeed = (float)Data[7] * 0.1;
 
                     SettingsByte = Data[8]; //setting1 - Danfoss valve etc
 

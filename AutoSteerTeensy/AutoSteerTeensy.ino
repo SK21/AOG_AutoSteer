@@ -90,7 +90,7 @@ struct Setup
 	uint8_t PulseCountMax = 5;
 	uint8_t IsDanfoss = 0;
 	uint8_t UseIMU_Y_Axis = 0;	//Set to 0 to use X Axis, 1 to use Y avis
-	double MinSpeed = 0;		// minimum kmh X 10
+	float MinSpeed = 0;		// minimum kmh X 10
 };
 
 Setup SteerConfig;          //9 bytes
@@ -274,17 +274,17 @@ void SendSpeedPulse()
 	const uint16_t MinHz = 31;	// Tone will not work under 31 Hz 
 	const uint16_t MaxHz = 1200;
 
-	static double LastSpeed = 0;
+	static float LastSpeed = 0;
 	static uint32_t LastTime = 0;
 	static bool ToneIsOn = false;
 
 	if (MDL.SpeedPulsePin < NC && (millis() - LastTime > UpdateMS))
 	{
 		LastTime = millis();
-		double PulseCal = MDL.SpeedPulseCal / 10.0;
+		float PulseCal = MDL.SpeedPulseCal / 10.0;
 		if (PulseCal < 1) PulseCal = 25.5;
 
-		double CutOffSpeed = MinHz / PulseCal;
+		float CutOffSpeed = MinHz / PulseCal;
 
 		if (ToneIsOn)
 		{

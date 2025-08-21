@@ -3,7 +3,7 @@ float steerAngleError = 0;
 
 void DoSteering()
 {
-	static const double LOW_HIGH_DEGREES = 5.0;		// How many degrees before decreasing Max PWM
+	static const float LOW_HIGH_DEGREES = 5.0;		// How many degrees before decreasing Max PWM
 
 	//************** Steering Angle ******************
 	int16_t CurrentWas = WasReading - MDL.ZeroOffset;
