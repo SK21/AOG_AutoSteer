@@ -22,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 19085;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 12095;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -49,10 +49,10 @@ struct ModuleConfig
 	uint8_t WorkSwitchPin = 31;
 	uint8_t DirPin = 23;
 	uint8_t PWMpin = 22;
-	int16_t ZeroOffset = 0;
+	int16_t ZeroOffset = 6500;
 	uint8_t IP0 = 192;
 	uint8_t IP1 = 168;
-	uint8_t IP2 = 1;
+	uint8_t IP2 = 5;
 	uint8_t IP3 = 126;
 	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
 	bool InvertRoll = false;
