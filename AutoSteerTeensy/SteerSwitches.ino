@@ -1,6 +1,12 @@
 
 void ReadSwitches()
 {
+	// steer switch		- low, steering on 
+	//					- high, steering off
+
+	// AOGsteeringReady (from AOG)	- false, steering off
+	//								- true, steering on
+
 	static bool LatchedOff = false;		// keeps steering off after sensor shut-off until reset
 	static bool ModuleSteeringReady = false;
 	static uint8_t ReadingLast = HIGH;

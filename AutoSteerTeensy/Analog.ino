@@ -19,10 +19,10 @@ void ReadAnalog()
 		switch (CurrentPin)
 		{
 		case 0:
-			WasReading = Aread >> 1;	// WAS
+			WasReading = Aread >> 1;	// WAS	(effective 14 bit, 0-16383)
 			break;
 		default:
-			AnalogReadingValue = Aread >> 8;	// analog current
+			AnalogReadingValue = Aread >> 8;	// analog current	(0-127)
 			break;
 		}
 
@@ -71,7 +71,7 @@ void ReadAnalog()
 	else
 	{
 		// use Teensy analog pins
-		if (MDL.WasPin < NC) WasReading = (uint16_t)analogRead(MDL.WasPin);
+		if (MDL.WasPin < NC) WasReading = (uint16_t)analogRead(MDL.WasPin);	// 12 bit, 0-4095
 		if (MDL.AnalogPin < NC) AnalogReadingValue = (uint16_t)analogRead(MDL.AnalogPin);
 	}
 }
