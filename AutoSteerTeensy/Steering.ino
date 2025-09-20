@@ -128,7 +128,7 @@ void AutoZeroWAS()
 					fracAccumulator -= step;
 				}
 
-				if (step != 0) MDL.ZeroOffset = constrain((int32_t)MDL.ZeroOffset + step, -2500, 2500);
+				if (step != 0) MDL.ZeroOffset = constrain((int32_t)MDL.ZeroOffset + step, -10000, 10000);
 
 				if (!initialized)
 				{

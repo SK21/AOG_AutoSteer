@@ -22,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 14095;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 20095;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -30,30 +30,26 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 #define PassThruBaud 57600		// for RS232
 #define NC 0xFF					// Pin not connected
 
-struct ModuleConfig
+struct ModuleConfig		// about 28 bytes
 {
 	//	AS15-3 config
 	uint8_t ID = 0;
-	uint8_t ReceiverSerialPort = 8;	
+	uint8_t ReceiverSerialPort = 4;	
 	uint8_t	IMUSerialPort = 3;	
-	uint8_t PassThruInSerialPort = 4;		// from F9P Uart2
+	uint8_t PassThruInSerialPort = 8;		// from F9P Uart2
 	uint8_t PassThrOutSerialPort = 2;		// to Max232 for DB9 connector
 	uint8_t PowerRelayPin = 0;
 	uint8_t SteeringRelayPin = 1;	// pin for steering disconnect relay
+	uint8_t SteerSwitchPin = 30;
+	uint8_t WorkSwitchPin = 31;
 	uint8_t WasPin = 25;
 	uint8_t AnalogPin = 26;
+	uint8_t DirPin = 23;
+	uint8_t PWMpin = 22;
 	uint8_t EncoderPin = NC;
 	uint8_t SpeedPulsePin = NC;
 	uint16_t SpeedPulseCal = 255;	// Hz/KMH X 10
-	uint8_t SteerSwitchPin = 30;
-	uint8_t WorkSwitchPin = 31;
-	uint8_t DirPin = 23;
-	uint8_t PWMpin = 22;
 	int16_t ZeroOffset = 6500;
-	uint8_t IP0 = 192;
-	uint8_t IP1 = 168;
-	uint8_t IP2 = 5;
-	uint8_t IP3 = 126;
 	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
 	bool InvertRoll = false;
 	bool ADS1115Enabled = false;
@@ -61,6 +57,17 @@ struct ModuleConfig
 };
 
 ModuleConfig MDL;
+
+struct ModuleNetwork
+{
+	uint16_t Identifier = 9876;
+	uint8_t IP0 = 192;
+	uint8_t IP1 = 168;
+	uint8_t IP2 = 1;
+	uint8_t IP3 = 126;
+};
+
+ModuleNetwork MDLnetwork;
 
 struct Storage 
 {
@@ -99,7 +106,7 @@ Setup SteerConfig;          //9 bytes
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
 const uint16_t ListeningPort = 8888;
 const uint16_t DestinationPort = 9999;	// port that AGIO listens on
-IPAddress DestinationIP(MDL.IP0, MDL.IP1, MDL.IP2, 255);
+IPAddress DestinationIP(MDLnetwork.IP0, MDLnetwork.IP1, MDLnetwork.IP2, 255);
 uint32_t AOGTime;
 
 EthernetUDP UDPntrip;				// from AGIO to receiver
@@ -194,6 +201,7 @@ void loop()
 	Blink();
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
+
 
 void Blink()
 {

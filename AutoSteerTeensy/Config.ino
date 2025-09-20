@@ -84,11 +84,11 @@ void ReceiveConfig()
 				{
 					if (GoodCRC(Data, PGNlength))
 					{
-						MDL.IP0 = Data[2];
-						MDL.IP1 = Data[3];
-						MDL.IP2 = Data[4];
+						MDLnetwork.IP0 = Data[2];
+						MDLnetwork.IP1 = Data[3];
+						MDLnetwork.IP2 = Data[4];
 
-						SaveData();
+						SaveNetworks();
 
 						// restart the Teensy
 						SCB_AIRCR = 0x05FA0004;

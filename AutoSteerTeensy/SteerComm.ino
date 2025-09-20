@@ -24,10 +24,11 @@ void ReceiveSteerData()
                     // update IP
                     if (Data[4] == 5 && Data[5] == 201 && Data[6] == 201)
                     {
-                        MDL.IP0 = Data[7];
-                        MDL.IP1 = Data[8];
-                        MDL.IP2 = Data[9];
-                        SaveData();
+                        MDLnetwork.IP0 = Data[7];
+                        MDLnetwork.IP1 = Data[8];
+                        MDLnetwork.IP2 = Data[9];
+
+                        SaveNetworks();
 
                         //reset the Teensy
                         SCB_AIRCR = 0x05FA0004;
@@ -94,7 +95,6 @@ void ReceiveSteerData()
                     if (bitRead(Data[7], 0) == 1) AOGsteeringReady = true; else AOGsteeringReady = false;
 
                     steerAngleSetPoint = (float)((int16_t)(Data[9] << 8 | Data[8])) * 0.01;
-
                     SendSteerData();
                     AOGTime = millis();
                     break;
@@ -218,7 +218,7 @@ void SendScanIDreply()
 {
     IPAddress rem_ip = UDPsteering.remoteIP();
 
-    uint8_t scanReply[] = { 128, 129, MDL.IP3, 203, 7, MDL.IP0, MDL.IP1, MDL.IP2, MDL.IP3,
+    uint8_t scanReply[] = { 128, 129, MDLnetwork.IP3, 203, 7, MDLnetwork.IP0, MDLnetwork.IP1, MDLnetwork.IP2, MDLnetwork.IP3,
                             rem_ip[0],rem_ip[1],rem_ip[2], 23 };
 
     //checksum

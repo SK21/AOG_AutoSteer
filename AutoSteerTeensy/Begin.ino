@@ -13,6 +13,7 @@ void DoSetup()
 
 	// eeprom
 	LoadData();
+	LoadNetworks();
 
 	Serial.println("");
 	Serial.println(InoDescription);
@@ -128,8 +129,9 @@ void DoSetup()
 
 	// ethernet 
 	Serial.println("Starting Ethernet ...");
-	IPAddress LocalIP(MDL.IP0, MDL.IP1, MDL.IP2, MDL.IP3);
-	static uint8_t LocalMac[] = { 0x00,0x00,0x56,0x00,0x00,MDL.IP3 };
+	MDLnetwork.IP3 = 126;
+	IPAddress LocalIP(MDLnetwork.IP0, MDLnetwork.IP1, MDLnetwork.IP2, MDLnetwork.IP3);
+	static uint8_t LocalMac[] = { 0x00,0x0B,0x42,0x11,0x22,MDLnetwork.IP3 };
 
 	Ethernet.begin(LocalMac, 0);
 	Ethernet.setLocalIP(LocalIP);
@@ -145,7 +147,7 @@ void DoSetup()
 	}
 	Serial.print("IP Address: ");
 	Serial.println(Ethernet.localIP());
-	DestinationIP = IPAddress(MDL.IP0, MDL.IP1, MDL.IP2, 255);	// update from saved data
+	DestinationIP = IPAddress(MDLnetwork.IP0, MDLnetwork.IP1, MDLnetwork.IP2, 255);	// update from saved data
 
 	// UDP
 	UDPsteering.begin(ListeningPort);
@@ -201,6 +203,14 @@ void DoSetup()
 	Serial.println("Finished setup.");
 	Serial.println("");
 }
+
+// eeprom map:
+// ID				0
+// module type		4
+// steer settings	10
+// steer config		40
+// module settings	110
+// network			168
 
 void LoadData()
 {
@@ -288,30 +298,52 @@ void LoadDefaults()
 
 	// AS15-3
 	MDL.ID = 0;
-	MDL.ReceiverSerialPort = 8;
+	MDL.ReceiverSerialPort = 4;
 	MDL.IMUSerialPort = 3;
-	MDL.PassThruInSerialPort = 4;
+	MDL.PassThruInSerialPort = 8;
 	MDL.PassThrOutSerialPort = 2;
 	MDL.PowerRelayPin = 0;
 	MDL.SteeringRelayPin = 1;
+	MDL.SteerSwitchPin = 30;
+	MDL.WorkSwitchPin = 31;
 	MDL.WasPin = 25;
 	MDL.AnalogPin = 26;
+	MDL.DirPin = 23;
+	MDL.PWMpin = 22;
 	MDL.EncoderPin = NC;
 	MDL.SpeedPulsePin = NC;
 	MDL.SpeedPulseCal = 255;
-	MDL.SteerSwitchPin = 30;
-	MDL.WorkSwitchPin = 31;
-	MDL.DirPin = 23;
-	MDL.PWMpin = 22;
 	MDL.ZeroOffset = 0;
-	MDL.IP0 = 192;
-	MDL.IP1 = 168;
-	MDL.IP2 = 1;
-	MDL.IP3 = 126;
 	MDL.IMUtype = 0;
 	MDL.InvertRoll = false;
 	MDL.ADS1115Enabled = false;
 	MDL.AutoZero = false;
+}
+
+void LoadNetworks()
+{
+	ModuleNetwork tmp;
+	EEPROM.get(168, tmp);
+	if (tmp.Identifier == 9876)
+	{
+		MDLnetwork = tmp;
+	}
+	else
+	{
+		// load network defaults
+		MDLnetwork.Identifier = 9876;
+		MDLnetwork.IP0 = 192;
+		MDLnetwork.IP1 = 168;
+		MDLnetwork.IP2 = 1;
+		MDLnetwork.IP3 = 126;
+
+		SaveNetworks();
+	}
+}
+
+void SaveNetworks()
+{
+	EEPROM.put(168, MDLnetwork);
 }
 
 HardwareSerial* SetSerialPort(uint8_t port, uint32_t baud)
