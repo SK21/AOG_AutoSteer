@@ -177,6 +177,7 @@ bool SerialPassThruEnabled = false;
 const uint16_t  LOOP_TIME = 25;	// 40 hz, main loop
 uint32_t  LoopLast;
 uint16_t MaxLoopTime = 0;	// micros
+float steerAngleError = 0;
 
 void setup()
 {
@@ -201,7 +202,6 @@ void loop()
 	Blink();
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
-
 
 void Blink()
 {

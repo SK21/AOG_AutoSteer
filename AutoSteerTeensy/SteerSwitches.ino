@@ -57,7 +57,7 @@ void ReadSwitches()
 		}
 	}
 
-	if (LatchedOff || !SensorsSteeringReady())
+	if (LatchedOff || !SensorsSteeringReady(ModuleSteeringReady))
 	{
 		ModuleSteeringReady = false;
 		LatchedOff = true;
@@ -77,14 +77,11 @@ void ReadSwitches()
 	}
 }
 
-bool SensorsSteeringReady()
+bool SensorsSteeringReady(bool MDLready)
 {
 	static uint16_t EncoderCounts = 0;
-	static uint32_t LastTime;
 	static uint8_t EncoderRead;
-	static uint8_t EncoderReadLast;
-	static const uint8_t DebounceTime = 50;	// ms
-
+	static const float MaxSteeringError = 5;	// degrees
 	bool Result = true;
 
 	if (SteerConfig.CurrentSensor)
@@ -111,18 +108,22 @@ bool SensorsSteeringReady()
 	}
 	else if (SteerConfig.ShaftEncoder)
 	{
-		EncoderRead = digitalRead(MDL.EncoderPin);
-		if ((EncoderRead != EncoderReadLast) && (millis() - LastTime > DebounceTime))
+
+		// virtual encoder based on steering error
+		if (MDLready)
 		{
-			LastTime = millis();
-			EncoderReadLast = EncoderRead;
-			EncoderCounts++;
+			EncoderRead = abs(steerAngleError);
+			EncoderCounts += (EncoderRead > MaxSteeringError);
 
 			if (EncoderCounts >= SteerConfig.PulseCountMax)
 			{
 				EncoderCounts = 0;
 				Result = false;
 			}
+		}
+		else
+		{
+			EncoderCounts = 0;
 		}
 	}
 	return Result;

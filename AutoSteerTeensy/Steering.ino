@@ -1,6 +1,4 @@
 
-float steerAngleError = 0; 
-
 void DoSteering()
 {
 	static const float LOW_HIGH_DEGREES = 5.0;		// How many degrees before decreasing Max PWM
