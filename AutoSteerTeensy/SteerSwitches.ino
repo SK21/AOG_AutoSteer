@@ -79,53 +79,91 @@ void ReadSwitches()
 
 bool SensorsSteeringReady(bool MDLready)
 {
-	static uint16_t EncoderCounts = 0;
-	static uint8_t EncoderRead;
-	static const float MaxSteeringError = 5;	// degrees
-	bool Result = true;
+	static uint16_t EncoderCounts = 0;     // virtual pulses counted
+	static float ve_accumDeg = 0.0f;       // accumulated degrees since last virtual pulse
+	static float ve_prevError = 0.0f;      // previous steerAngleError sample
+	static bool ve_initialized = false;    // first-sample flag
+	static const float degreesPerCount = 5.0f;  // adjust sensitivity
+	const float VE_MIN_DELTA = 0.05f;      // ignore jitter smaller than this (degrees)
 
+	bool Result = true; // single exit point: will be returned at function end
+
+	// --- CurrentSensor branch ---
 	if (SteerConfig.CurrentSensor)
 	{
 		float SensorSample = (float)AnalogReadingValue;
-		SensorSample = (512.0 - SensorSample) * 0.5;
-		if (SensorSample < 0) SensorSample = 0;
-		AnalogReadingAverage = AnalogReadingAverage * 0.7 + SensorSample * 0.3;
+		SensorSample = (512.0f - SensorSample) * 0.5f;
+		if (SensorSample < 0.0f) SensorSample = 0.0f;
+		AnalogReadingAverage = AnalogReadingAverage * 0.7f + SensorSample * 0.3f;
 		if (AnalogReadingAverage > SteerConfig.PulseCountMax)
 		{
-			AnalogReadingAverage = 0;
+			AnalogReadingAverage = 0.0f;
 			Result = false;
 		}
 	}
+	// --- PressureSensor branch ---
 	else if (SteerConfig.PressureSensor)
 	{
-		float SensorSample = (float)AnalogReadingValue * 0.25;
-		AnalogReadingAverage = AnalogReadingAverage * 0.7 + SensorSample * 0.3;
+		float SensorSample = (float)AnalogReadingValue * 0.25f;
+		AnalogReadingAverage = AnalogReadingAverage * 0.7f + SensorSample * 0.3f;
 		if (AnalogReadingAverage > SteerConfig.PulseCountMax)
 		{
-			AnalogReadingAverage = 0;
+			AnalogReadingAverage = 0.0f;
 			Result = false;
 		}
 	}
+	// --- Virtual encoder branch ---
 	else if (SteerConfig.ShaftEncoder)
 	{
-
-		// virtual encoder based on steering error
 		if (MDLready)
 		{
-			EncoderRead = abs(steerAngleError);
-			EncoderCounts += (EncoderRead > MaxSteeringError);
+			// process virtual encoder
+			float currError = steerAngleError;     // signed degrees
+			float absCurr = fabsf(currError);
+			float absPrev = fabsf(ve_prevError);
 
-			if (EncoderCounts >= SteerConfig.PulseCountMax)
+			if (!ve_initialized)
 			{
-				EncoderCounts = 0;
-				Result = false;
+				// initialize previous sample to avoid spurious big delta
+				ve_prevError = currError;
+				ve_initialized = true;
+			}
+			else
+			{
+				// compute magnitude increase only
+				float magDelta = absCurr - absPrev;
+				if (magDelta > VE_MIN_DELTA)
+				{
+					ve_accumDeg += magDelta;
+				}
+
+				// update previous sample
+				ve_prevError = currError;
+
+				// convert accumulated degrees into virtual pulses
+				while (ve_accumDeg >= degreesPerCount)
+				{
+					ve_accumDeg -= degreesPerCount;
+					EncoderCounts++;
+				}
+
+				// if exceeded pulse threshold, disengage
+				if (EncoderCounts >= SteerConfig.PulseCountMax)
+				{
+					EncoderCounts = 0;
+					ve_accumDeg = 0.0f;
+					Result = false;
+				}
 			}
 		}
 		else
 		{
+			// reset when module not ready
 			EncoderCounts = 0;
+			ve_accumDeg = 0.0f;
+			ve_prevError = 0.0f;
+			ve_initialized = false;
 		}
 	}
 	return Result;
 }
-
