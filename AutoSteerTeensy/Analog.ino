@@ -3,6 +3,7 @@ void ReadAnalog()
 {
 	static	uint8_t CurrentPin = 0;
 	static uint16_t Aread;
+	static uint16_t NewReading;
 
 	// use ADS1115 through Teensy
 	if (ADSfound)
@@ -19,8 +20,12 @@ void ReadAnalog()
 		switch (CurrentPin)
 		{
 		case 0:
-			WasReading = Aread >> 1;	// WAS	(effective 14 bit, 0-16383)
+			// WAS	(effective 14 bit, 0-16383)
+			//WasReading = Aread >> 1;	
+			NewReading = Aread >> 1;
+			WasReading = NewReading * 0.5 + WasReading * 0.5;
 			break;
+
 		default:
 			AnalogReadingValue = Aread >> 8;	// analog current	(0-127)
 			break;
