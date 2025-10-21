@@ -67,7 +67,6 @@ void ReadTM171()
         {
             size_t toDiscard = avail - BUF_MAX;
 
-            // Discard in chunks (efficient)
             const size_t DISCARD_CHUNK = 32;
             uint8_t discardBuf[DISCARD_CHUNK];
             while (toDiscard)
