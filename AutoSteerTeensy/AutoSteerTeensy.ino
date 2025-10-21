@@ -202,7 +202,6 @@ void loop()
 	Blink();
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 }
-
 void Blink()
 {
 	static bool State = false;
@@ -223,12 +222,6 @@ void Blink()
 
 			Serial.print(", ");
 			Serial.print(IMU_Heading / 10.0);
-
-			Serial.print(", ");
-			Serial.print(WasReading);
-
-			Serial.print(", ");
-			Serial.print(AnalogReadingValue);
 
 			Serial.println("");
 
