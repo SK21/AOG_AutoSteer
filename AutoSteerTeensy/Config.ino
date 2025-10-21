@@ -31,7 +31,7 @@ void ReceiveConfig()
 				//13    IMU serial port
 				//14    Commands
 				//          - bit 0, zero WAS
-				//          - bit 1, invert roll
+				//          - bit 1, -
 				//          - bit 2, use ADS1115
 				//			- bit 3, Auto zero WAS
 				//15	IMU type	// 0 BNO080, 1 TM171
@@ -57,7 +57,6 @@ void ReceiveConfig()
 
 						uint8_t Commands = Data[14];
 						if (bitRead(Commands, 0)) MDL.ZeroOffset = WasReading;
-						if (bitRead(Commands, 1)) MDL.InvertRoll = true; else MDL.InvertRoll = false;
 						if (bitRead(Commands, 2)) MDL.ADS1115Enabled = true; else MDL.ADS1115Enabled = false;
 						if (bitRead(Commands, 3)) MDL.AutoZero = true; else MDL.AutoZero = false;
 

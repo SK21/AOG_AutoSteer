@@ -45,7 +45,6 @@ void ReadBNO()
             IMU_Roll = BNOdata.roll * 10;
             IMU_Pitch = BNOdata.pitch * 10;
         }
-        if (MDL.InvertRoll) IMU_Roll *= -1.0;
     }
 }
 
@@ -104,7 +103,6 @@ void ReadTM171()
                             IMU_Roll = RPY_Data.roll * 10;
                             IMU_Pitch = RPY_Data.pitch * 10;
                         }
-                        if (MDL.InvertRoll) IMU_Roll *= -1.0;
                     }
                     break;
 
@@ -127,7 +125,6 @@ void ReadTM171()
                             IMU_Roll = ComboData.roll * 1e-2f * 10.0f;
                             IMU_Pitch = ComboData.pitch * 1e-2f * 10.0f;
                         }
-                        if (MDL.InvertRoll) IMU_Roll *= -1.0;
                     }
                     break;
 

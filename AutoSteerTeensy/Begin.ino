@@ -315,7 +315,6 @@ void LoadDefaults()
 	MDL.SpeedPulseCal = 255;
 	MDL.ZeroOffset = 0;
 	MDL.IMUtype = 0;
-	MDL.InvertRoll = false;
 	MDL.ADS1115Enabled = false;
 	MDL.AutoZero = false;
 }

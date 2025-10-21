@@ -51,7 +51,6 @@ struct ModuleConfig		// about 28 bytes
 	uint16_t SpeedPulseCal = 255;	// Hz/KMH X 10
 	int16_t ZeroOffset = 6500;
 	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
-	bool InvertRoll = false;
 	bool ADS1115Enabled = false;
 	bool AutoZero = false;
 };
