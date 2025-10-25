@@ -1,9 +1,9 @@
 
 void ReadAnalog()
 {
-	static	uint8_t CurrentPin = 0;
 	static uint16_t Aread;
-	static uint16_t NewReading;
+	static const uint8_t pattern[4] = { 0, 3, 0, 0 };	// prioritize AIN0 (WAS)
+	static uint8_t patIdx = 0;							// index into pattern
 
 	// use ADS1115 through Teensy
 	if (ADSfound)
@@ -17,22 +17,28 @@ void ReadAnalog()
 		Wire.requestFrom(ADS1115_Address, 2);
 		Aread = (Wire.read() << 8 | Wire.read());
 
-		switch (CurrentPin)
+		// decode which channel this sample belongs to
+		uint8_t channel = pattern[patIdx];
+
+		switch (channel)
 		{
-		case 0:
-			// WAS	(effective 14 bit, 0-16383)
-			//WasReading = Aread >> 1;	
-			NewReading = Aread >> 1;
-			WasReading = NewReading * 0.5 + WasReading * 0.5;
+		case 0:	// AIN0: WAS (effective 14-bit, 0-16383)
+			WasReading = Aread >> 1;
+			break;
+
+		case 3:	// AIN3: analog current (0-127)
+			AnalogReadingValue = Aread >> 8;
 			break;
 
 		default:
-			AnalogReadingValue = Aread >> 8;	// analog current	(0-127)
+			// AIN1/2 not used
 			break;
 		}
 
+		// advance schedule and configure next conversion
+		patIdx = (uint8_t)((patIdx + 1) % 4);
+		uint8_t nextChannel = pattern[patIdx];
 
-		// do next conversion
 		Wire.beginTransmission(ADS1115_Address);
 		Wire.write(0b00000001); // Point to Config Register
 
@@ -43,19 +49,11 @@ void ReadAnalog()
 		// Bits 11:9  Programmable Gain 000=6.144v 001=4.096v 010=2.048v .... 111=0.256v
 		// Bits 8     0=Continuous conversion mode, 1=Power down single shot
 
-		CurrentPin++;
-		if (CurrentPin > 3) CurrentPin = 0;
-		switch (CurrentPin)
+		// MSB: set MUX for next channel (continuous mode)
+		switch (nextChannel)
 		{
-			// single ended
 		case 0:
 			Wire.write(0b01000000);	// AIN0
-			break;
-		case 1:
-			Wire.write(0b01010000);	// AIN1
-			break;
-		case 2:
-			Wire.write(0b01100000);	// AIN2
 			break;
 		case 3:
 			Wire.write(0b01110000);	// AIN3
@@ -70,6 +68,7 @@ void ReadAnalog()
 		// Bit  2   Latching 0=No, 1=Yes
 		// Bits 1:0 Comparator # before Alert pin goes high
 		//      00=1, 01=2, 10=4, 11=Disable this feature
+
 		Wire.write(0b11100011);	//860 samples/sec
 		Wire.endTransmission();
 	}
