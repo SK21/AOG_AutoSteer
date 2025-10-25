@@ -1,4 +1,3 @@
-
 void DoSteering()
 {
 	static const float LOW_HIGH_DEGREES = 5.0;		// How many degrees before decreasing Max PWM
@@ -91,16 +90,32 @@ void AutoZeroWAS()
 	static uint32_t lastSaveMs = 0;
 	static bool initialized = false;
 
+	// New: track angle rate and require stability
+	static float lastAngle = 0.0f;
+	static uint32_t lastAngleMs = 0;
+
 	if (MDL.AutoZero && SteerSettings.steerSensorCounts > 0)
 	{
-		// Check if we're mostly centered and stable
-		bool smallSetpoint = fabs(steerAngleSetPoint) <= 1.0f;
-		bool smallEffort = abs(pwmDrive) <= (SteerSettings.minPWM + 5);
-		bool modestError = fabs(steerAngleError) <= 2.0f;
-
-		if (smallSetpoint && smallEffort && modestError)
+		// Compute angle rate (deg/s), sampled opportunistically
+		uint32_t now = millis();
+		if (lastAngleMs == 0) { lastAngleMs = now; lastAngle = steerAngleActual; }
+		float angleRateDegPerSec = 0.0f;
+		uint32_t dt = now - lastAngleMs;
+		if (dt >= 50) // update every >=50 ms
 		{
-			uint32_t now = millis();
+			angleRateDegPerSec = (steerAngleActual - lastAngle) * (1000.0f / (float)dt);
+			lastAngle = steerAngleActual;
+			lastAngleMs = now;
+		}
+
+		// Check if we're mostly centered and stable
+		bool smallSetpoint = fabsf(steerAngleSetPoint) <= 1.0f;
+		bool smallEffort   = abs(pwmDrive) <= (SteerSettings.minPWM + 5);
+		bool modestError   = fabsf(steerAngleError) <= 2.0f;
+		bool stableAngle   = fabsf(angleRateDegPerSec) <= 3.0f; // new: don’t zero while turning
+
+		if (smallSetpoint && smallEffort && modestError && stableAngle)
+		{
 			if (now - lastAdjustMs > 200)
 			{
 				lastAdjustMs = now;
@@ -108,25 +123,25 @@ void AutoZeroWAS()
 				// Determine polarity based on InvertWAS
 				int8_t polarity = SteerConfig.InvertWAS ? 1 : -1;
 
-				// Calculate how much to shift zero offset based on error
-				float deltaCounts = -steerAngleError * SteerSettings.steerSensorCounts * polarity * 0.02f;
-				if (deltaCounts > 2.0f) deltaCounts = 2.0f;
+				// Counts to shift (clamped to ±2 counts per adjustment)
+				float deltaCounts = -steerAngleError * (float)SteerSettings.steerSensorCounts * (float)polarity * 0.02f;
+				if (deltaCounts >  2.0f) deltaCounts =  2.0f;
 				if (deltaCounts < -2.0f) deltaCounts = -2.0f;
+
 				fracAccumulator += deltaCounts;
 
 				int16_t step = 0;
-				if (fracAccumulator >= 1.0f) 
+				if (fabsf(fracAccumulator) >= 1.0f)
 				{
-					step = (int16_t)floor(fracAccumulator);
-					fracAccumulator -= step;
-				}
-				else if (fracAccumulator <= -1.0f) 
-				{
-					step = (int16_t)ceil(fracAccumulator);
+					// Truncate toward zero (matches prior floor/ceil logic)
+					step = (int16_t)(fracAccumulator > 0.0f ? floorf(fracAccumulator) : ceilf(fracAccumulator));
 					fracAccumulator -= step;
 				}
 
-				if (step != 0) MDL.ZeroOffset = constrain((int32_t)MDL.ZeroOffset + step, -10000, 10000);
+				if (step != 0)
+				{
+					MDL.ZeroOffset = constrain((int32_t)MDL.ZeroOffset + step, -10000, 10000);
+				}
 
 				if (!initialized)
 				{
@@ -135,6 +150,7 @@ void AutoZeroWAS()
 					initialized = true;
 				}
 
+				// Note: SaveData() can block; consider deferring to a safe context.
 				if ((now - lastSaveMs > 300000) && abs(MDL.ZeroOffset - lastSavedOffset) >= 10)
 				{
 					SaveData();
