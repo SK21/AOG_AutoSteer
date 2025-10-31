@@ -22,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 24105;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 31105;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -110,7 +110,7 @@ uint32_t AOGTime;
 
 EthernetUDP UDPntrip;				// from AGIO to receiver
 const uint16_t NtripPort = 2233;	// local port to listen on for NTRIP data
-char NtripBuffer[512];				// buffer for ntrip data
+char NtripBuffer[4096];				// buffer for ntrip data
 
 // Ethernet config
 EthernetUDP UDPconfig;
@@ -216,11 +216,7 @@ void Blink()
 		digitalWrite(LED_BUILTIN, State);
 		if (!FirmwareUpdateMode)
 		{
-			Serial.print(" Micros: ");
 			Serial.print(MaxLoopTime);
-
-			Serial.print(", ");
-			Serial.print(IMU_Heading / 10.0);
 
 			Serial.println("");
 
