@@ -1,3 +1,6 @@
+
+bool SavePending = false;
+
 void DoSteering()
 {
 	static const float LOW_HIGH_DEGREES = 5.0;		// How many degrees before decreasing Max PWM
@@ -11,7 +14,7 @@ void DoSteering()
 	// redone when changing to InvertWAS.
 	if (SteerConfig.InvertWAS)
 	{
-		CurrentWas = (CurrentWas - SteerSettings.wasOffset);   
+		CurrentWas = (CurrentWas - SteerSettings.wasOffset);
 		steerAngleActual = (float)(CurrentWas) / -SteerSettings.steerSensorCounts;
 	}
 	else
@@ -33,6 +36,11 @@ void DoSteering()
 		digitalWrite(MDL.SteeringRelayPin, LOW);
 		digitalWrite(MDL.PowerRelayPin, LOW);
 
+		if (SavePending)
+		{
+			SaveData();
+			SavePending = false;
+		}
 	}
 	else
 	{
@@ -56,6 +64,8 @@ void DoSteering()
 
 		if (SteerConfig.InvertSteer) pwmDrive *= -1;
 
+		int16_t RawPMW = pwmDrive;
+
 		if (SteerConfig.IsDanfoss)
 		{
 			// Danfoss: PWM 25% On = Left Position max  (below Valve=Center)
@@ -74,7 +84,7 @@ void DoSteering()
 		digitalWrite(MDL.SteeringRelayPin, HIGH);
 		digitalWrite(MDL.PowerRelayPin, HIGH);
 
-		AutoZeroWAS();
+		AutoZeroWAS(RawPMW);
 	}
 
 	// pwm value out to motor
@@ -82,13 +92,15 @@ void DoSteering()
 	analogWrite(MDL.PWMpin, abs(pwmDrive));
 }
 
-void AutoZeroWAS()
+void AutoZeroWAS(int16_t RawPWM)
 {
 	static uint32_t lastAdjustMs = 0;
 	static float fracAccumulator = 0.0f;
 	static int16_t lastSavedOffset = 0;
 	static uint32_t lastSaveMs = 0;
 	static bool initialized = false;
+	static bool FreshAngleRate = false;
+	static float LastAngleRate = 0;
 
 	// New: track angle rate and require stability
 	static float lastAngle = 0.0f;
@@ -98,34 +110,41 @@ void AutoZeroWAS()
 	{
 		// Compute angle rate (deg/s), sampled opportunistically
 		uint32_t now = millis();
-		if (lastAngleMs == 0) { lastAngleMs = now; lastAngle = steerAngleActual; }
-		float angleRateDegPerSec = 0.0f;
+		if (lastAngleMs == 0)
+		{
+			lastAngleMs = now;
+			lastAngle = steerAngleActual;
+		}
+
 		uint32_t dt = now - lastAngleMs;
 		if (dt >= 50) // update every >=50 ms
 		{
-			angleRateDegPerSec = (steerAngleActual - lastAngle) * (1000.0f / (float)dt);
-			lastAngle = steerAngleActual;
 			lastAngleMs = now;
+			float angleRateDegPerSec = (steerAngleActual - lastAngle) * (1000.0f / (float)dt);
+			LastAngleRate = angleRateDegPerSec;
+			FreshAngleRate = true;
+			lastAngle = steerAngleActual;
 		}
 
 		// Check if we're mostly centered and stable
 		bool smallSetpoint = fabsf(steerAngleSetPoint) <= 1.0f;
-		bool smallEffort   = abs(pwmDrive) <= (SteerSettings.minPWM + 5);
-		bool modestError   = fabsf(steerAngleError) <= 2.0f;
-		bool stableAngle   = fabsf(angleRateDegPerSec) <= 3.0f; // new: don’t zero while turning
+		bool smallEffort = abs(RawPWM) <= (SteerSettings.minPWM + 5);
+		bool modestError = fabsf(steerAngleError) <= 2.0f;
+		bool stableAngle = fabsf(LastAngleRate) <= 3.0f; // new: don’t zero while turning
 
 		if (smallSetpoint && smallEffort && modestError && stableAngle)
 		{
-			if (now - lastAdjustMs > 200)
+			if ((now - lastAdjustMs > 200) && FreshAngleRate)
 			{
+				FreshAngleRate = false;
 				lastAdjustMs = now;
 
 				// Determine polarity based on InvertWAS
 				int8_t polarity = SteerConfig.InvertWAS ? 1 : -1;
 
 				// Counts to shift (clamped to ±2 counts per adjustment)
-				float deltaCounts = -steerAngleError * (float)SteerSettings.steerSensorCounts * (float)polarity * 0.02f;
-				if (deltaCounts >  2.0f) deltaCounts =  2.0f;
+				float deltaCounts = -1 * steerAngleError * (float)SteerSettings.steerSensorCounts * (float)polarity * 0.02f;
+				if (deltaCounts > 2.0f) deltaCounts = 2.0f;
 				if (deltaCounts < -2.0f) deltaCounts = -2.0f;
 
 				fracAccumulator += deltaCounts;
@@ -150,10 +169,9 @@ void AutoZeroWAS()
 					initialized = true;
 				}
 
-				// Note: SaveData() can block; consider deferring to a safe context.
 				if ((now - lastSaveMs > 300000) && abs(MDL.ZeroOffset - lastSavedOffset) >= 10)
 				{
-					SaveData();
+					SavePending = true;
 					lastSavedOffset = MDL.ZeroOffset;
 					lastSaveMs = now;
 				}
@@ -161,3 +179,4 @@ void AutoZeroWAS()
 		}
 	}
 }
+
