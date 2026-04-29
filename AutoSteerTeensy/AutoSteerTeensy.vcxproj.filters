@@ -40,6 +40,15 @@
     </ClCompile>
     <ClCompile Include="IMU.ino" />
     <ClCompile Include="Panda.ino" />
+    <ClCompile Include="EasyProfile\EasyObjectDictionary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EasyProfile\EasyProfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EasyProfile\EasyProtocol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="SteerComm.ino" />
     <ClCompile Include="Steering.ino" />
     <ClCompile Include="SteerSwitches.ino" />

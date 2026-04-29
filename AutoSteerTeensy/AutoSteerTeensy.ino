@@ -16,13 +16,13 @@ extern "C" {
 }
 
 // Motion Module Interface:				https://www.syd-dynamics.com/download-center/
-#include <EasyObjectDictionary.h>
-#include <EasyProfile.h>
+#include "EasyProfile/EasyObjectDictionary.h"
+#include "EasyProfile/EasyProfile.h"
 EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 31105;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 28046;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 #define ReceiverBaud 460800
@@ -34,8 +34,8 @@ struct ModuleConfig		// about 28 bytes
 {
 	//	AS15-3 config
 	uint8_t ID = 0;
-	uint8_t ReceiverSerialPort = 4;	
-	uint8_t	IMUSerialPort = 3;	
+	uint8_t ReceiverSerialPort = 4;
+	uint8_t	IMUSerialPort = 3;
 	uint8_t PassThruInSerialPort = 8;		// from F9P Uart2
 	uint8_t PassThrOutSerialPort = 2;		// to Max232 for DB9 connector
 	uint8_t PowerRelayPin = 0;
@@ -46,6 +46,7 @@ struct ModuleConfig		// about 28 bytes
 	uint8_t AnalogPin = 26;
 	uint8_t DirPin = 23;
 	uint8_t PWMpin = 22;
+	float PWMFrequency = 490;	// teensy default 4482 Hz
 	uint8_t EncoderPin = NC;
 	uint8_t SpeedPulsePin = NC;
 	uint16_t SpeedPulseCal = 255;	// Hz/KMH X 10
@@ -68,7 +69,7 @@ struct ModuleNetwork
 
 ModuleNetwork MDLnetwork;
 
-struct Storage 
+struct Storage
 {
 	uint8_t Kp = 40;  //proportional gain
 	uint8_t lowPWM = 10;  //band of no action
@@ -77,7 +78,7 @@ struct Storage
 	uint8_t highPWM = 60;//max PWM value
 	float steerSensorCounts = 30;
 	float AckermanFix = 1;     //sent as percent
-};  
+};
 
 Storage SteerSettings;  //11 bytes
 
@@ -164,10 +165,10 @@ uint16_t AnalogReadingValue;
 bool ADSfound = false;
 int16_t ADS1115_Address = 72;
 
-HardwareSerial* SerialIMU;
-HardwareSerial* SerialReceiver;
-HardwareSerial* SerialPassIn;
-HardwareSerial* SerialPassOut;
+HardwareSerialIMXRT* SerialIMU;
+HardwareSerialIMXRT* SerialReceiver;
+HardwareSerialIMXRT* SerialPassIn;
+HardwareSerialIMXRT* SerialPassOut;
 
 bool SerialIMUEnabled = false;
 bool SerialReceiverEnabled = false;
@@ -198,8 +199,9 @@ void loop()
 	DoPanda();
 	ReceiveSteerData();
 	ReceiveUpdate();
-	Blink();
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
+
+	Blink();
 }
 void Blink()
 {
@@ -208,24 +210,24 @@ void Blink()
 	static elapsedMicros LoopTmr;
 	static byte Count = 0;
 	static bool Initialized = false;
-	
+
 	if (BlinkTmr > 1000)
 	{
 		BlinkTmr = 0;
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
-		if (!FirmwareUpdateMode)
-		{
-			Serial.print(MaxLoopTime);
+		//if (!FirmwareUpdateMode)
+		//{
+		//	Serial.print(MaxLoopTime);
 
-			Serial.println("");
+		//	Serial.println("");
 
-			if (Count++ > 10)
-			{
-				Count = 0;
-				MaxLoopTime = 0;
-			}
-		}
+		//	if (Count++ > 10)
+		//	{
+		//		Count = 0;
+		//		MaxLoopTime = 0;
+		//	}
+		//}
 	}
 
 	if (!Initialized)

@@ -74,7 +74,13 @@ void DoSetup()
 	if (MDL.SteerSwitchPin < NC) pinMode(MDL.SteerSwitchPin, INPUT_PULLUP);
 	if (MDL.SteeringRelayPin < NC) pinMode(MDL.SteeringRelayPin, OUTPUT);
 	if (MDL.DirPin < NC) pinMode(MDL.DirPin, OUTPUT);
-	if (MDL.PWMpin < NC) pinMode(MDL.PWMpin, OUTPUT);
+
+	if (MDL.PWMpin < NC)
+	{
+		pinMode(MDL.PWMpin, OUTPUT);
+		analogWriteFrequency(MDL.PWMpin,MDL.PWMFrequency);
+	}
+
 	if (MDL.PowerRelayPin < NC) pinMode(MDL.PowerRelayPin, OUTPUT);
 	if (MDL.EncoderPin < NC && SteerConfig.ShaftEncoder) pinMode(MDL.EncoderPin, INPUT_PULLUP);
 
@@ -252,7 +258,7 @@ void SaveData()
 bool ValidData()
 {
 	bool Result = true;
-	if (MDL.SteeringRelayPin > 41 && MDL.SteeringRelayPin!=NC)
+	if (MDL.SteeringRelayPin > 41 && MDL.SteeringRelayPin != NC)
 	{
 		Result = false;
 	}
@@ -310,6 +316,7 @@ void LoadDefaults()
 	MDL.AnalogPin = 26;
 	MDL.DirPin = 23;
 	MDL.PWMpin = 22;
+	MDL.PWMFrequency = 490;
 	MDL.EncoderPin = NC;
 	MDL.SpeedPulsePin = NC;
 	MDL.SpeedPulseCal = 255;
@@ -345,9 +352,9 @@ void SaveNetworks()
 	EEPROM.put(168, MDLnetwork);
 }
 
-HardwareSerial* SetSerialPort(uint8_t port, uint32_t baud)
+HardwareSerialIMXRT* SetSerialPort(uint8_t port, uint32_t baud)
 {
-	HardwareSerial* NewPort = nullptr;
+	HardwareSerialIMXRT* NewPort = nullptr;
 
 	switch (port)
 	{
