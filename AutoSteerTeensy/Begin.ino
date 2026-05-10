@@ -43,7 +43,7 @@ void DoSetup()
 	Serial.println(fwVer);
 
 	// receiver
-	uint32_t rxBaud = (MDL.GPSSource == GPS_UM982) ? 115200 : ReceiverBaud;
+	uint32_t rxBaud = (MDL.GPSSource == GPS_ByNav) ? 115200 : ReceiverBaud;
 	SerialReceiver = SetSerialPort(MDL.ReceiverSerialPort, rxBaud);
 	SerialReceiverEnabled = (SerialReceiver != nullptr);
 	if (SerialReceiverEnabled)
@@ -58,7 +58,7 @@ void DoSetup()
 		Serial.println(MDL.ReceiverSerialPort);
 		Serial.println("");
 
-		if (MDL.GPSSource == GPS_UM982) SendHPRConfig(SerialReceiver);
+		if (MDL.GPSSource == GPS_ByNav) SendPASHRConfig(SerialReceiver);
 	}
 	else
 	{
@@ -71,7 +71,7 @@ void DoSetup()
 	parser.setErrorHandler(errorHandler);
 	parser.addHandler("G-GGA", GGA_Handler);
 	parser.addHandler("G-VTG", VTG_Handler);
-	parser.addHandler("G-HPR", HPR_Handler);
+	parser.addHandler("PASHR", PASHR_Handler);
 
 	// pins
 	if (MDL.WorkSwitchPin < NC) pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);

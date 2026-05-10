@@ -35,7 +35,7 @@ void ReceiveConfig()
 				//          - bit 2, use ADS1115
 				//			- bit 3, Auto zero WAS
 				//15	IMU type	0 BNO080, 1 TM171
-				//16	GPS source	0 F9P+IMU, 1 KSXT
+				//16	GPS source	0 F9P+IMU, 1 ByNav
 				//17	Steering mode	0 wheel angle, 1 tool XTE
 				//18	CRC
 
@@ -158,7 +158,7 @@ void SendStatus()
 	data[2] = (byte)InoID;
 	data[3] = InoID >> 8;
 
-	uint16_t heading = (int)IMU_Heading;
+	uint16_t heading = (int)ATT_Heading;
 	data[4] = (byte)heading;
 	data[5] = heading >> 8;
 

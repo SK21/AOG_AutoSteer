@@ -112,48 +112,24 @@ void SendSteerData()
     PGN_253[5] = (byte)tmp;
     PGN_253[6] = tmp >> 8;
 
-    // heading and roll — source depends on GPS mode
-    if (MDL.GPSSource == GPS_KSXT)
+    // heading and roll
+    if (ATT_Connected())
     {
-        if (GPS_Connected())
-        {
-            tmp = (int16_t)(GPS_Heading * 10.0f);
-            PGN_253[7] = (byte)tmp;
-            PGN_253[8] = tmp >> 8;
-            tmp = (int16_t)(GPS_Roll * 10.0f);
-            PGN_253[9] = (byte)tmp;
-            PGN_253[10] = tmp >> 8;
-        }
-        else
-        {
-            tmp = 9999;
-            PGN_253[7] = (byte)tmp;
-            PGN_253[8] = tmp >> 8;
-            tmp = 8888;
-            PGN_253[9] = (byte)tmp;
-            PGN_253[10] = tmp >> 8;
-        }
+        tmp = (int)(ATT_Heading);
+        PGN_253[7] = (byte)tmp;
+        PGN_253[8] = tmp >> 8;
+        tmp = (int)(ATT_Roll);
+        PGN_253[9] = (byte)tmp;
+        PGN_253[10] = tmp >> 8;
     }
     else
     {
-        if (IMU_Connected())
-        {
-            tmp = (int)(IMU_Heading);
-            PGN_253[7] = (byte)tmp;
-            PGN_253[8] = tmp >> 8;
-            tmp = (int)(IMU_Roll);
-            PGN_253[9] = (byte)tmp;
-            PGN_253[10] = tmp >> 8;
-        }
-        else
-        {
-            tmp = 9999;
-            PGN_253[7] = (byte)tmp;
-            PGN_253[8] = tmp >> 8;
-            tmp = 8888;
-            PGN_253[9] = (byte)tmp;
-            PGN_253[10] = tmp >> 8;
-        }
+        tmp = 9999;
+        PGN_253[7] = (byte)tmp;
+        PGN_253[8] = tmp >> 8;
+        tmp = 8888;
+        PGN_253[9] = (byte)tmp;
+        PGN_253[10] = tmp >> 8;
     }
 
     PGN_253[9] = (byte)tmp;
@@ -219,7 +195,7 @@ void SendHelloReply()
         UDPsteering.write(helloFromAutoSteer, sizeof(helloFromAutoSteer));
         UDPsteering.endPacket();
 
-        bool headingAvailable = (MDL.GPSSource == GPS_KSXT) ? GPS_Connected() : IMU_Connected();
+        bool headingAvailable = ATT_Connected();
         if (headingAvailable)
         {
             UDPsteering.beginPacket(DestinationIP, DestinationPort);

@@ -1,7 +1,7 @@
 
-bool IMU_Connected()
+bool ATT_Connected()
 {
-    return (millis() - IMUtime < 4000);
+    return (millis() - ATT_Time < 4000);
 }
 
 void ReadIMU()
@@ -26,24 +26,24 @@ void ReadBNO()
 {
     if (rvc.read(&BNOdata))
     {
-        IMUtime = millis();
-        IMU_YawRate = BNOdata.z_accel;
-        IMU_Heading = BNOdata.yaw;
-        if (IMU_Heading < 0 && IMU_Heading >= -180) //Scale BNO085 yaw from [-180?;180?] to [0;360?]
+        ATT_Time = millis();
+        ATT_YawRate = BNOdata.z_accel;
+        ATT_Heading = BNOdata.yaw;
+        if (ATT_Heading < 0 && ATT_Heading >= -180) //Scale BNO085 yaw from [-180?;180?] to [0;360?]
         {
-            IMU_Heading = IMU_Heading + 360;
+            ATT_Heading = ATT_Heading + 360;
         }
-        IMU_Heading *= 10.0;
+        ATT_Heading *= 10.0;
 
         if (SteerConfig.UseIMU_Y_Axis)
         {
-            IMU_Roll = BNOdata.pitch * 10;
-            IMU_Pitch = BNOdata.roll * 10;
+            ATT_Roll = BNOdata.pitch * 10;
+            ATT_Pitch = BNOdata.roll * 10;
         }
         else
         {
-            IMU_Roll = BNOdata.roll * 10;
-            IMU_Pitch = BNOdata.pitch * 10;
+            ATT_Roll = BNOdata.roll * 10;
+            ATT_Pitch = BNOdata.pitch * 10;
         }
     }
 }
@@ -89,19 +89,19 @@ void ReadTM171()
                     Ep_RPY RPY_Data;
                     if (EP_SUCC_ == eOD.Read_Ep_RPY(&RPY_Data))
                     {
-                        IMUtime = millis();
-                        IMU_YawRate = 0.0f;
-                        IMU_Heading = fmodf(RPY_Data.yaw * 10.0f + 3600.0f, 3600.0f);
+                        ATT_Time = millis();
+                        ATT_YawRate = 0.0f;
+                        ATT_Heading = fmodf(RPY_Data.yaw * 10.0f + 3600.0f, 3600.0f);
 
                         if (SteerConfig.UseIMU_Y_Axis)
                         {
-                            IMU_Roll = RPY_Data.pitch * 10;
-                            IMU_Pitch = RPY_Data.roll * 10;
+                            ATT_Roll = RPY_Data.pitch * 10;
+                            ATT_Pitch = RPY_Data.roll * 10;
                         }
                         else
                         {
-                            IMU_Roll = RPY_Data.roll * 10;
-                            IMU_Pitch = RPY_Data.pitch * 10;
+                            ATT_Roll = RPY_Data.roll * 10;
+                            ATT_Pitch = RPY_Data.pitch * 10;
                         }
                     }
                     break;
@@ -110,20 +110,20 @@ void ReadTM171()
                     Ep_Combo ComboData;
                     if (EP_SUCC_ == eOD.Read_Ep_Combo(&ComboData))
                     {
-                        IMUtime = millis();
-                        IMU_YawRate = ComboData.wz * 1e-5f;
-                        IMU_Heading = fmodf(ComboData.yaw * 1e-2f * 10.0f + 3600.0f, 3600.0f);
+                        ATT_Time = millis();
+                        ATT_YawRate = ComboData.wz * 1e-5f;
+                        ATT_Heading = fmodf(ComboData.yaw * 1e-2f * 10.0f + 3600.0f, 3600.0f);
 
                         if (SteerConfig.UseIMU_Y_Axis)
                         {
                             // Use ComboData values (was a bug in the original)
-                            IMU_Roll = ComboData.pitch * 1e-2f * 10.0f;
-                            IMU_Pitch = ComboData.roll * 1e-2f * 10.0f;
+                            ATT_Roll = ComboData.pitch * 1e-2f * 10.0f;
+                            ATT_Pitch = ComboData.roll * 1e-2f * 10.0f;
                         }
                         else
                         {
-                            IMU_Roll = ComboData.roll * 1e-2f * 10.0f;
-                            IMU_Pitch = ComboData.pitch * 1e-2f * 10.0f;
+                            ATT_Roll = ComboData.roll * 1e-2f * 10.0f;
+                            ATT_Pitch = ComboData.pitch * 1e-2f * 10.0f;
                         }
                     }
                     break;

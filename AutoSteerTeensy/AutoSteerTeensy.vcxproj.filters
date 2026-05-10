@@ -55,7 +55,7 @@
     <ClCompile Include="zNMEAParser.h">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="GPS_KSXT.ino" />
+    <ClCompile Include="GPS_PASHR.ino" />
     <ClCompile Include="Toolsteer.ino" />
     <ClCompile Include="ToolsteerPID.ino" />
     <ClCompile Include="ToolComm.ino" />

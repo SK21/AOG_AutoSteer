@@ -27,7 +27,7 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 
 // GPS source (stored in MDL.GPSSource)
 #define GPS_F9P_IMU  0
-#define GPS_UM982      1	
+#define GPS_ByNav    1	
 
 // Steering mode (stored in MDL.SteeringMode)
 #define STEER_WHEEL_ANGLE  0
@@ -62,7 +62,7 @@ struct ModuleConfig		// about 28 bytes
 	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
 	bool ADS1115Enabled = false;
 	bool AutoZero = false;
-	uint8_t GPSSource = 0;     // GPS_F9P_IMU(0) or GPS_UM982(1)
+	uint8_t GPSSource = 0;     // GPS_F9P_IMU(0) or GPS_ByNav(1)
 	uint8_t SteeringMode = 0;  // STEER_WHEEL_ANGLE(0) or STEER_TOOL_XTE(1)
 };
 
@@ -164,12 +164,16 @@ uint8_t SteerSwitch = HIGH;	// Low on, High off
 uint8_t switchByte = 0;
 float AnalogReadingAverage;
 
-// IMU
-float IMU_Heading = 0;
-float IMU_Roll = 0;
-float IMU_Pitch = 0;
-float IMU_YawRate = 0;
-uint32_t IMUtime;
+// attitude (from IMU or dual-antenna GPS)
+float ATT_Heading = 0;
+float ATT_Roll = 0;
+float ATT_Pitch = 0;
+float ATT_YawRate = 0;
+uint32_t ATT_Time;
+char attHeading[6];
+char attRoll[6];
+char attPitch[6];
+char attYawRate[6];
 
 //pwm variables
 int16_t pwmDrive = 0;

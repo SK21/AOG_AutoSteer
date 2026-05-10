@@ -21,16 +21,10 @@ char ageDGPS[10];
 char vtgHeading[12];
 char speedKnots[10];
 
-//imu
-char imuHeading[6];
-char imuRoll[6];
-char imuPitch[6];
-char imuYawRate[6];
-
 int16_t Ptemp;
 float tmpIMU;
 
-elapsedMillis imuDelayTimer;
+elapsedMillis attDelayTimer;
 bool isGGA_Updated = false;
 
 void DoPanda()
@@ -48,16 +42,16 @@ void DoPanda()
         parser << SerialReceiver->read();
 
     // refresh IMU char arrays after each GGA (F9P_IMU mode only)
-    if (MDL.GPSSource == GPS_F9P_IMU && isGGA_Updated && imuDelayTimer > 40 && IMU_Connected())
+    if (MDL.GPSSource == GPS_F9P_IMU && isGGA_Updated && attDelayTimer > 40 && ATT_Connected())
     {
-        Ptemp = (int16_t)IMU_Heading;
-        itoa(Ptemp, imuHeading, 10);
-        Ptemp = (int16_t)IMU_Roll;
-        itoa(Ptemp, imuRoll, 10);
-        Ptemp = (int16_t)IMU_Pitch;
-        itoa(Ptemp, imuPitch, 10);
-        Ptemp = (int16_t)IMU_YawRate;
-        itoa(Ptemp, imuYawRate, 10);
+        Ptemp = (int16_t)ATT_Heading;
+        itoa(Ptemp, attHeading, 10);
+        Ptemp = (int16_t)ATT_Roll;
+        itoa(Ptemp, attRoll, 10);
+        Ptemp = (int16_t)ATT_Pitch;
+        itoa(Ptemp, attPitch, 10);
+        Ptemp = (int16_t)ATT_YawRate;
+        itoa(Ptemp, attYawRate, 10);
         isGGA_Updated = false;
     }
 }
@@ -109,7 +103,7 @@ void GGA_Handler() //Rec'd GGA
     isGGA_Updated = true;
 
     //reset imu timer
-    imuDelayTimer = 0;
+    attDelayTimer = 0;
 
     BuildPanda();
 }
@@ -157,21 +151,21 @@ void BuildPanda()
     strcat(nme, ",");
 
     //12
-    Ptemp = (int16_t)IMU_Heading;   // duplicated in DoPanda
-    itoa(Ptemp, imuHeading, 10);
-    strcat(nme, imuHeading);
+    Ptemp = (int16_t)ATT_Heading;   // duplicated in DoPanda
+    itoa(Ptemp, attHeading, 10);
+    strcat(nme, attHeading);
     strcat(nme, ",");
 
     //13
-    strcat(nme, imuRoll);
+    strcat(nme, attRoll);
     strcat(nme, ",");
 
     //14
-    strcat(nme, imuPitch);
+    strcat(nme, attPitch);
     strcat(nme, ",");
 
     //15
-    strcat(nme, imuYawRate);
+    strcat(nme, attYawRate);
 
     strcat(nme, "*");
 
