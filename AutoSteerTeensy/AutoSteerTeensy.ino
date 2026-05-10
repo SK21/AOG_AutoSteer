@@ -22,12 +22,12 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 9056;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 10056;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 // GPS source (stored in MDL.GPSSource)
 #define GPS_F9P_IMU  0
-#define GPS_KSXT     1	// UM982
+#define GPS_UM982      1	
 
 // Steering mode (stored in MDL.SteeringMode)
 #define STEER_WHEEL_ANGLE  0
@@ -62,7 +62,7 @@ struct ModuleConfig		// about 28 bytes
 	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
 	bool ADS1115Enabled = false;
 	bool AutoZero = false;
-	uint8_t GPSSource = 0;     // GPS_F9P_IMU(0) or GPS_KSXT(1)
+	uint8_t GPSSource = 0;     // GPS_F9P_IMU(0) or GPS_UM982(1)
 	uint8_t SteeringMode = 0;  // STEER_WHEEL_ANGLE(0) or STEER_TOOL_XTE(1)
 };
 
@@ -186,7 +186,7 @@ uint8_t PGN_253[] = { 128, 129, 123, 253, 8, 0, 0, 0, 0, 0,0,0,0, 12 };
 //fromAutoSteerData FD 250 - sensor values etc
 uint8_t PGN_250[] = { 128, 129, 123, 250, 8, 0, 0, 0, 0, 0,0,0,0, 12 };
 
-NMEAParser<2> parser;
+NMEAParser<3> parser;
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 BNO08x_RVC_Data BNOdata;
 
