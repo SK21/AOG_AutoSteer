@@ -246,7 +246,7 @@ void BuildPandaFromKSXT()
     snprintf(numSats, sizeof(numSats), "%02d", GPS_Sats);
     strcpy(HDOP, "1.0");    // not available in KSXT
     snprintf(altitude, sizeof(altitude), "%.1f", GPS_Alt);
-    strcpy(ageDGPS, "0");   // not available in KSXT
+    snprintf(ageDGPS, sizeof(ageDGPS), "%.1f", GPS_AgeDGPS);
 
     // speed
     snprintf(speedKnots, sizeof(speedKnots), "%.2f", GPS_Speed * 0.539957f);

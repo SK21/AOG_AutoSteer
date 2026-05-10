@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs cat)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:globalgpssystems.com)",
+      "WebFetch(domain:docs.sparkfun.com)",
+      "WebFetch(domain:en.unicore.com)",
+      "Bash(gh api *)",
+      "WebFetch(domain:mm.digikey.com)",
+      "WebFetch(domain:discourse.agopengps.com)",
+      "WebFetch(domain:s-taka.org)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}
