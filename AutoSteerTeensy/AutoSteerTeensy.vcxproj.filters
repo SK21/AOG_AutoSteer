@@ -38,8 +38,18 @@
     <ClCompile Include="FXUtil.h">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="GPS_PASHR.ino" />
     <ClCompile Include="IMU.ino" />
     <ClCompile Include="Panda.ino" />
+    <ClCompile Include="SteerComm.ino" />
+    <ClCompile Include="Steering.ino" />
+    <ClCompile Include="SteerSwitches.ino" />
+    <ClCompile Include="ToolComm.ino" />
+    <ClCompile Include="Toolsteer.ino" />
+    <ClCompile Include="ToolsteerPID.ino" />
+    <ClCompile Include="zNMEAParser.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
     <ClCompile Include="EasyProfile\EasyObjectDictionary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,19 +59,24 @@
     <ClCompile Include="EasyProfile\EasyProtocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SteerComm.ino" />
-    <ClCompile Include="Steering.ino" />
-    <ClCompile Include="SteerSwitches.ino" />
-    <ClCompile Include="zNMEAParser.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GPS_PASHR.ino" />
-    <ClCompile Include="Toolsteer.ino" />
-    <ClCompile Include="ToolsteerPID.ino" />
-    <ClCompile Include="ToolComm.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensy.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EasyProfile\BasicTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EasyProfile\EasyObjectDictionary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EasyProfile\EasyProfile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EasyProfile\EasyProtocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EasyProfile\EasyQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

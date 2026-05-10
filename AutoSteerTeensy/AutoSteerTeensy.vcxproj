@@ -64,7 +64,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <IncludePath>$(ProjectDir)..\AutoSteerTeensy;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM\utility;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\arm-none-eabi\thumb\v7e-m+dp\hard;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\backward;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include-fixed;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor</IncludePath>
+    <IncludePath>$(ProjectDir)..\AutoSteerTeensy;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\arm-none-eabi\thumb\v7e-m+dp\hard;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\backward;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include-fixed;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor</IncludePath>
     <RemoteCCompileToolExe>C:\Program Files (x86)\Arduino\hardware\tools\arm\bin\arm-none-eabi-g++</RemoteCCompileToolExe>
     <RemoteCppCompileToolExe>C:\Program Files (x86)\Arduino\hardware\tools\arm\bin\arm-none-eabi-g++</RemoteCppCompileToolExe>
     <ValidateArchitecture>false</ValidateArchitecture>
@@ -81,6 +81,9 @@
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
+    <ClCompile Include="EasyProfile\EasyObjectDictionary.cpp" />
+    <ClCompile Include="EasyProfile\EasyProfile.cpp" />
+    <ClCompile Include="EasyProfile\EasyProtocol.cpp" />
     <ClCompile Include="FlashTxx.c">
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
@@ -105,6 +108,11 @@
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
+    <ClInclude Include="EasyProfile\BasicTypes.h" />
+    <ClInclude Include="EasyProfile\EasyObjectDictionary.h" />
+    <ClInclude Include="EasyProfile\EasyProfile.h" />
+    <ClInclude Include="EasyProfile\EasyProtocol.h" />
+    <ClInclude Include="EasyProfile\EasyQueue.h" />
     <ClInclude Include="__vm\.AutoSteerTeensy.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
@@ -132,6 +140,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GPS_PASHR.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="IMU.ino">
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
@@ -140,17 +154,6 @@
   <ItemGroup>
     <ClCompile Include="Panda.ino">
       <FileType>CppCode</FileType>
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="EasyProfile\EasyObjectDictionary.cpp">
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
-    <ClCompile Include="EasyProfile\EasyProfile.cpp">
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
-    <ClCompile Include="EasyProfile\EasyProtocol.cpp">
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
   </ItemGroup>
@@ -173,6 +176,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ToolComm.ino">
+      <FileType>CppCode</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="Toolsteer.ino">
       <FileType>CppCode</FileType>
       <DeploymentContent>true</DeploymentContent>
@@ -184,24 +193,12 @@
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="ToolComm.ino">
-      <FileType>CppCode</FileType>
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="GPS_PASHR.ino">
-      <FileType>CppCode</FileType>
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
-  </ItemGroup>
   <PropertyGroup>
     <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\AutoSteerTeensy;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM\utility;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\arm-none-eabi\thumb\v7e-m+dp\hard;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\backward;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include-fixed;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\AutoSteerTeensy;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\arm-none-eabi\thumb\v7e-m+dp\hard;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include\c++\11.3.1\backward;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include;c:\program files (x86)\arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\11.3.1\include-fixed;c:\program files (x86)\arduino\hardware\tools\arm\arm-none-eabi\include;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Wire\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\NativeEthernet\src\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\FNET\src;D:\Sync\Documents\Arduino\libraries\Adafruit_Unified_Sensor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GccToolChain>C:\Program Files (x86)\Arduino\hardware\tools\arm\bin\arm-none-eabi-g++</GccToolChain>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <CLanguageStandard>gnu11</CLanguageStandard>
@@ -216,9 +213,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties arduino.upload.port="usb:0/140000/0/9" vm.preproc.lib-search.lib-in-lib="none" vm.preproc.lib-search.lib-in-sketch="root" />
-    </VisualStudio>
-  </ProjectExtensions>
 </Project>
