@@ -22,8 +22,16 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 29046;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 9056;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
+
+// GPS source (stored in MDL.GPSSource)
+#define GPS_F9P_IMU  0
+#define GPS_KSXT     1	// UM982
+
+// Steering mode (stored in MDL.SteeringMode)
+#define STEER_WHEEL_ANGLE  0
+#define STEER_TOOL_XTE     1
 
 #define ReceiverBaud 460800
 #define IMUBaud 115200
@@ -54,6 +62,8 @@ struct ModuleConfig		// about 28 bytes
 	uint8_t IMUtype = 0;	// 0 BNO080, 1 TM171
 	bool ADS1115Enabled = false;
 	bool AutoZero = false;
+	uint8_t GPSSource = 0;     // GPS_F9P_IMU(0) or GPS_KSXT(1)
+	uint8_t SteeringMode = 0;  // STEER_WHEEL_ANGLE(0) or STEER_TOOL_XTE(1)
 };
 
 ModuleConfig MDL;
@@ -101,6 +111,26 @@ struct Setup
 };
 
 Setup SteerConfig;          //9 bytes
+
+struct Tool_Settings
+{
+	uint8_t  kP = 40;
+	uint8_t  kD = 0;
+	uint8_t  minPWM = 20;
+	uint8_t  lowPWM = 25;
+	uint8_t  highPWM = 100;
+	int16_t  zeroOffset_APOS = 0;
+	float    lowHighDistance = 10.0f;
+	uint8_t  CytronDriver = 1;
+	uint8_t  invertAPOS = 0;
+	uint8_t  invertActuator = 0;
+	uint8_t  maxActuatorLimit = 60;
+	uint8_t  isDirectionalValve = 0;
+	uint8_t  valveOnTime = 5;     // Bang-bang: loop ticks energised per pulse (5 × 25ms = 125ms)
+	uint8_t  valveOffTime = 15;    // Bang-bang: loop ticks de-energised per pulse (15 × 25ms = 375ms)
+};
+
+Tool_Settings toolSettings;   // 17 bytes, EEPROM offset 60 in STEER_TOOL_XTE mode
 
 // Ethernet steering
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
@@ -179,6 +209,18 @@ uint32_t  LoopLast;
 uint16_t MaxLoopTime = 0;	// micros
 float steerAngleError = 0;
 
+// Tool steer variables
+float   toolXTE_cm = 0;
+float   vehicleXTE_cm = 0;   // received in PGN 233, not used in control logic
+uint8_t guidanceStatus = 0;   // bit 0 = guidance enabled
+int16_t manualPWM = 0;   // manual override from PGN 233
+int16_t pwmDisplay = 0;   // last pwmDrive before direction inversion, sent in PGN 230
+
+#define WATCHDOG_THRESHOLD    200
+#define WATCHDOG_FORCE_VALUE  250
+
+static uint16_t watchdogTimer = WATCHDOG_FORCE_VALUE;
+
 void setup()
 {
 	DoSetup();
@@ -189,20 +231,59 @@ void loop()
 	if (millis() - LoopLast >= LOOP_TIME)
 	{
 		LoopLast = millis();
-		ReadAnalog();
-		ReadSwitches();
-		DoSteering();
+
+		if (MDL.SteeringMode == STEER_WHEEL_ANGLE)
+		{
+			ReadAnalog();
+			ReadSwitches();
+			DoSteering();
+			SendSpeedPulse();
+		}
+		else  // STEER_TOOL_XTE
+		{
+			ReadActuatorPosition();
+			UpdateWatchdog();
+			if (ToolSteerEnabled())
+			{
+				if (toolSettings.isDirectionalValve)
+				{
+					BangBangDrive();
+				}
+				else
+				{
+					calcSteeringPID();
+					motorDrive();
+				}
+			}
+			else
+			{
+				pwmDrive = 0;
+				motorDrive();
+			}
+			SendToolFeedback();
+		}
+
 		ReceiveConfig();
-		SendSpeedPulse();
 	}
+
 	ReadIMU();
 	DoPanda();
-	ReceiveSteerData();
+
+	if (MDL.SteeringMode == STEER_WHEEL_ANGLE)
+	{
+		ReceiveSteerData();
+	}
+	else
+	{
+		ReceiveToolSteerData();
+	}
+
 	ReceiveUpdate();
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 
 	Blink();
 }
+
 void Blink()
 {
 	static bool State = false;

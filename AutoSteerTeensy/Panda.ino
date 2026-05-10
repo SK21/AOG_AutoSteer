@@ -35,10 +35,7 @@ bool isGGA_Updated = false;
 
 void DoPanda()
 {
-    // NMEA, from receiver to parser
-    if (SerialReceiverEnabled && SerialReceiver->available()) parser << SerialReceiver->read();
-
-    // GPS corrections from AGIO to receiver
+    // GPS corrections from AGIO to receiver — both GPS modes
     int packetSize = UDPntrip.parsePacket();
     if (packetSize)
     {
@@ -46,22 +43,30 @@ void DoPanda()
         if (SerialReceiverEnabled) SerialReceiver->write(NtripBuffer, packetSize);
     }
 
-    if (isGGA_Updated && imuDelayTimer > 40 && IMU_Connected())
+    if (MDL.GPSSource == GPS_KSXT)
     {
-        // read IMU data
-        Ptemp = (int16_t)IMU_Heading;
-        itoa(Ptemp, imuHeading, 10);
+        ReadKSXT();
+        if (GPS_DataValid) BuildPandaFromKSXT();
+    }
+    else
+    {
+        // NMEA from F9P to parser — GGA_Handler() calls BuildPanda()
+        if (SerialReceiverEnabled && SerialReceiver->available())
+            parser << SerialReceiver->read();
 
-        Ptemp = (int16_t)IMU_Roll;
-        itoa(Ptemp, imuRoll, 10);
-
-        Ptemp = (int16_t)IMU_Pitch;
-        itoa(Ptemp, imuPitch, 10);
-
-        Ptemp = (int16_t)IMU_YawRate;
-        itoa(Ptemp, imuYawRate, 10);
-
-        isGGA_Updated = false;
+        // refresh IMU char arrays after each GGA
+        if (isGGA_Updated && imuDelayTimer > 40 && IMU_Connected())
+        {
+            Ptemp = (int16_t)IMU_Heading;
+            itoa(Ptemp, imuHeading, 10);
+            Ptemp = (int16_t)IMU_Roll;
+            itoa(Ptemp, imuRoll, 10);
+            Ptemp = (int16_t)IMU_Pitch;
+            itoa(Ptemp, imuPitch, 10);
+            Ptemp = (int16_t)IMU_YawRate;
+            itoa(Ptemp, imuYawRate, 10);
+            isGGA_Updated = false;
+        }
     }
 }
 
@@ -216,6 +221,46 @@ void CalculateChecksum(void)
     chk = (sum % 16);
     char hex2[2] = { asciiHex[chk],0 };
     strcat(nme, hex2);
+}
+
+void BuildPandaFromKSXT()
+{
+    strncpy(fixTime, GPS_Time, sizeof(fixTime) - 1);
+
+    // latitude: decimal degrees → ddmm.mmmmm
+    double absLat = fabs(GPS_Lat);
+    int latDeg = (int)absLat;
+    double latMin = (absLat - latDeg) * 60.0;
+    snprintf(latitude, sizeof(latitude), "%02d%08.5f", latDeg, latMin);
+    snprintf(latNS, sizeof(latNS), "%s", GPS_Lat >= 0 ? "N" : "S");
+
+    // longitude: decimal degrees → dddmm.mmmmm
+    double absLon = fabs(GPS_Lon);
+    int lonDeg = (int)absLon;
+    double lonMin = (absLon - lonDeg) * 60.0;
+    snprintf(longitude, sizeof(longitude), "%03d%08.5f", lonDeg, lonMin);
+    snprintf(lonEW, sizeof(lonEW), "%s", GPS_Lon >= 0 ? "E" : "W");
+
+    // fix, sats, HDOP, altitude, DGPS age
+    snprintf(fixQuality, sizeof(fixQuality), "%d", GPS_Fix);
+    snprintf(numSats, sizeof(numSats), "%02d", GPS_Sats);
+    strcpy(HDOP, "1.0");    // not available in KSXT
+    snprintf(altitude, sizeof(altitude), "%.1f", GPS_Alt);
+    strcpy(ageDGPS, "0");   // not available in KSXT
+
+    // speed
+    snprintf(speedKnots, sizeof(speedKnots), "%.2f", GPS_Speed * 0.539957f);
+
+    // BuildPanda() reads IMU_Heading float directly; imuRoll/Pitch/YawRate as char arrays
+    IMU_Heading = GPS_Heading * 10.0f;
+    IMU_Roll = GPS_Roll * 10.0f;
+    IMU_Pitch = GPS_Pitch * 10.0f;
+    IMU_YawRate = 0;
+    itoa((int16_t)IMU_Roll, imuRoll, 10);
+    itoa((int16_t)IMU_Pitch, imuPitch, 10);
+    itoa((int16_t)IMU_YawRate, imuYawRate, 10);
+
+    BuildPanda();
 }
 
 

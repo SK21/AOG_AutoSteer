@@ -34,10 +34,12 @@ void ReceiveConfig()
 				//          - bit 1, -
 				//          - bit 2, use ADS1115
 				//			- bit 3, Auto zero WAS
-				//15	IMU type	// 0 BNO080, 1 TM171
-				//16	CRC
+				//15	IMU type	0 BNO080, 1 TM171
+				//16	GPS source	0 F9P+IMU, 1 KSXT
+				//17	Steering mode	0 wheel angle, 1 tool XTE
+				//18	CRC
 
-				PGNlength = 17;
+				PGNlength = 19;
 				if (len > PGNlength - 1)
 				{
 					if (GoodCRC(Data, PGNlength))
@@ -61,6 +63,8 @@ void ReceiveConfig()
 						if (bitRead(Commands, 3)) MDL.AutoZero = true; else MDL.AutoZero = false;
 
 						MDL.IMUtype = Data[15];
+						MDL.GPSSource=Data[16];
+						MDL.SteeringMode=Data[17];
 
 						SaveData();
 						SCB_AIRCR = 0x05FA0004; //reset the Teensy   

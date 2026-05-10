@@ -43,7 +43,8 @@ void DoSetup()
 	Serial.println(fwVer);
 
 	// receiver
-	SerialReceiver = SetSerialPort(MDL.ReceiverSerialPort, ReceiverBaud);
+	uint32_t rxBaud = (MDL.GPSSource == GPS_KSXT) ? 115200 : ReceiverBaud;
+	SerialReceiver = SetSerialPort(MDL.ReceiverSerialPort, rxBaud);
 	SerialReceiverEnabled = (SerialReceiver != nullptr);
 	if (SerialReceiverEnabled)
 	{
@@ -56,6 +57,8 @@ void DoSetup()
 		Serial.print("Connecting to receiver on serial port ");
 		Serial.println(MDL.ReceiverSerialPort);
 		Serial.println("");
+
+		if (MDL.GPSSource == GPS_KSXT) SendKSXTConfig(SerialReceiver);
 	}
 	else
 	{
@@ -78,7 +81,7 @@ void DoSetup()
 	if (MDL.PWMpin < NC)
 	{
 		pinMode(MDL.PWMpin, OUTPUT);
-		analogWriteFrequency(MDL.PWMpin,MDL.PWMFrequency);
+		analogWriteFrequency(MDL.PWMpin, MDL.PWMFrequency);
 	}
 
 	if (MDL.PowerRelayPin < NC) pinMode(MDL.PowerRelayPin, OUTPUT);
@@ -177,30 +180,39 @@ void DoSetup()
 	}
 
 	// IMU
-	SerialIMU = SetSerialPort(MDL.IMUSerialPort, IMUBaud);
-	SerialIMUEnabled = (SerialIMU != nullptr);
-	if (SerialIMUEnabled)
+	if (MDL.GPSSource == GPS_F9P_IMU)
 	{
-		switch (MDL.IMUtype)
+		SerialIMU = SetSerialPort(MDL.IMUSerialPort, IMUBaud);
+		SerialIMUEnabled = (SerialIMU != nullptr);
+		if (SerialIMUEnabled)
 		{
-		case 0:
-			// BNO080
-			Serial.println("");
-			Serial.println("Using BNO080 IMU.");
-			rvc.begin(SerialIMU);
-			break;
+			switch (MDL.IMUtype)
+			{
+			case 0:
+				// BNO080
+				Serial.println("");
+				Serial.println("Using BNO080 IMU.");
+				rvc.begin(SerialIMU);
+				break;
 
-		case 1:
-			// TM171
+			case 1:
+				// TM171
+				Serial.println("");
+				Serial.println("Using TM171 IMU.");
+				break;
+			}
+		}
+		else
+		{
 			Serial.println("");
-			Serial.println("Using TM171 IMU.");
-			break;
+			Serial.println("IMU serial port invalid. IMU disabled.");
 		}
 	}
 	else
 	{
+		SerialIMUEnabled = false;
 		Serial.println("");
-		Serial.println("IMU serial port invalid. IMU disabled.");
+		Serial.println("IMU disabled (KSXT mode).");
 	}
 
 	LoopLast = millis();
@@ -231,6 +243,7 @@ void LoadData()
 		Serial.println("Loading stored settings.");
 		EEPROM.get(10, SteerSettings);
 		EEPROM.get(40, SteerConfig);
+		EEPROM.get(60, toolSettings);
 		EEPROM.get(110, MDL);
 
 		IsValid = ValidData();
@@ -252,6 +265,7 @@ void SaveData()
 	EEPROM.put(4, InoType);
 	EEPROM.put(10, SteerSettings);
 	EEPROM.put(40, SteerConfig);
+	EEPROM.put(60, toolSettings);
 	EEPROM.put(110, MDL);
 }
 
@@ -324,6 +338,8 @@ void LoadDefaults()
 	MDL.IMUtype = 0;
 	MDL.ADS1115Enabled = false;
 	MDL.AutoZero = false;
+	MDL.GPSSource = 0;   // GPS_F9P_IMU
+	MDL.SteeringMode = 0;   // STEER_WHEEL_ANGLE
 }
 
 void LoadNetworks()

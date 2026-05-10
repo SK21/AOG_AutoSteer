@@ -80,3 +80,52 @@ void ReadAnalog()
 	}
 }
 
+// written by ReadActuatorPosition(), read by Toolsteer.ino
+int16_t actuatorPosition = 0;
+float   actuatorPositionPercent = 0;
+
+void ReadActuatorPosition()
+{
+	static bool initialized = false;
+
+	if (ADSfound)
+	{
+		if (!initialized)
+		{
+			// configure ADS1115: AIN0 vs GND, ±6.144V, continuous, 860 SPS
+			Wire.beginTransmission(ADS1115_Address);
+			Wire.write(0b00000001);  // config register
+			Wire.write(0b01000000);  // AIN0, ±6.144V, continuous
+			Wire.write(0b11100011);  // 860 SPS, comparator disabled
+			Wire.endTransmission();
+			initialized = true;
+			return;
+		}
+
+		// read last completed conversion
+		Wire.beginTransmission(ADS1115_Address);
+		Wire.write(0b00000000);  // conversion register
+		Wire.endTransmission();
+		Wire.requestFrom(ADS1115_Address, 2);
+		uint16_t raw = (Wire.read() << 8 | Wire.read());
+
+		// 14-bit result, mid-scale ~6805 counts at 2.5V
+		actuatorPosition = (int16_t)(raw >> 1) - 6805 + toolSettings.zeroOffset_APOS;
+		actuatorPositionPercent = (float)actuatorPosition / 68.0f;
+
+		if (toolSettings.invertAPOS)
+			actuatorPositionPercent = -actuatorPositionPercent;
+	}
+	else
+	{
+		// no ADS1115 — read actuator pot directly from WasPin (12-bit, 0-4095)
+		if (MDL.WasPin < NC)
+		{
+			int16_t raw = (int16_t)analogRead(MDL.WasPin);
+			actuatorPosition = raw - 2048 + toolSettings.zeroOffset_APOS;
+			actuatorPositionPercent = (float)actuatorPosition / 20.48f;
+			if (toolSettings.invertAPOS)
+				actuatorPositionPercent = -actuatorPositionPercent;
+		}
+	}
+}

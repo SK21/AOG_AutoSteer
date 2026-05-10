@@ -112,26 +112,48 @@ void SendSteerData()
     PGN_253[5] = (byte)tmp;
     PGN_253[6] = tmp >> 8;
 
-    // BNOdata
-    if (IMU_Connected())
+    // heading and roll — source depends on GPS mode
+    if (MDL.GPSSource == GPS_KSXT)
     {
-        tmp = (int)(IMU_Heading);
-        PGN_253[7] = (byte)tmp;
-        PGN_253[8] = tmp >> 8;
-
-        tmp = (int)(IMU_Roll);
-        PGN_253[9] = (byte)tmp;
-        PGN_253[10] = tmp >> 8;
+        if (GPS_Connected())
+        {
+            tmp = (int16_t)(GPS_Heading * 10.0f);
+            PGN_253[7] = (byte)tmp;
+            PGN_253[8] = tmp >> 8;
+            tmp = (int16_t)(GPS_Roll * 10.0f);
+            PGN_253[9] = (byte)tmp;
+            PGN_253[10] = tmp >> 8;
+        }
+        else
+        {
+            tmp = 9999;
+            PGN_253[7] = (byte)tmp;
+            PGN_253[8] = tmp >> 8;
+            tmp = 8888;
+            PGN_253[9] = (byte)tmp;
+            PGN_253[10] = tmp >> 8;
+        }
     }
     else
     {
-        tmp = 9999;
-        PGN_253[7] = (byte)tmp;
-        PGN_253[8] = tmp >> 8;
-
-        tmp = 8888;
-        PGN_253[9] = (byte)tmp;
-        PGN_253[10] = tmp >> 8;
+        if (IMU_Connected())
+        {
+            tmp = (int)(IMU_Heading);
+            PGN_253[7] = (byte)tmp;
+            PGN_253[8] = tmp >> 8;
+            tmp = (int)(IMU_Roll);
+            PGN_253[9] = (byte)tmp;
+            PGN_253[10] = tmp >> 8;
+        }
+        else
+        {
+            tmp = 9999;
+            PGN_253[7] = (byte)tmp;
+            PGN_253[8] = tmp >> 8;
+            tmp = 8888;
+            PGN_253[9] = (byte)tmp;
+            PGN_253[10] = tmp >> 8;
+        }
     }
 
     PGN_253[9] = (byte)tmp;
@@ -190,14 +212,6 @@ void SendHelloReply()
     helloFromAutoSteer[8] = helloSteerPosition >> 8;
     helloFromAutoSteer[9] = switchByte;
 
-    ////add the checksum
-    //int16_t CK_A = 0;
-    //for (uint8_t i = 2; i < sizeof(helloFromAutoSteer) - 1; i++)
-    //{
-    //    CK_A = (CK_A + helloFromAutoSteer[i]);
-    //}
-    //helloFromAutoSteer[sizeof(helloFromAutoSteer) - 1] = CK_A;
-
     // to ethernet
     if (Ethernet.linkStatus() == LinkON)
     {
@@ -205,7 +219,8 @@ void SendHelloReply()
         UDPsteering.write(helloFromAutoSteer, sizeof(helloFromAutoSteer));
         UDPsteering.endPacket();
 
-        if (IMU_Connected())
+        bool headingAvailable = (MDL.GPSSource == GPS_KSXT) ? GPS_Connected() : IMU_Connected();
+        if (headingAvailable)
         {
             UDPsteering.beginPacket(DestinationIP, DestinationPort);
             UDPsteering.write(helloFromIMU, sizeof(helloFromIMU));
