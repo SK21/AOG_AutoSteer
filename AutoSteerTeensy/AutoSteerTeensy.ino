@@ -37,6 +37,7 @@ const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano R
 #define IMUBaud 115200
 #define PassThruBaud 57600		// for RS232
 #define NC 0xFF					// Pin not connected
+#define ByNavBaud 115200
 
 struct ModuleConfig		// about 28 bytes
 {
@@ -215,15 +216,10 @@ float steerAngleError = 0;
 
 // Tool steer variables
 float   toolXTE_cm = 0;
-float   vehicleXTE_cm = 0;   // received in PGN 233, not used in control logic
-uint8_t guidanceStatus = 0;   // bit 0 = guidance enabled
-int16_t manualPWM = 0;   // manual override from PGN 233
-int16_t pwmDisplay = 0;   // last pwmDrive before direction inversion, sent in PGN 230
-
-#define WATCHDOG_THRESHOLD    200
-#define WATCHDOG_FORCE_VALUE  250
-
-static uint16_t watchdogTimer = WATCHDOG_FORCE_VALUE;
+float   vehicleXTE_cm = 0;		// received in PGN 233, not used in control logic
+int16_t manualPWM = 0;			// manual override from PGN 233
+int16_t pwmDisplay = 0;			// last pwmDrive before direction inversion, sent in PGN 230
+uint8_t ValveCounter = 0;
 
 void setup()
 {
@@ -241,33 +237,16 @@ void loop()
 			ReadAnalog();
 			ReadSwitches();
 			DoSteering();
-			SendSpeedPulse();
 		}
 		else  // STEER_TOOL_XTE
 		{
 			ReadActuatorPosition();
-			UpdateWatchdog();
-			if (ToolSteerEnabled())
-			{
-				if (toolSettings.isDirectionalValve)
-				{
-					BangBangDrive();
-				}
-				else
-				{
-					calcSteeringPID();
-					motorDrive();
-				}
-			}
-			else
-			{
-				pwmDrive = 0;
-				motorDrive();
-			}
-			SendToolFeedback();
+			ReadSwitchesLite();
+			DoToolSteering();
 		}
 
 		ReceiveConfig();
+		SendSpeedPulse();
 	}
 
 	ReadIMU();
@@ -283,6 +262,7 @@ void loop()
 	}
 
 	ReceiveUpdate();
+
 	if (SerialPassThruEnabled && SerialPassIn->available()) SerialPassOut->write(SerialPassIn->read());
 
 	Blink();

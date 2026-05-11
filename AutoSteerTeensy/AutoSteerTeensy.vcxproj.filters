@@ -46,7 +46,6 @@
     <ClCompile Include="SteerSwitches.ino" />
     <ClCompile Include="ToolComm.ino" />
     <ClCompile Include="Toolsteer.ino" />
-    <ClCompile Include="ToolsteerPID.ino" />
     <ClCompile Include="zNMEAParser.h">
       <Filter>Header Files</Filter>
     </ClCompile>

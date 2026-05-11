@@ -43,7 +43,7 @@ void DoSetup()
 	Serial.println(fwVer);
 
 	// receiver
-	uint32_t rxBaud = (MDL.GPSSource == GPS_ByNav) ? 115200 : ReceiverBaud;
+	uint32_t rxBaud = (MDL.GPSSource == GPS_ByNav) ? ByNavBaud : ReceiverBaud;
 	SerialReceiver = SetSerialPort(MDL.ReceiverSerialPort, rxBaud);
 	SerialReceiverEnabled = (SerialReceiver != nullptr);
 	if (SerialReceiverEnabled)
@@ -126,7 +126,20 @@ void DoSetup()
 				break;
 			}
 		}
-		if (!ADSfound)
+
+		if (ADSfound)
+		{
+			if (MDL.GPSSource == GPS_ByNav)
+			{
+				// configure ADS1115: AIN0 vs GND, ±6.144V, continuous, 128 SPS
+				Wire.beginTransmission(ADS1115_Address);
+				Wire.write(0b00000001);  // config register
+				Wire.write(0b01000000);  // AIN0, ±6.144V, continuous
+				Wire.write(0b10000011);  // 128 SPS, comparator disabled
+				Wire.endTransmission();
+			}
+		}
+		else
 		{
 			Serial.println("ADS1115 not found.");
 			Serial.println("ADS1115 disabled.");
@@ -213,7 +226,7 @@ void DoSetup()
 	{
 		SerialIMUEnabled = false;
 		Serial.println("");
-		Serial.println("IMU disabled (HPR mode).");
+		Serial.println("IMU disabled (ByNav mode).");
 	}
 
 	LoopLast = millis();

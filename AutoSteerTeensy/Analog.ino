@@ -69,7 +69,7 @@ void ReadAnalog()
 		// Bits 1:0 Comparator # before Alert pin goes high
 		//      00=1, 01=2, 10=4, 11=Disable this feature
 
-		Wire.write(0b11100011);	//860 samples/sec
+		Wire.write(0b10000011);	//128 samples/sec
 		Wire.endTransmission();
 	}
 	else
@@ -86,22 +86,8 @@ float   actuatorPositionPercent = 0;
 
 void ReadActuatorPosition()
 {
-	static bool initialized = false;
-
 	if (ADSfound)
 	{
-		if (!initialized)
-		{
-			// configure ADS1115: AIN0 vs GND, ±6.144V, continuous, 860 SPS
-			Wire.beginTransmission(ADS1115_Address);
-			Wire.write(0b00000001);  // config register
-			Wire.write(0b01000000);  // AIN0, ±6.144V, continuous
-			Wire.write(0b11100011);  // 860 SPS, comparator disabled
-			Wire.endTransmission();
-			initialized = true;
-			return;
-		}
-
 		// read last completed conversion
 		Wire.beginTransmission(ADS1115_Address);
 		Wire.write(0b00000000);  // conversion register
@@ -113,8 +99,7 @@ void ReadActuatorPosition()
 		actuatorPosition = (int16_t)(raw >> 1) - 6805 + toolSettings.zeroOffset_APOS;
 		actuatorPositionPercent = (float)actuatorPosition / 68.0f;
 
-		if (toolSettings.invertAPOS)
-			actuatorPositionPercent = -actuatorPositionPercent;
+		if (toolSettings.invertAPOS) actuatorPositionPercent = -actuatorPositionPercent;
 	}
 	else
 	{
@@ -124,8 +109,7 @@ void ReadActuatorPosition()
 			int16_t raw = (int16_t)analogRead(MDL.WasPin);
 			actuatorPosition = raw - 2048 + toolSettings.zeroOffset_APOS;
 			actuatorPositionPercent = (float)actuatorPosition / 20.48f;
-			if (toolSettings.invertAPOS)
-				actuatorPositionPercent = -actuatorPositionPercent;
+			if (toolSettings.invertAPOS) actuatorPositionPercent = -actuatorPositionPercent;
 		}
 	}
 }

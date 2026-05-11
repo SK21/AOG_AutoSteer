@@ -1,49 +1,132 @@
+static float   pValue = 0;
+static float   dValue = 0;
+static float   lastXTE_Error = 0;
+static uint8_t dCounter = 0;
 
-void UpdateWatchdog()
+void DoToolSteering()
 {
-    if (watchdogTimer < WATCHDOG_FORCE_VALUE)
-        watchdogTimer++;
+	if (ToolSteerEnabled())
+	{
+		if (toolSettings.isDirectionalValve)
+		{
+			BangBangDrive();
+		}
+		else
+		{
+			calcSteeringPID();
+		}
+	}
+	else
+	{
+		pwmDrive = 0;
+	}
+	motorDrive();
 }
+
 
 bool ToolSteerEnabled()
 {
-    return (watchdogTimer < WATCHDOG_THRESHOLD) && (guidanceStatus & 0x01);
+	return (millis() - AOGTime < 4000) && AOGsteeringReady;
 }
 
 void BangBangDrive()
 {
-    static uint8_t valveOnCounter = 0;
-    static uint8_t valveOffCounter = 0;
+	float  errorAbs = fabsf(toolXTE_cm);
+	int8_t dir = (toolXTE_cm > 0) ? 1 : -1;
 
-    float  errorAbs = fabsf(toolXTE_cm);
-    int8_t dir = (toolXTE_cm > 0) ? 1 : -1;
-
-    if (errorAbs > toolSettings.lowHighDistance)
-    {
-        // large error — full drive, reset pulse counters
-        pwmDrive = 255 * dir;
-        valveOnCounter = 0;
-        valveOffCounter = 0;
-    }
-    else
-    {
-        // small error — pulse drive
-        if (valveOnCounter < toolSettings.valveOnTime)
-        {
-            pwmDrive = 255 * dir;
-            valveOnCounter++;
-        }
-        else if (valveOffCounter < toolSettings.valveOffTime)
-        {
-            pwmDrive = 0;
-            valveOffCounter++;
-        }
-        else
-        {
-            valveOnCounter = 0;
-            valveOffCounter = 0;
-        }
-    }
-
-    motorDrive();
+	if (errorAbs > toolSettings.lowHighDistance)
+	{
+		// large error — full drive, reset pulse counters
+		pwmDrive = 255 * dir;
+		ValveCounter = 0;
+	}
+	else
+	{
+		// small error — pulse drive
+		if (ValveCounter < toolSettings.valveOnTime)
+		{
+			pwmDrive = 255 * dir;
+		}
+		else if (ValveCounter < toolSettings.valveOffTime)
+		{
+			pwmDrive = 0;
+		}
+		else
+		{
+			ValveCounter = 0;
+		}
+	}
 }
+
+void calcSteeringPID()
+{
+	float errorAbs = fabsf(toolXTE_cm);
+
+	// proportional
+	pValue = toolSettings.kP * toolXTE_cm * 0.2f;
+	pwmDrive = (int16_t)pValue;
+
+	// dynamic PWM ceiling
+	float   lowHighPerCM = (float)(toolSettings.highPWM - toolSettings.lowPWM) / toolSettings.lowHighDistance;
+	int16_t newMax;
+
+	if (errorAbs < toolSettings.lowHighDistance)
+	{
+		newMax = (int16_t)(errorAbs * lowHighPerCM + toolSettings.lowPWM);
+	}
+	else
+	{
+		newMax = toolSettings.highPWM;
+	}
+
+	if (pwmDrive > newMax) pwmDrive = newMax;
+	if (pwmDrive < -newMax) pwmDrive = -newMax;
+
+	// derivative — updated every 11 loops to reduce noise
+	if (dCounter++ > 10)
+	{
+		dValue = (toolXTE_cm - lastXTE_Error) * 30.0f * (toolSettings.kD * 0.1f);
+		lastXTE_Error = toolXTE_cm;
+		dCounter = 0;
+	}
+
+	if (dValue > toolSettings.highPWM) dValue = toolSettings.highPWM;
+	if (dValue < -toolSettings.highPWM) dValue = -toolSettings.highPWM;
+
+	pwmDrive += (int16_t)dValue;
+
+	if (pwmDrive > toolSettings.highPWM) pwmDrive = toolSettings.highPWM;
+	if (pwmDrive < -toolSettings.highPWM) pwmDrive = -toolSettings.highPWM;
+
+	// minimum PWM to overcome motor friction
+	if (pwmDrive > 0) pwmDrive += toolSettings.minPWM;
+	else if (pwmDrive < 0) pwmDrive -= toolSettings.minPWM;
+}
+
+void motorDrive()
+{
+	// manual PWM override from PGN 233
+	if (manualPWM != 0) pwmDrive = manualPWM;
+
+	if (toolSettings.invertActuator) pwmDrive *= -1;
+
+	// hard stop at actuator travel limit
+	if (fabsf(actuatorPositionPercent) > toolSettings.maxActuatorLimit)
+	{
+		if (actuatorPositionPercent > 0 && pwmDrive > 0) pwmDrive = 0;
+		if (actuatorPositionPercent < 0 && pwmDrive < 0) pwmDrive = 0;
+	}
+
+	pwmDisplay = pwmDrive;
+
+	// Dir + PWM — consistent with existing Steering.ino motor output
+	if (MDL.DirPin < NC) digitalWrite(MDL.DirPin, pwmDrive >= 0);
+	if (MDL.PWMpin < NC) analogWrite(MDL.PWMpin, abs(pwmDrive));
+}
+
+void ReadSwitchesLite()
+{
+	switchByte = digitalRead(MDL.WorkSwitchPin);
+	switchByte |= (digitalRead(MDL.SteerSwitchPin) << 1);
+}
+

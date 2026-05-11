@@ -34,7 +34,9 @@ void ReceiveToolSteerData()
 
 				case 202:
 					if (Data[4] == 3 && Data[5] == 202 && Data[6] == 202)
+					{
 						SendScanIDreply();
+					}
 					break;
 
 				case 232:
@@ -65,11 +67,22 @@ void ReceiveToolSteerData()
 					if (len >= 14)
 					{
 						toolXTE_cm = (float)(int16_t)(Data[6] << 8 | Data[5]) / 10.0f;
-						guidanceStatus = Data[7];
+
+						ValveCounter++;
+						if (bitRead(Data[7], 0) == 1)
+						{
+							AOGsteeringReady = true;
+						}
+						else
+						{
+							AOGsteeringReady = false;
+							ValveCounter = 0;
+						}
+
 						vehicleXTE_cm = (float)(int16_t)(Data[9] << 8 | Data[8]) / 10.0f;
 						Speed_KMH = Data[10] * 0.1f;
 						manualPWM = (int16_t)(Data[12] << 8 | Data[11]);
-						watchdogTimer = 0;
+						AOGTime = millis();
 						SendToolFeedback();
 					}
 					break;
@@ -89,8 +102,9 @@ void SendToolFeedback()
 
 	PGN_230_buf[7] = (uint8_t)pwmDisplay;
 	PGN_230_buf[8] = (uint8_t)(pwmDisplay >> 8);
+	PGN_230_buf[9] = switchByte;
 
-	// bytes 9–12 remain 0
+	// bytes 10–12 remain 0
 
 	int16_t CK_A = 0;
 	for (uint8_t i = 2; i < sizeof(PGN_230_buf) - 1; i++)
