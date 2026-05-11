@@ -13,7 +13,7 @@ void DoToolSteering()
 		}
 		else
 		{
-			calcSteeringPID();
+			ProportionalDrive();
 		}
 	}
 	else
@@ -58,7 +58,7 @@ void BangBangDrive()
 	}
 }
 
-void calcSteeringPID()
+void ProportionalDrive()
 {
 	float errorAbs = fabsf(toolXTE_cm);
 
@@ -68,7 +68,7 @@ void calcSteeringPID()
 
 	// dynamic PWM ceiling
 	float   lowHighPerCM = (float)(toolSettings.highPWM - toolSettings.lowPWM) / toolSettings.lowHighDistance;
-	int16_t newMax;
+	int16_t newMax = 0;
 
 	if (errorAbs < toolSettings.lowHighDistance)
 	{
