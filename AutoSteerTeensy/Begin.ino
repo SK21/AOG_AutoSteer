@@ -58,7 +58,7 @@ void DoSetup()
 		Serial.println(MDL.ReceiverSerialPort);
 		Serial.println("");
 
-		if (MDL.GPSSource == GPS_ByNav) SendPASHRConfig(SerialReceiver);
+		if (MDL.GPSSource == GPS_ByNav) ByNavConfig();
 	}
 	else
 	{

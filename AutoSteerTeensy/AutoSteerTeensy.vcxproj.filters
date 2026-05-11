@@ -38,7 +38,7 @@
     <ClCompile Include="FXUtil.h">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="GPS_PASHR.ino" />
+    <ClCompile Include="ByNav.ino" />
     <ClCompile Include="IMU.ino" />
     <ClCompile Include="Panda.ino" />
     <ClCompile Include="SteerComm.ino" />

@@ -12,7 +12,10 @@
       "WebFetch(domain:discourse.agopengps.com)",
       "WebFetch(domain:s-taka.org)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:help.fieldsystems.trimble.com)"
+      "WebFetch(domain:help.fieldsystems.trimble.com)",
+      "WebFetch(domain:www.bynav.com)",
+      "WebFetch(domain:www.bynav.cn)",
+      "WebFetch(domain:community.gpswebshop.com)"
     ]
   }
 }
