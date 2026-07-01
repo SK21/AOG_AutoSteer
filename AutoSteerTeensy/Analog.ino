@@ -86,20 +86,46 @@ float   actuatorPositionPercent = 0;
 
 void ReadActuatorPosition()
 {
+	static bool ConversionPending = false;
+
 	if (ADSfound)
 	{
-		// read last completed conversion
-		Wire.beginTransmission(ADS1115_Address);
-		Wire.write(0b00000000);  // conversion register
-		Wire.endTransmission();
-		Wire.requestFrom(ADS1115_Address, 2);
-		uint16_t raw = (Wire.read() << 8 | Wire.read());
+		// Single-shot state machine (mirrors RateControl's ReadAnalog): one loop
+		// arms a conversion on AIN0, the next loop reads it. This is self-contained,
+		// so it no longer relies on the ADS being pre-configured to free-run in
+		// Begin.ino, and each sample is guaranteed to come from AIN0.
+		// Only one I2C transaction per call keeps loop time down.
+		if (ConversionPending)
+		{
+			// read the completed conversion
+			Wire.beginTransmission(ADS1115_Address);
+			Wire.write(0b00000000);  // conversion register
+			Wire.endTransmission();
+			if (Wire.requestFrom(ADS1115_Address, 2) == 2)
+			{
+				int16_t raw = (int16_t)(Wire.read() << 8 | Wire.read());
+				if (raw < 0) raw = 0;
 
-		// 14-bit result, mid-scale ~6805 counts at 2.5V
-		actuatorPosition = (int16_t)(raw >> 1) - 6805 + toolSettings.zeroOffset_APOS;
-		actuatorPositionPercent = (float)actuatorPosition / 68.0f;
+				// 14-bit result, mid-scale ~6805 counts at 2.5V
+				actuatorPosition = (int16_t)((uint16_t)raw >> 1) - 6805 + toolSettings.zeroOffset_APOS;
+				actuatorPositionPercent = (float)actuatorPosition / 68.0f;
 
-		if (toolSettings.invertAPOS) actuatorPositionPercent = -actuatorPositionPercent;
+				if (toolSettings.invertAPOS) actuatorPositionPercent = -actuatorPositionPercent;
+
+				ConversionPending = false;
+			}
+		}
+		else
+		{
+			// start a new single-shot conversion on AIN0
+			Wire.beginTransmission(ADS1115_Address);
+			Wire.write(0b00000001);  // config register
+			Wire.write(0b11000001);  // start, AIN0, ±6.144V, single-shot
+			Wire.write(0b10000011);  // 128 SPS, comparator disabled
+			Wire.endTransmission();
+
+			ConversionPending = true;
+		}
 	}
 	else
 	{

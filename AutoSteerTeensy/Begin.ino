@@ -14,6 +14,7 @@ void DoSetup()
 	// eeprom
 	LoadData();
 	LoadNetworks();
+	LoadBoardID();
 
 	Serial.println("");
 	Serial.println(InoDescription);
@@ -126,19 +127,7 @@ void DoSetup()
 			}
 		}
 
-		if (ADSfound)
-		{
-			if (MDL.GPSSource == GPS_ByNav)
-			{
-				// configure ADS1115: AIN0 vs GND, ±6.144V, continuous, 128 SPS
-				Wire.beginTransmission(ADS1115_Address);
-				Wire.write(0b00000001);  // config register
-				Wire.write(0b01000000);  // AIN0, ±6.144V, continuous
-				Wire.write(0b10000011);  // 128 SPS, comparator disabled
-				Wire.endTransmission();
-			}
-		}
-		else
+		if (!ADSfound)
 		{
 			Serial.println("ADS1115 not found.");
 			Serial.println("ADS1115 disabled.");
@@ -400,4 +389,29 @@ HardwareSerialIMXRT* SetSerialPort(uint8_t port, uint32_t baud)
 
 	if (NewPort != nullptr) NewPort->begin(baud);
 	return NewPort;
+}
+
+void LoadBoardID()
+{
+	// Independent EEPROM slot, NOT guarded by InoID, so the board label survives a firmware
+	// reflash / LoadDefaults (it identifies the hardware, not the settings).
+	BoardLabel tmp;
+	EEPROM.get(EE_BoardID, tmp);
+	if (tmp.Identifier == BoardIDMagic)
+	{
+		MDLboard = tmp;
+	}
+	else
+	{
+		// uninitialized EEPROM -> start with an empty label
+		MDLboard.Identifier = BoardIDMagic;
+		memset(MDLboard.Text, 0, sizeof(MDLboard.Text));
+		SaveBoardID();
+	}
+}
+
+void SaveBoardID()
+{
+	MDLboard.Identifier = BoardIDMagic;
+	EEPROM.put(EE_BoardID, MDLboard);
 }

@@ -115,6 +115,26 @@ void ReceiveConfig()
 					}
 				}
 				break;
+
+			case 32506:
+				// PGN32506, set board ID label from RC to module (stored in EEPROM, survives reflash)
+				//0		HeaderLo	250
+				//1		HeaderHi	126
+				//2		ModuleID	(high nibble)
+				//3-18	16 chars	board label, 0-padded
+				//19	CRC
+
+				PGNlength = 20;
+
+				if (len > PGNlength - 1 )
+				{
+					if (GoodCRC(Data, PGNlength) && ParseModID(Data[2]) == MDL.ID)
+					{
+						for (byte b = 0; b < 16; b++) MDLboard.Text[b] = Data[3 + b];
+						SaveBoardID();
+					}
+				}
+				break;
 			}
 		}
 	}
@@ -195,6 +215,30 @@ void SendStatus()
 		UDPconfig.beginPacket(DestinationIP, ConfigDestinationPort);
 		UDPconfig.write(data, PGNlength);
 		UDPconfig.endPacket();
+	}
+
+	// PGN32403, board ID label report from module to RC (slow cyclic - static label)
+	//0     HeaderLo    147
+	//1     HeaderHi    126
+	//2     Module ID   (high nibble)
+	//3-18  16 chars    board label, 0-padded
+	//19    CRC
+	static uint32_t BoardIDLast = 0;
+	if (millis() - BoardIDLast > 2000)
+	{
+		BoardIDLast = millis();
+		byte B[20];
+		B[0] = 147;
+		B[1] = 126;
+		B[2] = MDL.ID;	// raw module ID, matching the module-level status report (PGN 32401)
+		for (byte k = 0; k < 16; k++) B[3 + k] = MDLboard.Text[k];
+		B[19] = CRC(B, 19, 0);
+		if (Ethernet.linkStatus() == LinkON)
+		{
+			UDPconfig.beginPacket(DestinationIP, DestinationPort);
+			UDPconfig.write(B, 20);
+			UDPconfig.endPacket();
+		}
 	}
 }
 

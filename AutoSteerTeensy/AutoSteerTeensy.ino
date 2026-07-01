@@ -22,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 30066;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 1076;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 // GPS source (stored in MDL.GPSSource)
@@ -132,6 +132,16 @@ struct Tool_Settings
 };
 
 Tool_Settings toolSettings;   // 17 bytes, EEPROM offset 60 in STEER_TOOL_XTE mode
+
+// board text ID for pcb
+struct BoardLabel
+{
+	uint16_t Identifier;	// magic to detect an initialized slot
+	char Text[16];			// up to 16 chars; app 0-pads short strings
+};
+BoardLabel MDLboard;
+const int EE_BoardID = 178;			// free EEPROM region 
+const uint16_t BoardIDMagic = 4321;	// marks an initialized board label slot
 
 // Ethernet steering
 EthernetUDP UDPsteering;	// UDP Steering traffic, to and from AGIO
