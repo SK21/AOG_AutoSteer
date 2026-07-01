@@ -2,9 +2,9 @@
 // autosteer for Teensy 4.1
 
 #include <Wire.h>
-#include <EEPROM.h> 
-#include <NativeEthernet.h>
-#include <NativeEthernetUdp.h>
+#include <EEPROM.h>
+#include <QNEthernet.h>		// https://github.com/ssilverman/QNEthernet  (lwIP stack for Teensy 4.1)
+using namespace qindesign::network;	// brings Ethernet / EthernetUDP / EthernetServer into scope
 
 #include "zNMEAParser.h"	
 #include "Adafruit_BNO08x_RVC.h"	// https://github.com/VikingVoltage/Adafruit_BNO08x_RVC/tree/Get-most-recent-BNO08x-Data-from-Serial-Buffer
@@ -254,6 +254,8 @@ void setup()
 
 void loop()
 {
+	Ethernet.loop();	// service QNEthernet (link detection + lwIP) every pass
+
 	if (millis() - LoopLast >= LOOP_TIME)
 	{
 		LoopLast = millis();

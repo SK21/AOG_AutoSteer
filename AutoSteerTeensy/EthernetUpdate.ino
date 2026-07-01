@@ -42,7 +42,7 @@ void ReceiveUpdate()
 	// receive firmware update
 	if (Ethernet.linkStatus() == LinkON)
 	{
-		uint16_t PacketLength = UpdateComm.parsePacket();
+		int PacketLength = UpdateComm.parsePacket();	// QNEthernet returns -1 when empty; signed + > 0
 		if (PacketLength > 0)
 		{
 			if (PacketLength > 500) PacketLength = 500;

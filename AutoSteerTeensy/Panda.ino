@@ -13,10 +13,13 @@ bool isGGA_Updated = false;
 
 void DoPanda()
 {
-	// GPS corrections from AGIO to receiver
+	// GPS corrections from AGIO to receiver.
+	// QNEthernet's parsePacket() returns -1 (not 0) when nothing is waiting, so test > 0 and
+	// clamp the length before read() — passing a negative size overruns NtripBuffer and faults.
 	int packetSize = UDPntrip.parsePacket();
-	if (packetSize)
+	if (packetSize > 0)
 	{
+		if (packetSize > (int)sizeof(NtripBuffer)) packetSize = sizeof(NtripBuffer);
 		UDPntrip.read(NtripBuffer, packetSize);
 		if (SerialReceiverEnabled) SerialReceiver->write(NtripBuffer, packetSize);
 	}

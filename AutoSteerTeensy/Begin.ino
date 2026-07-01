@@ -138,16 +138,23 @@ void DoSetup()
 	// analog pins
 	analogReadResolution(12);
 
-	// ethernet 
+	// ethernet
 	Serial.println("Starting Ethernet ...");
 	MDLnetwork.IP3 = 126;
 	IPAddress LocalIP(MDLnetwork.IP0, MDLnetwork.IP1, MDLnetwork.IP2, MDLnetwork.IP3);
-	static uint8_t LocalMac[] = { 0x00,0x0B,0x42,0x11,0x22,MDLnetwork.IP3 };
+	IPAddress SubnetMask(255, 255, 255, 0);
+	IPAddress Gateway(MDLnetwork.IP0, MDLnetwork.IP1, MDLnetwork.IP2, 1);
 
-	Ethernet.begin(LocalMac, 0);
-	Ethernet.setLocalIP(LocalIP);
+	// QNEthernet static-IP bring-up. QNEthernet has a valid built-in MAC, so no
+	// pre-begin config calls are needed.
+	Ethernet.begin(LocalIP, SubnetMask, Gateway);
 
-	delay(1000);
+	// QNEthernet negotiates the PHY link more slowly than NativeEthernet; wait up to
+	// 4 s so the printed status is accurate (delay() yields, which services the stack).
+	// If it times out, the link still comes up on its own once loop() is running.
+	uint32_t linkWait = millis();
+	while (Ethernet.linkStatus() != LinkON && millis() - linkWait < 4000) delay(50);
+
 	if (Ethernet.linkStatus() == LinkON)
 	{
 		Serial.println("Ethernet Connected.");
@@ -337,11 +344,33 @@ void LoadDefaults()
 	MDL.SpeedPulsePin = NC;
 	MDL.SpeedPulseCal = 255;
 	MDL.ZeroOffset = 0;
-	MDL.IMUtype = 0;
+	MDL.IMUtype = 0;	// 0 BNO080, 1 TM171
 	MDL.ADS1115Enabled = false;
 	MDL.AutoZero = false;
 	MDL.GPSSource = 0;   // GPS_F9P_IMU
 	MDL.SteeringMode = 0;   // STEER_WHEEL_ANGLE
+
+	// temp changes for testing
+	MDL.ReceiverSerialPort = 8;
+	MDL.IMUSerialPort = 5;
+	MDL.PassThruInSerialPort = 3;
+	MDL.PassThrOutSerialPort = 1;
+	MDL.PowerRelayPin = 0;
+	MDL.SteeringRelayPin = 7;
+	MDL.SteerSwitchPin = 26;
+	MDL.WorkSwitchPin = 27;
+	MDL.WasPin = 25;
+	MDL.AnalogPin = 26;
+	MDL.DirPin = 23;
+	MDL.PWMpin = 22;
+	MDL.PWMFrequency = 490;
+	MDL.EncoderPin = NC;
+	MDL.SpeedPulsePin = NC;
+	MDL.SpeedPulseCal = 255;
+	MDL.ZeroOffset = 0;
+	MDL.IMUtype = 0;
+	MDL.ADS1115Enabled = true;
+	MDL.AutoZero = false;
 }
 
 void LoadNetworks()

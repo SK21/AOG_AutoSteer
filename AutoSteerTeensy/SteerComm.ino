@@ -5,8 +5,8 @@ void ReceiveSteerData()
 
     if (Ethernet.linkStatus() == LinkON)
     {
-        uint16_t len = UDPsteering.parsePacket();
-        if (len)
+        int len = UDPsteering.parsePacket();	// QNEthernet returns -1 when empty; use signed + > 0
+        if (len > 0)
         {
             uint8_t SettingsByte;
             byte Data[MaxReadBuffer];

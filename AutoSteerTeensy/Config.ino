@@ -3,8 +3,8 @@ void ReceiveConfig()
 {
 	if (Ethernet.linkStatus() == LinkON)
 	{
-		uint16_t len = UDPconfig.parsePacket();
-		if (len)
+		int len = UDPconfig.parsePacket();	// QNEthernet returns -1 when empty; use signed + > 0
+		if (len > 0)
 		{
 			uint8_t PGNlength;
 			byte Data[35];
@@ -34,10 +34,7 @@ void ReceiveConfig()
 				//          - bit 1, -
 				//          - bit 2, use ADS1115
 				//			- bit 3, Auto zero WAS
-				//15	IMU type	0 BNO080, 1 TM171
-				//16	GPS source	0 F9P+IMU, 1 ByNav
-				//17	Steering mode	0 wheel angle, 1 tool XTE
-				//18	CRC
+
 
 				PGNlength = 19;
 				if (len > PGNlength - 1)
