@@ -173,6 +173,9 @@ void DoSetup()
 	UDPntrip.begin(NtripPort);
 	UpdateComm.begin(UpdateReceivePort);
 
+	// settings web page
+	webServer.begin();
+
 	// GPS pass-through
 	SerialPassIn = SetSerialPort(MDL.PassThruInSerialPort, PassThruBaud);
 	SerialPassOut = SetSerialPort(MDL.PassThrOutSerialPort, PassThruBaud);

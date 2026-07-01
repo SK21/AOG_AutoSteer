@@ -166,6 +166,11 @@ const uint16_t UpdateSendPort = 29000;
 uint32_t buffer_addr, buffer_size;
 bool FirmwareUpdateMode = false;
 
+// web settings server (QNEthernet)
+EthernetServer webServer(80);
+bool webRebootPending = false;		// POST handlers defer the reset so the reply flushes first
+uint32_t webRebootAt = 0;
+
 //steering variables
 float steerAngleActual = 0;
 float steerAngleSetPoint = 0; //the desired angle from AgOpen
@@ -254,7 +259,7 @@ void setup()
 
 void loop()
 {
-	Ethernet.loop();	// service QNEthernet (link detection + lwIP) every pass
+	DoWebUI();
 
 	if (millis() - LoopLast >= LOOP_TIME)
 	{

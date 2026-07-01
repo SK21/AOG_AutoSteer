@@ -58,6 +58,7 @@
     <ClCompile Include="EasyProfile\EasyProtocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WebUI.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.AutoSteerTeensy.vsarduino.h">
