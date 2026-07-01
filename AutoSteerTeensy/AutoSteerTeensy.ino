@@ -316,18 +316,18 @@ void Blink()
 		BlinkTmr = 0;
 		State = !State;
 		digitalWrite(LED_BUILTIN, State);
-		//if (!FirmwareUpdateMode)
-		//{
-		//	Serial.print(MaxLoopTime);
+		if (!FirmwareUpdateMode)
+		{
+			//Serial.print(MaxLoopTime);
 
-		//	Serial.println("");
+			//Serial.println("");
 
-		//	if (Count++ > 10)
-		//	{
-		//		Count = 0;
-		//		MaxLoopTime = 0;
-		//	}
-		//}
+			if (Count++ > 10)
+			{
+				Count = 0;
+				MaxLoopTime = 0;
+			}
+		}
 
 		//Serial.println("");
 		//Serial.print(debug1);

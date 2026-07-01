@@ -352,28 +352,6 @@ void LoadDefaults()
 	MDL.AutoZero = false;
 	MDL.GPSSource = 0;   // GPS_F9P_IMU
 	MDL.SteeringMode = 0;   // STEER_WHEEL_ANGLE
-
-	// temp changes for testing
-	MDL.ReceiverSerialPort = 8;
-	MDL.IMUSerialPort = 5;
-	MDL.PassThruInSerialPort = 3;
-	MDL.PassThrOutSerialPort = 1;
-	MDL.PowerRelayPin = 0;
-	MDL.SteeringRelayPin = 7;
-	MDL.SteerSwitchPin = 26;
-	MDL.WorkSwitchPin = 27;
-	MDL.WasPin = 25;
-	MDL.AnalogPin = 26;
-	MDL.DirPin = 23;
-	MDL.PWMpin = 22;
-	MDL.PWMFrequency = 490;
-	MDL.EncoderPin = NC;
-	MDL.SpeedPulsePin = NC;
-	MDL.SpeedPulseCal = 255;
-	MDL.ZeroOffset = 0;
-	MDL.IMUtype = 0;
-	MDL.ADS1115Enabled = true;
-	MDL.AutoZero = false;
 }
 
 void LoadNetworks()

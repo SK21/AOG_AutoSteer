@@ -166,6 +166,7 @@ static String webCss()
 	st += ".label-normal { font-weight:normal; }";
 	st += ".hint { font-size: 12px; color: #333; margin-top: 4px; }";
 	st += ".status { margin: 2px auto 16px; font-size: 16px; }";
+	st += ".preset-btn { background-image: linear-gradient(rgba(179,132,201,.84), rgba(57,31,91,.84) 50%); color:#fff; border:0; border-radius:20px; padding:8px 16px; margin:4px; font-size:16px; font-weight:700; cursor:pointer; }";
 	return st;
 }
 
@@ -261,8 +262,20 @@ static String webPagePins()
 	st += webRowNum("RS232 in port",        "PassThruInSerialPort", MDL.PassThruInSerialPort);
 	st += webRowNum("IMU serial port",      "IMUSerialPort",        MDL.IMUSerialPort);
 	st += "</table>";
-	st += "<p><input class='button-72' id='submitBtn' type='submit' value='Save / Restart'></p>";
+	st += "<hr style='width:80%;margin:28px auto 8px;border:0;border-top:2px solid #b38fc9;'>";
+	st += "<div style='text-align:center;margin:8px auto 4px;'><span class='label-normal'>Load board preset</span><br>";
+	st += "<button type='button' class='preset-btn' onclick=\"preset('AS15')\">AS15</button>";
+	st += "<button type='button' class='preset-btn' onclick=\"preset('AS15-2')\">AS15-2</button>";
+	st += "<button type='button' class='preset-btn' onclick=\"preset('AS15-3')\">AS15-3</button>";
+	st += "<div class='hint'>Fills the fields above (blank pins = 255, not connected). Nothing is saved until you press Save / Restart.</div></div>";
+	st += "<p style='margin-top:8px'><input class='button-72' type='submit' value='Save / Restart'></p>";
 	st += "</form><p><a href='/'>Back</a></p>";
+	// board presets (values from the PCB reference table); blanks = 255 (NC)
+	st += "<script>var P={";
+	st += "'AS15':{ReceiverSerialPort:8,IMUSerialPort:5,PassThruInSerialPort:255,PassThrOutSerialPort:255,PowerRelayPin:0,SteeringRelayPin:7,SteerSwitchPin:26,WorkSwitchPin:27,WasPin:255,AnalogPin:255,DirPin:23,PWMpin:22},";
+	st += "'AS15-2':{ReceiverSerialPort:8,IMUSerialPort:5,PassThruInSerialPort:3,PassThrOutSerialPort:1,PowerRelayPin:255,SteeringRelayPin:7,SteerSwitchPin:26,WorkSwitchPin:27,WasPin:255,AnalogPin:255,DirPin:23,PWMpin:22},";
+	st += "'AS15-3':{ReceiverSerialPort:4,IMUSerialPort:3,PassThruInSerialPort:8,PassThrOutSerialPort:2,PowerRelayPin:0,SteeringRelayPin:1,SteerSwitchPin:30,WorkSwitchPin:31,WasPin:25,AnalogPin:26,DirPin:23,PWMpin:22}";
+	st += "};function preset(b){var p=P[b];for(var k in p){var e=document.getElementsByName(k);if(e.length)e[0].value=p[k];}}</script>";
 	st += webFoot();
 	return st;
 }
@@ -279,8 +292,16 @@ static String webPageModes()
 	st += webRowCheck("Auto-zero WAS", "autozero", MDL.AutoZero);
 	st += webRowCheck("Zero WAS now",  "zerowas",  false);
 	st += "</table>";
+	st += "<hr style='width:80%;margin:32px auto 8px;border:0;border-top:2px solid #b38fc9;'>";
+	st += "<div style='text-align:center;margin:8px auto 24px;'><span class='label-normal'>ADS1115 board preset</span><br>";
+	st += "<button type='button' class='preset-btn' onclick=\"presetAds('AS15')\">AS15</button>";
+	st += "<button type='button' class='preset-btn' onclick=\"presetAds('AS15-2')\">AS15-2</button>";
+	st += "<button type='button' class='preset-btn' onclick=\"presetAds('AS15-3')\">AS15-3</button>";
+	st += "<div class='hint'>Sets Use ADS1115 &mdash; AS15 / AS15-2: ON, AS15-3: OFF. Nothing is saved until you press Save / Restart.</div></div>";
 	st += "<p><input class='button-72' id='submitBtn' type='submit' value='Save / Restart'></p>";
 	st += "</form><p><a href='/'>Back</a></p>";
+	st += "<script>var A={'AS15':true,'AS15-2':true,'AS15-3':false};";
+	st += "function presetAds(b){document.getElementsByName('ads')[0].checked=A[b];}</script>";
 	st += webFoot();
 	return st;
 }
@@ -434,9 +455,9 @@ void HandleWebClient()
 	while (remaining > 0 && client.connected() && (millis() - tsend < 2000))
 	{
 		size_t n = client.write((const uint8_t*)p, remaining);
-		client.flush();
 		if (n > 0) { p += n; remaining -= n; tsend = millis(); }
-		else delay(1);
+		client.flush();
+		Ethernet.loop();	// let the stack push/drain the buffer instead of sleeping 1 ms
 	}
 	client.stop();
 }
