@@ -275,6 +275,9 @@ void loop()
 		SendSpeedPulse();
 	}
 
+	// service machine steering CAN RX every loop (no-op unless STEER_CAN_ENABLED)
+	CAN_Process();
+
 	ReadIMU();
 	DoPanda();
 

@@ -219,6 +219,9 @@ void DoSetup()
 
 	LoopLast = millis();
 
+	// machine steering CAN buses (no-op unless STEER_CAN_ENABLED is defined)
+	CAN_Begin();
+
 	Serial.println("");
 	Serial.println("Finished setup.");
 	Serial.println("");
