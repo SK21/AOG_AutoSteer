@@ -298,9 +298,9 @@ void Blink()
 {
 	static elapsedMillis BlinkTmr;
 	static bool State = false;
-	//static elapsedMicros LoopTmr;
-	//static byte Count = 0;
-	//static bool Initialized = false;
+	static elapsedMicros LoopTmr;
+	static byte Count = 0;
+	static bool Initialized = false;
 
 	if (BlinkTmr > 1000)
 	{
@@ -321,14 +321,14 @@ void Blink()
 		//}
 	}
 
-	//if (!Initialized)
-	//{
-	//	Initialized = true;
-	//	MaxLoopTime = LoopTmr;
-	//}
+	if (!Initialized)
+	{
+		Initialized = true;
+		MaxLoopTime = LoopTmr;
+	}
 
-	//if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
-	//LoopTmr = 0;
+	if (LoopTmr > MaxLoopTime) MaxLoopTime = LoopTmr;
+	LoopTmr = 0;
 }
 
 bool GoodCRC(byte Data[], byte Length)
