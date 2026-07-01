@@ -22,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 10056;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 30066;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 // GPS source (stored in MDL.GPSSource)
@@ -220,6 +220,22 @@ float   vehicleXTE_cm = 0;		// received in PGN 233, not used in control logic
 int16_t manualPWM = 0;			// manual override from PGN 233
 int16_t pwmDisplay = 0;			// last pwmDrive before direction inversion, sent in PGN 230
 uint8_t ValveCounter = 0;
+
+//GGA
+char fixTime[12];
+char latitude[15];
+char latNS[3];
+char longitude[15];
+char lonEW[3];
+char fixQuality[2];
+char numSats[4];
+char HDOP[5];
+char altitude[12];
+char ageDGPS[10];
+
+//VTG
+char vtgHeading[12];
+char speedKnots[10];
 
 void setup()
 {

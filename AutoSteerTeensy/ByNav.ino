@@ -15,31 +15,68 @@
 // 11   status      9   2
 // 12   check sum   10  10
 
-void PASHR_Handler()
+// decimal degrees -> NMEA ddmm.mmmmm (+ hemisphere)
+static void degToNMEA(double deg, char* out, char* hemi, bool isLat)
 {
-	char buf[12];
+	hemi[0] = isLat ? (deg < 0 ? 'S' : 'N') : (deg < 0 ? 'W' : 'E');
+	hemi[1] = '\0';
+	deg = fabs(deg);
+	int    d = (int)deg;
+	double m = (deg - d) * 60.0;
+	if (isLat) sprintf(out, "%02d%08.5f", d, m);   // e.g. 5325.45456
+	else       sprintf(out, "%03d%08.5f", d, m);   // e.g. 10340.65736
+}
 
-	// solution status field[9]: 0=invalid, 1=single point, 2=RTK
-	parser.getArg(9, buf);
-	if (atoi(buf) < 1) return;
+static char    _ksxtBuf[160];
+static uint8_t _ksxtIdx = 0;
 
+void KSXT_Feed(char c)
+{
+	if (c == '$') _ksxtIdx = 0;
+	if (_ksxtIdx < sizeof(_ksxtBuf) - 1) _ksxtBuf[_ksxtIdx++] = c;
+	if (c == '\n')
+	{
+		_ksxtBuf[_ksxtIdx] = '\0';
+		if (strncmp(_ksxtBuf, "$KSXT,", 6) == 0) ParseKSXT(_ksxtBuf);
+		_ksxtIdx = 0;
+	}
+}
+
+// $KSXT,YYYYMMDDHHMMSS.ss,lon,lat,alt,head,pitch,roll,spd(m/s),,posQual,hdgQual,sats,...*<32-bit CRC>
+void ParseKSXT(char* s)
+{
+	char* f[22]; uint8_t n = 0; char* p = s + 6;   // skip "$KSXT,"
+	f[n++] = p;
+	while (*p && n < 22) { if (*p == ',' || *p == '*') { *p = '\0'; f[n++] = p + 1; } p++; }
+	if (n < 12) return;                            // need through sats
+	if (atoi(f[9]) < 1) return;                    // field[9] pos fix status: 0 = no fix
+
+	// time: extract hhmmss.ss from YYYYMMDDHHMMSS.ss
+	if (strlen(f[0]) >= 14) { strncpy(fixTime, f[0] + 8, 11); fixTime[11] = '\0'; }
+
+	// position (KSXT is decimal degrees → NMEA)
+	degToNMEA(atof(f[2]), latitude, latNS, true);
+	degToNMEA(atof(f[1]), longitude, lonEW, false);
+
+	strncpy(altitude, f[3], sizeof(altitude) - 1); altitude[sizeof(altitude) - 1] = '\0';
+	fixQuality[0] = f[9][0]; fixQuality[1] = '\0';           // may need remap for RTK display
+	strncpy(numSats, f[11], sizeof(numSats) - 1); numSats[sizeof(numSats) - 1] = '\0';
+	strcpy(HDOP, "1.0");                                     // not in KSXT
+	strcpy(ageDGPS, "0");                                    // not in KSXT
+
+	// speed m/s → knots
+	sprintf(speedKnots, "%.3f", atof(f[7]) * 1.94384f);
+
+	// attitude → shared ATT_ globals (heading used by BuildPanda + SteerComm)
 	ATT_Time = millis();
-
-	// heading: field[1], degrees True North 0-360
-	parser.getArg(1, buf);
-	ATT_Heading = atof(buf) * 10.0f;
-
-	// roll: field[3], degrees
-	parser.getArg(3, buf);
-	ATT_Roll = atof(buf) * 10.0f;
+	ATT_Heading = atof(f[4]) * 10.0f;   // field[4] heading
+	ATT_Pitch = atof(f[5]) * 10.0f;   // field[5] pitch
+	ATT_Roll = atof(f[6]) * 10.0f;   // field[6] roll (0.00 flat = correct)
 	itoa((int16_t)ATT_Roll, attRoll, 10);
-
-	// pitch: field[4], degrees
-	parser.getArg(4, buf);
-	ATT_Pitch = atof(buf) * 10.0f;
 	itoa((int16_t)ATT_Pitch, attPitch, 10);
-
 	itoa(0, attYawRate, 10);
+
+	BuildPanda();
 }
 
 void ByNavConfig()
@@ -49,6 +86,9 @@ void ByNavConfig()
 	if (ByNavValueMatches())
 	{
 		Serial.println("ByNav saved config found.");
+		// log config
+		delay(200);
+		SerialReceiver->println("LOG COM1 KSXT ONTIME 0.1");   delay(100);
 	}
 	else
 	{
@@ -56,12 +96,6 @@ void ByNavConfig()
 		SendFullConfig();
 	}
 
-	// log config
-	delay(200);
-	SerialReceiver->println("UNLOGALL");              delay(100);
-	SerialReceiver->println("LOG GNGGA ONTIME 0.1");  delay(100);
-	SerialReceiver->println("LOG GNVTG ONTIME 0.1");  delay(100);
-	SerialReceiver->println("LOG PASHR ONTIME 0.1");  delay(100);
 
 	Serial.println("ByNav config finished.");
 }
@@ -115,13 +149,13 @@ void SendFullConfig()
 	delay(200);
 	SerialReceiver->println("UNLOGALL");                     delay(100);
 	SerialReceiver->println("RTKTYPE ROVER");                delay(100);
-	SerialReceiver->println("WORKFREQS ALL ALL");            delay(100);
 	SerialReceiver->println("SET OBSFREQ 10");               delay(100);
 	SerialReceiver->println("HEADINGOFFSET 90");             delay(100);
 	SerialReceiver->println("DUALANTENNAPOWER ON");          delay(100);
 	SerialReceiver->println("RTKTIMEOUT 500");               delay(100);
 	SerialReceiver->println("INTERFACEMODE COM1 AUTO AUTO"); delay(100);
 	SerialReceiver->println("SNRCUTOFF 15");                 delay(100);
+	SerialReceiver->println("LOG COM1 KSXT ONTIME 0.1");     delay(100);
 	SerialReceiver->println("SAVECONFIG");                   delay(1000);
 	SerialReceiver->println("REBOOT");                       delay(8000);
 }

@@ -71,7 +71,6 @@ void DoSetup()
 	parser.setErrorHandler(errorHandler);
 	parser.addHandler("G-GGA", GGA_Handler);
 	parser.addHandler("G-VTG", VTG_Handler);
-	parser.addHandler("PASHR", PASHR_Handler);
 
 	// pins
 	if (MDL.WorkSwitchPin < NC) pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);
