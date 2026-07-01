@@ -296,6 +296,8 @@ void loop()
 	Blink();
 }
 
+//uint16_t debug1;
+//uint16_t debug2;
 void Blink()
 {
 	static elapsedMillis BlinkTmr;
@@ -321,6 +323,11 @@ void Blink()
 		//		MaxLoopTime = 0;
 		//	}
 		//}
+
+		//Serial.println("");
+		//Serial.print(debug1);
+		//Serial.print(", ");
+		//Serial.print(debug2);
 	}
 
 	if (!Initialized)

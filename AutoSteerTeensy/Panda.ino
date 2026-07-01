@@ -165,7 +165,6 @@ void BuildPanda()
 	strcat(nme, "\r\n");
 
 	uint16_t len = strlen(nme);
-
 	// to ethernet
 	if (Ethernet.linkStatus() == LinkON)
 	{
