@@ -99,6 +99,69 @@ static void webScheduleReboot()
 	webRebootAt = millis() + 1500;	// leave time for the reply to be sent
 }
 
+// firmware version string, decoded from InoID exactly like DoBegin() in Begin.ino (ddmmy)
+static String webFwVersion()
+{
+	uint16_t yr   = InoID % 10 + 2020;
+	uint16_t rest = InoID / 10;
+	uint8_t  mn   = rest % 100;
+	uint16_t dy   = rest / 100;
+
+	if (mn > 12 || dy > 31) return "invalid";
+
+	String v = "v";
+	v += String(yr);
+	v += ".";
+	if (mn < 10) v += "0";
+	v += String(mn);
+	v += ".";
+	if (dy < 10) v += "0";
+	v += String(dy);
+	return v;
+}
+
+// green/grey indicator for a boolean flag
+static String webFlag(bool on)
+{
+	return on ? "<span style='color:#127a12;font-weight:700;'>ON</span>"
+	          : "<span style='color:#999;'>off</span>";
+}
+
+// one status row; the value cell carries an id so /status polling can update it in place
+static String webRowStatus(const char* label, const char* id, const String& value)
+{
+	String st = "<tr><td class='label-col'>";
+	st += label;
+	st += "</td><td class='input-col' id='";
+	st += id;
+	st += "'>";
+	st += value;
+	st += "</td></tr>";
+	return st;
+}
+
+// compact JSON snapshot of the PGN 32505 fields, polled by the main page
+static String webStatusJson()
+{
+	int16_t currentWas = (int16_t)WasReading - (int16_t)MDL.ZeroOffset;
+	String j = "{";
+	j += "\"h\":"    + String(ATT_Heading / 10.0f, 1);	// ATT_Heading is decidegrees (0-3600)
+	j += ",\"was\":" + String(WasReading);
+	j += ",\"cwas\":"+ String(currentWas);
+	j += ",\"zo\":"  + String(MDL.ZeroOffset);
+	j += ",\"cur\":" + String((int)AnalogReadingAverage);
+	j += ",\"loop\":"+ String(MaxLoopTime);
+	j += ",\"imu\":" + String(SerialIMUEnabled ? 1 : 0);
+	j += ",\"rcv\":" + String(SerialReceiverEnabled ? 1 : 0);
+	j += ",\"pt\":"  + String(SerialPassThruEnabled ? 1 : 0);
+	j += ",\"ads\":" + String(ADSfound ? 1 : 0);
+	j += ",\"aog\":" + String((millis() - AOGTime < 4000) ? 1 : 0);
+	j += ",\"steer\":" + String(AOGsteeringReady ? 1 : 0);
+	j += ",\"sw\":"  + String(SteerSwitch == LOW ? 1 : 0);
+	j += "}";
+	return j;
+}
+
 // ---------- theme (ported verbatim from the ESP32 module's PgNetwork.ino GetPage2) ----------
 
 static String webCss()
@@ -231,15 +294,52 @@ static String webRowCheck(const char* label, const char* name, bool checked)
 static String webPageMain()
 {
 	String st = webHead("AutoSteer Setup", nullptr);
+
 	st += "<h1 align=center>AutoSteer</h1>";
-	st += "<table class='center'>";
-	st += "<tr><td class='label-col'>IP Address</td><td class='input-col'>" + webIP() + "</td></tr>";
-	st += "<tr><td class='label-col'>Firmware ID</td><td class='input-col'>" + String(InoID) + "</td></tr>";
-	st += "<tr><td class='label-col'>Board Label</td><td class='input-col'>" + webBoardLabel() + "</td></tr>";
-	st += "</table>";
+
+	// --- navigation ---
 	st += "<p><a class='button-72' href='/pins'>Pins &amp; Ports</a></p>";
 	st += "<p><a class='button-72' href='/modes'>Modes</a></p>";
 	st += "<p><a class='button-72' href='/label'>Board Label</a></p>";
+
+	// --- identity ---
+	st += "<table class='center'>";
+	st += "<tr><td class='label-col'>IP Address</td><td class='input-col'>" + webIP() + "</td></tr>";
+	st += "<tr><td class='label-col'>Firmware Version</td><td class='input-col'>" + webFwVersion() + "</td></tr>";
+	st += "<tr><td class='label-col'>Board Label</td><td class='input-col'>" + webBoardLabel() + "</td></tr>";
+	st += "</table>";
+
+	// --- live status (mirrors PGN 32505, see SendStatus() in Config.ino) ---
+	// Values are seeded server-side, then refreshed by polling /status (small JSON)
+	// so the heavy HTML page is served only once and the steer loop isn't hammered.
+	int16_t currentWas = (int16_t)WasReading - (int16_t)MDL.ZeroOffset;
+	st += "<table class='center'>";
+	st += webRowStatus("IMU heading",       "h",     String(ATT_Heading / 10.0f, 1));	// decidegrees -> degrees
+	st += webRowStatus("WAS reading",       "was",   String(WasReading));
+	st += webRowStatus("Current WAS",       "cwas",  String(currentWas));
+	st += webRowStatus("Zero offset",       "zo",    String(MDL.ZeroOffset));
+	st += webRowStatus("Current sensor",    "cur",   String((int)AnalogReadingAverage));
+	st += webRowStatus("Max loop time",     "loop",  String(MaxLoopTime) + " us");
+	st += webRowStatus("IMU enabled",       "imu",   webFlag(SerialIMUEnabled));
+	st += webRowStatus("Receiver enabled",  "rcv",   webFlag(SerialReceiverEnabled));
+	st += webRowStatus("Pass-thru enabled", "pt",    webFlag(SerialPassThruEnabled));
+	st += webRowStatus("ADS1115 found",     "ads",   webFlag(ADSfound));
+	st += webRowStatus("AOG connected",     "aog",   webFlag(millis() - AOGTime < 4000));
+	st += webRowStatus("Steering on",       "steer", webFlag(AOGsteeringReady));
+	st += webRowStatus("Steer switch on",   "sw",    webFlag(SteerSwitch == LOW));
+	st += "</table>";
+
+	// poll the lightweight /status endpoint instead of reloading the whole page
+	st += "<script>";
+	st += "function T(i,v){var e=document.getElementById(i);if(e)e.textContent=v;}";
+	st += "function F(i,v){var e=document.getElementById(i);if(e)e.innerHTML=v?\"<span style='color:#127a12;font-weight:700;'>ON</span>\":\"<span style='color:#999;'>off</span>\";}";
+	st += "function P(){fetch('/status').then(function(r){return r.json();}).then(function(j){";
+	st += "T('h',j.h);T('was',j.was);T('cwas',j.cwas);T('zo',j.zo);T('cur',j.cur);T('loop',j.loop+' us');";
+	st += "F('imu',j.imu);F('rcv',j.rcv);F('pt',j.pt);F('ads',j.ads);F('aog',j.aog);F('steer',j.steer);F('sw',j.sw);";
+	st += "}).catch(function(){});}";
+	st += "setInterval(P,1000);";
+	st += "</script>";
+
 	st += webFoot();
 	return st;
 }
@@ -389,26 +489,44 @@ static String webBuildResponse(bool isPost, const String& path, const String& bo
 		else if (path == "/label") { webApplyLabel(body); return webPageSaved(false); }
 		return webPageMain();
 	}
-	if      (path == "/pins")  return webPagePins();
+	if      (path == "/status") return webStatusJson();
+	else if (path == "/pins")  return webPagePins();
 	else if (path == "/modes") return webPageModes();
 	else if (path == "/label") return webPageLabel();
 	return webPageMain();
 }
 
+// Non-blocking HTTP handler. Reads the request incrementally across loop passes
+// (only whatever bytes are already buffered each pass, never busy-waiting), and
+// tears the socket down with the non-blocking close() instead of stop(). The old
+// version blocked the steer loop on every request: it spun waiting for the request
+// bytes and then called client.stop(), which blocks until the TCP close round-trip
+// completes. That injected a stall into the loop on every 1 s status poll.
 void HandleWebClient()
 {
-	EthernetClient client = webServer.available();
-	if (!client) return;
+	static EthernetClient client;
+	static bool     busy = false;
+	static String   reqLine, line, body;
+	static int      contentLength;
+	static bool     firstLine, headersDone;
+	static uint32_t start;
 
-	String reqLine, line, body;
-	int contentLength = 0;
-	bool firstLine = true, headersDone = false;
-	uint32_t start = millis();
-
-	// request line + headers (bounded so a stuck client can't stall the steer loop)
-	while (client.connected() && !headersDone && (millis() - start < 300))
+	if (!busy)
 	{
-		if (!client.available()) continue;
+		client = webServer.available();
+		if (!client) return;
+		busy = true;
+		reqLine = ""; line = ""; body = "";
+		contentLength = 0; firstLine = true; headersDone = false;
+		start = millis();
+	}
+
+	// give up on a client that stalls, so a half-open connection can't wedge us
+	if (millis() - start > 1000) { client.close(); busy = false; return; }
+
+	// request line + headers: consume only what's buffered right now, then return
+	while (!headersDone && client.available())
+	{
 		char c = client.read();
 		if (c == '\r') continue;
 		if (c == '\n')
@@ -426,10 +544,20 @@ void HandleWebClient()
 		else line += c;
 	}
 
-	// body (POST)
-	while ((int)body.length() < contentLength && client.connected() && (millis() - start < 600))
+	if (!headersDone)
 	{
-		if (client.available()) body += (char)client.read();
+		if (!client.connected()) { client.close(); busy = false; }
+		return;	// come back next pass with more bytes
+	}
+
+	// body (POST): same incremental approach
+	while ((int)body.length() < contentLength && client.available())
+		body += (char)client.read();
+
+	if ((int)body.length() < contentLength)
+	{
+		if (!client.connected()) { client.close(); busy = false; }
+		return;
 	}
 
 	bool isPost = reqLine.startsWith("POST");
@@ -438,28 +566,31 @@ void HandleWebClient()
 	String path = (sp1 >= 0 && sp2 > sp1) ? reqLine.substring(sp1 + 1, sp2) : "/";
 
 	String resp = webBuildResponse(isPost, path, body);
+	bool isJson = (!isPost && path == "/status");
 
 	client.print(F("HTTP/1.1 200 OK\r\n"));
-	client.print(F("Content-Type: text/html\r\n"));
+	client.print(isJson ? F("Content-Type: application/json\r\n") : F("Content-Type: text/html\r\n"));
 	client.print(F("Connection: close\r\n"));
 	client.print(F("Content-Length: "));
 	client.print(resp.length());
 	client.print(F("\r\n\r\n"));
 
-	// Send the body in full. QNEthernet's write() buffers only as much as fits and returns
-	// a short count when its send buffer is full, so a single print() truncates large pages
-	// (e.g. /pins). Loop + flush until every byte is out.
+	// Write the body. QNEthernet's write() returns a short count when its send buffer
+	// is full, so loop until every byte is queued (small /status responses go in one
+	// pass; large pages like /pins take a few). close() is non-blocking: it flushes the
+	// FIN through the stack without waiting for the peer, unlike stop().
 	const char* p = resp.c_str();
 	size_t remaining = resp.length();
 	uint32_t tsend = millis();
-	while (remaining > 0 && client.connected() && (millis() - tsend < 2000))
+	while (remaining > 0 && client.connected() && (millis() - tsend < 1000))
 	{
 		size_t n = client.write((const uint8_t*)p, remaining);
 		if (n > 0) { p += n; remaining -= n; tsend = millis(); }
 		client.flush();
-		Ethernet.loop();	// let the stack push/drain the buffer instead of sleeping 1 ms
+		Ethernet.loop();	// service the stack so it pushes/drains the send buffer (non-blocking)
 	}
-	client.stop();
+	client.close();
+	busy = false;
 }
 
 void DoWebUI()
