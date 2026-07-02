@@ -329,14 +329,19 @@ static String webPageMain()
 	st += webRowStatus("Steer switch on",   "sw",    webFlag(SteerSwitch == LOW));
 	st += "</table>";
 
+	// one-click WAS zero: captures the current WAS as the new zero (no reboot needed)
+	st += "<p><button class='button-72' type='button' onclick='Z()'>Zero WAS now</button></p>";
+
 	// poll the lightweight /status endpoint instead of reloading the whole page
 	st += "<script>";
 	st += "function T(i,v){var e=document.getElementById(i);if(e)e.textContent=v;}";
 	st += "function F(i,v){var e=document.getElementById(i);if(e)e.innerHTML=v?\"<span style='color:#127a12;font-weight:700;'>ON</span>\":\"<span style='color:#999;'>off</span>\";}";
-	st += "function P(){fetch('/status').then(function(r){return r.json();}).then(function(j){";
+	st += "function U(j){";
 	st += "T('h',j.h);T('was',j.was);T('cwas',j.cwas);T('zo',j.zo);T('cur',j.cur);T('loop',j.loop+' us');";
-	st += "F('imu',j.imu);F('rcv',j.rcv);F('pt',j.pt);F('ads',j.ads);F('aog',j.aog);F('steer',j.steer);F('sw',j.sw);";
-	st += "}).catch(function(){});}";
+	st += "F('imu',j.imu);F('rcv',j.rcv);F('pt',j.pt);F('ads',j.ads);F('aog',j.aog);F('steer',j.steer);F('sw',j.sw);}";
+	st += "function P(){fetch('/status').then(function(r){return r.json();}).then(U).catch(function(){});}";
+	st += "function Z(){if(confirm('Set the current WAS reading as zero?'))";
+	st += "fetch('/zero',{method:'POST'}).then(function(r){return r.json();}).then(U).catch(function(){});}";
 	st += "setInterval(P,1000);";
 	st += "</script>";
 
@@ -390,7 +395,6 @@ static String webPageModes()
 	st += webRowSelect2("IMU type",      "IMUtype",      MDL.IMUtype,      "BNO080",      "TM171");
 	st += webRowCheck("Use ADS1115",  "ads",      MDL.ADS1115Enabled);
 	st += webRowCheck("Auto-zero WAS", "autozero", MDL.AutoZero);
-	st += webRowCheck("Zero WAS now",  "zerowas",  false);
 	st += "</table>";
 	st += "<hr style='width:80%;margin:32px auto 8px;border:0;border-top:2px solid #b38fc9;'>";
 	st += "<div style='text-align:center;margin:8px auto 24px;'><span class='label-normal'>ADS1115 board preset</span><br>";
@@ -463,9 +467,18 @@ static void webApplyModes(const String& b)
 	MDL.IMUtype        = (uint8_t)webField(b, "IMUtype").toInt();
 	MDL.ADS1115Enabled = webChecked(b, "ads");
 	MDL.AutoZero       = webChecked(b, "autozero");
-	if (webChecked(b, "zerowas")) MDL.ZeroOffset = WasReading;	// one-shot, mirrors PGN Commands bit 0
 	SaveData();
 	webScheduleReboot();
+}
+
+// One-shot WAS zero (dedicated "Zero WAS now" button on the main page). Mirrors the
+// PGN Commands bit 0 path in ReceiveConfig(), but needs no reboot: DoSteering() reads
+// MDL.ZeroOffset live every loop, so the new zero takes effect immediately and the
+// status panel shows Current WAS drop to ~0. SaveData() persists it across restarts.
+static void webApplyZero()
+{
+	MDL.ZeroOffset = WasReading;
+	SaveData();
 }
 
 static void webApplyLabel(const String& b)
@@ -487,6 +500,7 @@ static String webBuildResponse(bool isPost, const String& path, const String& bo
 		if      (path == "/pins")  { webApplyPins(body);  return webPageSaved(true);  }
 		else if (path == "/modes") { webApplyModes(body); return webPageSaved(true);  }
 		else if (path == "/label") { webApplyLabel(body); return webPageSaved(false); }
+		else if (path == "/zero")  { webApplyZero();      return webStatusJson();     }
 		return webPageMain();
 	}
 	if      (path == "/status") return webStatusJson();
@@ -566,7 +580,7 @@ void HandleWebClient()
 	String path = (sp1 >= 0 && sp2 > sp1) ? reqLine.substring(sp1 + 1, sp2) : "/";
 
 	String resp = webBuildResponse(isPost, path, body);
-	bool isJson = (!isPost && path == "/status");
+	bool isJson = (path == "/status") || (isPost && path == "/zero");
 
 	client.print(F("HTTP/1.1 200 OK\r\n"));
 	client.print(isJson ? F("Content-Type: application/json\r\n") : F("Content-Type: text/html\r\n"));
