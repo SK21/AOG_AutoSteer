@@ -415,3 +415,10 @@ fp-info-cache
 
 # Visual Micro stuff
 __vm/
+
+# Claude Code local settings
+.claude/
+
+# Development notes, not shipped
+IMPLEMENTATION.md
+CODE_REVIEW_Development.md
