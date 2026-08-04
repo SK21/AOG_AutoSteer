@@ -1,0 +1,19 @@
+AS15-3 config
+-----------
+Serial Ports
+	- Receiver	4
+	- IMU		3
+	- RS232 In	8
+	- RS232 Out	2
+
+I/O Pins
+	- Power Relay	0
+	- Steer Relay	1
+	- Steer Switch	30
+	- Work Switch	31
+	- WAS		25
+	- Current	26
+	- Motor Dir	23
+	- Motor PWM	22
+
+No ADS1115.

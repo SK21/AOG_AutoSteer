@@ -1,0 +1,12 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "eb08f838-cbdc-40a5-80a5-af65b945fe41")
+	(paper "A4")
+	(title_block
+		(title "Motor")
+		(date "2025-07-26")
+	)
+	(lib_symbols)
+)
