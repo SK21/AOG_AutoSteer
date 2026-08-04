@@ -34,38 +34,50 @@ void ReceiveConfig()
 				//          - bit 1, -
 				//          - bit 2, use ADS1115
 				//			- bit 3, Auto zero WAS
+				//15	IMU type	// 0 BNO080, 1 TM171
+				//16	GPS source		) 19 byte form only
+				//17	Steering mode	)
+				//18	CRC				// at [16] in the 17 byte form
 
+				// Two lengths are accepted. PCBsetup builds that predate GPSSource/SteeringMode
+				// send 17 bytes with the CRC at [16]; newer ones send 19 with it at [18]. Try the
+				// long form first - a 17 byte packet can't satisfy it - and leave GPSSource and
+				// SteeringMode at their stored values when the short form arrives. Without this
+				// an old app's config is dropped silently, with no error at either end.
+				PGNlength = 0;
+				if (len > 18 && GoodCRC(Data, 19)) PGNlength = 19;
+				else if (len > 16 && GoodCRC(Data, 17)) PGNlength = 17;
 
-				PGNlength = 19;
-				if (len > PGNlength - 1)
+				if (PGNlength)
 				{
-					if (GoodCRC(Data, PGNlength))
+					MDL.PowerRelayPin = Data[2];
+					MDL.SteeringRelayPin = Data[3];
+					MDL.WasPin = Data[4];
+					MDL.AnalogPin = Data[5];
+					MDL.SteerSwitchPin = Data[6];
+					MDL.WorkSwitchPin = Data[7];
+					MDL.DirPin = Data[8];
+					MDL.PWMpin = Data[9];
+					MDL.ReceiverSerialPort = Data[10];
+					MDL.PassThrOutSerialPort = Data[11];
+					MDL.PassThruInSerialPort = Data[12];
+					MDL.IMUSerialPort = Data[13];
+
+					uint8_t Commands = Data[14];
+					if (bitRead(Commands, 0)) MDL.ZeroOffset = WasReading;
+					if (bitRead(Commands, 2)) MDL.ADS1115Enabled = true; else MDL.ADS1115Enabled = false;
+					if (bitRead(Commands, 3)) MDL.AutoZero = true; else MDL.AutoZero = false;
+
+					MDL.IMUtype = Data[15];
+
+					if (PGNlength == 19)
 					{
-						MDL.PowerRelayPin = Data[2];
-						MDL.SteeringRelayPin = Data[3];
-						MDL.WasPin = Data[4];
-						MDL.AnalogPin = Data[5];
-						MDL.SteerSwitchPin = Data[6];
-						MDL.WorkSwitchPin = Data[7];
-						MDL.DirPin = Data[8];
-						MDL.PWMpin = Data[9];
-						MDL.ReceiverSerialPort = Data[10];
-						MDL.PassThrOutSerialPort = Data[11];
-						MDL.PassThruInSerialPort = Data[12];
-						MDL.IMUSerialPort = Data[13];
-
-						uint8_t Commands = Data[14];
-						if (bitRead(Commands, 0)) MDL.ZeroOffset = WasReading;
-						if (bitRead(Commands, 2)) MDL.ADS1115Enabled = true; else MDL.ADS1115Enabled = false;
-						if (bitRead(Commands, 3)) MDL.AutoZero = true; else MDL.AutoZero = false;
-
-						MDL.IMUtype = Data[15];
-						MDL.GPSSource=Data[16];
-						MDL.SteeringMode=Data[17];
-
-						SaveData();
-						SCB_AIRCR = 0x05FA0004; //reset the Teensy   
+						MDL.GPSSource = Data[16];
+						MDL.SteeringMode = Data[17];
 					}
+
+					SaveData();
+					SCB_AIRCR = 0x05FA0004; //reset the Teensy
 				}
 				break;
 
