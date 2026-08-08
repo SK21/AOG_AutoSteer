@@ -1,4 +1,15 @@
 
+// Counts edges on the work switch pin when it is wired to a steering column pulse sensor.
+// 2 ms debounce caps counting at 500 edges/s - far above the ~32 edges/s a 16 pulse/rev
+// sensor produces at one wheel turn per second, and low enough to reject electrical noise.
+void WorkSwitchISR()
+{
+	uint32_t Now = micros();
+	if (Now - WorkSwitchLastEdge < 2000) return;
+	WorkSwitchLastEdge = Now;
+	WorkSwitchEdges++;
+}
+
 void ReadSwitches()
 {
 	// steer switch		- low, steering on 
@@ -63,7 +74,10 @@ void ReadSwitches()
 		LatchedOff = true;
 	}
 
-	switchByte = digitalRead(MDL.WorkSwitchPin);  // read work switch, Low on, High off
+	// With a kickout sensor on the pin the level is a pulse train, so reporting it would flick
+	// AOG's work switch on and off at the pulse rate. Report the work switch permanently off.
+	if (SteerConfig.WorkSwitchKickout) switchByte = 1;
+	else switchByte = digitalRead(MDL.WorkSwitchPin);  // read work switch, Low on, High off
 
 	if (ModuleSteeringReady)
 	{
@@ -112,10 +126,59 @@ bool SensorsSteeringReady(bool MDLready)
 			Result = false;
 		}
 	}
-	// --- Virtual encoder branch ---
+	// --- Steering wheel encoder branch ---
+	// AOG's Shaft Encoder checkbox turns the kickout on; the WorkSwitchKickout wiring flag
+	// picks the source - real pulses on the work switch pin, or the virtual encoder.
 	else if (SteerConfig.ShaftEncoder)
 	{
-		if (MDLready)
+		if (SteerConfig.WorkSwitchKickout)
+		{
+			// Real pulses from the steering column sensor. WorkSwitchEdges free runs and is
+			// never written here, so the WebUI can show it as a lifetime edge count for
+			// checking the tap on the machine - turning the wheel moves it whether or not
+			// steering is engaged. The kickout works from a moving baseline instead.
+			// 32 bit reads are atomic on the Teensy, so no interrupt guard is needed.
+			static uint32_t ws_base = 0;	// edge count at the start of the current window
+			static uint32_t ws_last = 0;	// edge count at the previous sample
+			static uint32_t ws_quiet = 0;	// millis() of the last new edge
+
+			uint32_t Edges = WorkSwitchEdges;
+
+			uint8_t Threshold = SteerConfig.PulseCountMax;
+			if (Threshold < 1) Threshold = 1;	// 0 would disengage on every pass
+
+			if (MDLready)
+			{
+				if (Edges != ws_last)
+				{
+					// still turning, keep accumulating
+					ws_last = Edges;
+					ws_quiet = millis();
+				}
+				else if (millis() - ws_quiet > 250)
+				{
+					// wheel stopped - drop the window, so stray edges cannot add up to
+					// the threshold over minutes and kick out with nobody at the wheel
+					ws_base = Edges;
+				}
+
+				// unsigned subtraction, stays correct across a counter wrap
+				if (Edges - ws_base >= Threshold)
+				{
+					ws_base = Edges;
+					ws_quiet = millis();
+					Result = false;
+				}
+			}
+			else
+			{
+				// hold the window at the current count while the module is not ready
+				ws_base = Edges;
+				ws_last = Edges;
+				ws_quiet = millis();
+			}
+		}
+		else if (MDLready)
 		{
 			// process virtual encoder
 			float currError = steerAngleError;     // signed degrees

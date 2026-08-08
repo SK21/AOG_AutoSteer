@@ -74,7 +74,16 @@ void DoSetup()
 	parser.addHandler("G-VTG", VTG_Handler);
 
 	// pins
-	if (MDL.WorkSwitchPin < NC) pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);
+	if (MDL.WorkSwitchPin < NC)
+	{
+		pinMode(MDL.WorkSwitchPin, INPUT_PULLUP);
+
+		// Kickout wiring: the pin carries a pulse train from the steering column sensor. Attach on
+		// the wiring flag alone, not on ShaftEncoder - the pulses are on the pin either way, and
+		// ReadSwitches() needs the count to stay out of the work switch bit sent to AOG.
+		if (SteerConfig.WorkSwitchKickout)
+			attachInterrupt(digitalPinToInterrupt(MDL.WorkSwitchPin), WorkSwitchISR, CHANGE);
+	}
 	if (MDL.SteerSwitchPin < NC) pinMode(MDL.SteerSwitchPin, INPUT_PULLUP);
 	if (MDL.SteeringRelayPin < NC) pinMode(MDL.SteeringRelayPin, OUTPUT);
 	if (MDL.DirPin < NC) pinMode(MDL.DirPin, OUTPUT);

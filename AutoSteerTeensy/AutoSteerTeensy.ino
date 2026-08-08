@@ -22,7 +22,7 @@ EasyObjectDictionary eOD;
 EasyProfile          eP(&eOD);
 
 #define InoDescription "AutoSteerTeensy"
-const uint16_t InoID = 4086;	// change to send defaults to eeprom, ddmmy, no leading 0
+const uint16_t InoID = 8086;	// change to send defaults to eeprom, ddmmy, no leading 0
 const uint8_t InoType = 0;		// 0 - Teensy AutoSteer, 1 - Teensy Rate, 2 - Nano Rate, 3 - Nano SwitchBox, 4 - ESP Rate
 
 // GPS source (stored in MDL.GPSSource)
@@ -108,6 +108,7 @@ struct Setup
 	uint8_t PulseCountMax = 5;
 	uint8_t IsDanfoss = 0;
 	uint8_t UseIMU_Y_Axis = 0;	//Set to 0 to use X Axis, 1 to use Y avis
+	uint8_t WorkSwitchKickout = 0;	//1 if the work switch pin carries a kickout pulse train instead of a work switch
 	float MinSpeed = 0;		// minimum kmh X 10
 };
 
@@ -179,6 +180,11 @@ bool AOGsteeringReady = false;	// AOG is ready to steer pending steer switch
 uint8_t SteerSwitch = HIGH;	// Low on, High off
 uint8_t switchByte = 0;
 float AnalogReadingAverage;
+
+// Work switch pin used as a steering kickout (SteerConfig.WorkSwitchKickout). The sensor is a
+// pulse train, not a level, so edges are counted in an ISR - the 25 ms main loop drops edges.
+volatile uint32_t WorkSwitchEdges = 0;
+volatile uint32_t WorkSwitchLastEdge = 0;	// micros(), ISR debounce
 
 // attitude (from IMU or dual-antenna GPS)
 float ATT_Heading = 0;

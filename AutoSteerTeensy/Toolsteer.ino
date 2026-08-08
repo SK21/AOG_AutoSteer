@@ -126,7 +126,10 @@ void motorDrive()
 
 void ReadSwitchesLite()
 {
-	switchByte = digitalRead(MDL.WorkSwitchPin);
+	// see ReadSwitches() - a kickout pulse train on the pin must not reach AOG's work switch bit
+	if (SteerConfig.WorkSwitchKickout) switchByte = 1;
+	else switchByte = digitalRead(MDL.WorkSwitchPin);
+
 	switchByte |= (digitalRead(MDL.SteerSwitchPin) << 1);
 }
 

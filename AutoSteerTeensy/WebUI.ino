@@ -143,11 +143,11 @@ static String webRowStatus(const char* label, const char* id, const String& valu
 // compact JSON snapshot of the PGN 32505 fields, polled by the main page
 static String webStatusJson()
 {
-	int16_t currentWas = (int16_t)WasReading - (int16_t)MDL.ZeroOffset;
+	int16_t zeroedWas = (int16_t)WasReading - (int16_t)MDL.ZeroOffset;
 	String j = "{";
 	j += "\"h\":"    + String(ATT_Heading / 10.0f, 1);	// ATT_Heading is decidegrees (0-3600)
 	j += ",\"was\":" + String(WasReading);
-	j += ",\"cwas\":"+ String(currentWas);
+	j += ",\"cwas\":"+ String(zeroedWas);
 	j += ",\"zo\":"  + String(MDL.ZeroOffset);
 	j += ",\"cur\":" + String((int)AnalogReadingAverage);
 	j += ",\"loop\":"+ String(MaxLoopTime);
@@ -158,6 +158,8 @@ static String webStatusJson()
 	j += ",\"aog\":" + String((millis() - AOGTime < 4000) ? 1 : 0);
 	j += ",\"steer\":" + String(AOGsteeringReady ? 1 : 0);
 	j += ",\"sw\":"  + String(SteerSwitch == LOW ? 1 : 0);
+	j += ",\"wse\":" + String(WorkSwitchEdges);
+	j += ",\"tmp\":" + String(tempmonGetTemp(), 1);
 	j += "}";
 	return j;
 }
@@ -312,14 +314,17 @@ static String webPageMain()
 	// --- live status (mirrors PGN 32505, see SendStatus() in Config.ino) ---
 	// Values are seeded server-side, then refreshed by polling /status (small JSON)
 	// so the heavy HTML page is served only once and the steer loop isn't hammered.
-	int16_t currentWas = (int16_t)WasReading - (int16_t)MDL.ZeroOffset;
+	int16_t zeroedWas = (int16_t)WasReading - (int16_t)MDL.ZeroOffset;
 	st += "<table class='center'>";
 	st += webRowStatus("IMU heading",       "h",     String(ATT_Heading / 10.0f, 1));	// decidegrees -> degrees
+	// reading, offset, result - in that order, so the subtraction reads down the table
 	st += webRowStatus("WAS reading",       "was",   String(WasReading));
-	st += webRowStatus("Current WAS",       "cwas",  String(currentWas));
 	st += webRowStatus("Zero offset",       "zo",    String(MDL.ZeroOffset));
-	st += webRowStatus("Current sensor",    "cur",   String((int)AnalogReadingAverage));
+	st += webRowStatus("Zeroed WAS",        "cwas",  String(zeroedWas));
+	st += webRowStatus("Motor current",     "cur",   String((int)AnalogReadingAverage));
 	st += webRowStatus("Max loop time",     "loop",  String(MaxLoopTime) + " us");
+	// Teensy 4.x on-die temperature sensor; tempmon_init() already ran from the core startup
+	st += webRowStatus("Teensy temperature", "tmp",  String(tempmonGetTemp(), 1) + " &deg;C");
 	st += webRowStatus("IMU enabled",       "imu",   webFlag(SerialIMUEnabled));
 	st += webRowStatus("Receiver enabled",  "rcv",   webFlag(SerialReceiverEnabled));
 	st += webRowStatus("Pass-thru enabled", "pt",    webFlag(SerialPassThruEnabled));
@@ -327,6 +332,12 @@ static String webPageMain()
 	st += webRowStatus("AOG connected",     "aog",   webFlag(millis() - AOGTime < 4000));
 	st += webRowStatus("Steering on",       "steer", webFlag(AOGsteeringReady));
 	st += webRowStatus("Steer switch on",   "sw",    webFlag(SteerSwitch == LOW));
+
+	// Free running edge total (nothing resets it - see SensorsSteeringReady). Turning the
+	// wheel moves it whether or not steering is engaged, so the tap can be checked on the
+	// machine: expect about 32 edges per turn of the wheel from a 16 pulse/rev sensor.
+	if (SteerConfig.WorkSwitchKickout)
+		st += webRowStatus("Kickout pulses", "wse", String(WorkSwitchEdges));
 	st += "</table>";
 
 	// one-click WAS zero: captures the current WAS as the new zero (no reboot needed)
@@ -337,7 +348,11 @@ static String webPageMain()
 	st += "function T(i,v){var e=document.getElementById(i);if(e)e.textContent=v;}";
 	st += "function F(i,v){var e=document.getElementById(i);if(e)e.innerHTML=v?\"<span style='color:#127a12;font-weight:700;'>ON</span>\":\"<span style='color:#999;'>off</span>\";}";
 	st += "function U(j){";
+	// T() writes textContent, so the degree sign cannot be an HTML entity. Built with
+	// fromCharCode rather than a \u escape: the source stays plain ASCII and no compiler
+	// gets a chance to fold the escape into a literal character.
 	st += "T('h',j.h);T('was',j.was);T('cwas',j.cwas);T('zo',j.zo);T('cur',j.cur);T('loop',j.loop+' us');";
+	st += "T('wse',j.wse);T('tmp',j.tmp+' '+String.fromCharCode(176)+'C');";
 	st += "F('imu',j.imu);F('rcv',j.rcv);F('pt',j.pt);F('ads',j.ads);F('aog',j.aog);F('steer',j.steer);F('sw',j.sw);}";
 	st += "function P(){fetch('/status').then(function(r){return r.json();}).then(U).catch(function(){});}";
 	st += "function Z(){if(confirm('Set the current WAS reading as zero?'))";
@@ -395,6 +410,12 @@ static String webPageModes()
 	st += webRowSelect2("IMU type",      "IMUtype",      MDL.IMUtype,      "BNO080",      "TM171");
 	st += webRowCheck("Use ADS1115",  "ads",      MDL.ADS1115Enabled);
 	st += webRowCheck("Auto-zero WAS", "autozero", MDL.AutoZero);
+	st += webRowCheck("Work switch = kickout", "wskick", SteerConfig.WorkSwitchKickout);
+	st += "<tr><td colspan='2'><div class='control-width'><div class='hint'>";
+	st += "Work switch pin carries a steering column pulse sensor instead of a work switch. ";
+	st += "Tick Shaft Encoder in AOG to enable the kickout and set the threshold with Pulse Count. ";
+	st += "The work switch is reported permanently off.";
+	st += "</div></div></td></tr>";
 	st += "</table>";
 	st += "<hr style='width:80%;margin:32px auto 8px;border:0;border-top:2px solid #b38fc9;'>";
 	st += "<div style='text-align:center;margin:8px auto 24px;'><span class='label-normal'>ADS1115 board preset</span><br>";
@@ -467,6 +488,7 @@ static void webApplyModes(const String& b)
 	MDL.IMUtype        = (uint8_t)webField(b, "IMUtype").toInt();
 	MDL.ADS1115Enabled = webChecked(b, "ads");
 	MDL.AutoZero       = webChecked(b, "autozero");
+	SteerConfig.WorkSwitchKickout = webChecked(b, "wskick") ? 1 : 0;
 	SaveData();
 	webScheduleReboot();
 }
@@ -474,7 +496,7 @@ static void webApplyModes(const String& b)
 // One-shot WAS zero (dedicated "Zero WAS now" button on the main page). Mirrors the
 // PGN Commands bit 0 path in ReceiveConfig(), but needs no reboot: DoSteering() reads
 // MDL.ZeroOffset live every loop, so the new zero takes effect immediately and the
-// status panel shows Current WAS drop to ~0. SaveData() persists it across restarts.
+// status panel shows Zeroed WAS drop to ~0. SaveData() persists it across restarts.
 static void webApplyZero()
 {
 	MDL.ZeroOffset = WasReading;
