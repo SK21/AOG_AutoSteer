@@ -201,6 +201,15 @@ char attYawRate[6];
 int16_t pwmDrive = 0;
 int16_t MaxPWMvalue = 255;
 
+// steer diagnostics, PGN 249 - sent each loop while AOG's control data log requests it
+const uint8_t DiagPGN = 249;
+const uint32_t DiagHoldTime = 3000;	// ms to keep sending after the last request from AOG
+bool DiagRequested = false;
+uint32_t DiagRequestTime = 0;
+int16_t DiagCmdPWM = 0;		// steering PWM before InvertSteer / Danfoss
+uint8_t DiagFlags = 0;		// bit0 enabled, bit1 AOG timeout, bit2 AOG not ready, bit3 steer switch off, bit4 below min speed, bit5 IMU connected
+uint8_t PGN_249[35] = { 128, 129, 126, DiagPGN, 29 };
+
 //Heart beat hello AgIO
 uint8_t helloFromIMU[] = { 128, 129, 121, 121, 5, 0, 0, 0, 0, 0, 71 };
 uint8_t helloFromAutoSteer[] = { 128, 129, 126, 126, 5, 0, 0, 0, 0, 0, 71 };
@@ -276,6 +285,7 @@ void loop()
 			ReadAnalog();
 			ReadSwitches();
 			DoSteering();
+			SendSteerDiag();
 		}
 		else  // STEER_TOOL_XTE
 		{

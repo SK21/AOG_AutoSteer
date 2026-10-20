@@ -98,6 +98,12 @@ void ReceiveSteerData()
                     SendSteerData();
                     AOGTime = millis();
                     break;
+
+                case DiagPGN:
+                    // steer diagnostics request from AOG's control data log
+                    DiagRequested = true;
+                    DiagRequestTime = millis();
+                    break;
                 }
             }
         }
@@ -174,6 +180,78 @@ void SendSteerData()
             UDPsteering.write(PGN_250, sizeof(PGN_250));
             UDPsteering.endPacket();
         }
+    }
+}
+
+void SendSteerDiag()
+{
+    // PGN 249, steer diagnostics for AOG's control data log. Sent every loop (25 ms)
+    // for DiagHoldTime after the last request from AOG.
+    //0     HeaderLo        128
+    //1     HeaderHi        129
+    //2     source          126
+    //3     PGN             249
+    //4     length          29
+    //5-8   millis          uint32
+    //9-10  WAS reading     uint16, raw
+    //11-12 ZeroOffset      int16
+    //13-14 actual angle    int16, X 100
+    //15-16 set point       int16, X 100
+    //17-18 command PWM     int16, before InvertSteer / Danfoss
+    //19-20 output PWM      int16, as driven
+    //21    max PWM         low/high PWM limit in effect
+    //22    flags           bit0 enabled, bit1 AOG timeout, bit2 AOG not ready, bit3 steer switch off, bit4 below min speed, bit5 IMU connected
+    //23    switch byte
+    //24-25 set point age   uint16, ms since last PGN 254
+    //26-27 speed           uint16, km/h X 10
+    //28-29 IMU heading     int16, X 10, 9999 = none
+    //30-31 IMU roll        int16, X 10, 8888 = none
+    //32-33 max loop time   uint16, micros
+    //34    CRC
+
+    if (DiagRequested && (millis() - DiagRequestTime < DiagHoldTime) && Ethernet.linkStatus() == LinkON)
+    {
+        uint32_t ms = millis();
+        int16_t ZeroOffset = MDL.ZeroOffset;
+        int16_t Actual = (int16_t)(steerAngleActual * 100);
+        int16_t SetPoint = (int16_t)(steerAngleSetPoint * 100);
+        uint8_t MaxPWM = constrain(MaxPWMvalue, 0, 255);
+        uint16_t SetPointAge = min(ms - AOGTime, (uint32_t)65535);
+        uint16_t Speed = (uint16_t)(Speed_KMH * 10);
+        int16_t Heading = 9999;
+        int16_t Roll = 8888;
+        if (ATT_Connected())
+        {
+            Heading = (int16_t)ATT_Heading;
+            Roll = (int16_t)ATT_Roll;
+        }
+
+        memcpy(&PGN_249[5], &ms, 4);
+        memcpy(&PGN_249[9], &WasReading, 2);
+        memcpy(&PGN_249[11], &ZeroOffset, 2);
+        memcpy(&PGN_249[13], &Actual, 2);
+        memcpy(&PGN_249[15], &SetPoint, 2);
+        memcpy(&PGN_249[17], &DiagCmdPWM, 2);
+        memcpy(&PGN_249[19], &pwmDrive, 2);
+        PGN_249[21] = MaxPWM;
+        PGN_249[22] = DiagFlags;
+        PGN_249[23] = switchByte;
+        memcpy(&PGN_249[24], &SetPointAge, 2);
+        memcpy(&PGN_249[26], &Speed, 2);
+        memcpy(&PGN_249[28], &Heading, 2);
+        memcpy(&PGN_249[30], &Roll, 2);
+        memcpy(&PGN_249[32], &MaxLoopTime, 2);
+
+        uint8_t CK_A = 0;
+        for (uint8_t i = 2; i < sizeof(PGN_249) - 1; i++)
+        {
+            CK_A += PGN_249[i];
+        }
+        PGN_249[sizeof(PGN_249) - 1] = CK_A;
+
+        UDPsteering.beginPacket(DestinationIP, DestinationPort);
+        UDPsteering.write(PGN_249, sizeof(PGN_249));
+        UDPsteering.endPacket();
     }
 }
 

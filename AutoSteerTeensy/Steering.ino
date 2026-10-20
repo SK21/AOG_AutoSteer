@@ -26,11 +26,23 @@ void DoSteering()
 	if (steerAngleActual < 0) steerAngleActual = (steerAngleActual * SteerSettings.AckermanFix);
 	steerAngleError = steerAngleActual - steerAngleSetPoint;
 
-	if ((millis() - AOGTime > 4000) || !AOGsteeringReady || SteerSwitch == HIGH || Speed_KMH < SteerConfig.MinSpeed)
+	bool AOGtimeout = (millis() - AOGTime > 4000);
+	bool BelowMinSpeed = (Speed_KMH < SteerConfig.MinSpeed);
+
+	// steer diagnostics flags, PGN 249
+	DiagFlags = 0;
+	if (AOGtimeout) DiagFlags |= 2;
+	if (!AOGsteeringReady) DiagFlags |= 4;
+	if (SteerSwitch == HIGH) DiagFlags |= 8;
+	if (BelowMinSpeed) DiagFlags |= 16;
+	if (ATT_Connected()) DiagFlags |= 32;
+
+	if (AOGtimeout || !AOGsteeringReady || SteerSwitch == HIGH || BelowMinSpeed)
 	{
 		// steering disabled
 
 		pwmDrive = 0;
+		DiagCmdPWM = 0;
 
 		// release relays
 		digitalWrite(MDL.SteeringRelayPin, LOW);
@@ -45,6 +57,7 @@ void DoSteering()
 	else
 	{
 		// steering enabled
+		DiagFlags |= 1;
 
 		// limit PWM when steer angle error is low
 		MaxPWMvalue = SteerSettings.highPWM;
@@ -61,6 +74,8 @@ void DoSteering()
 		else if (pwmDrive > 0) pwmDrive += SteerSettings.minPWM;
 		if (pwmDrive > MaxPWMvalue) pwmDrive = MaxPWMvalue;
 		if (pwmDrive < -MaxPWMvalue) pwmDrive = -MaxPWMvalue;
+
+		DiagCmdPWM = pwmDrive;	// steer diagnostics, before InvertSteer / Danfoss
 
 		if (SteerConfig.InvertSteer) pwmDrive *= -1;
 
